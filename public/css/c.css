@@ -1,0 +1,190 @@
+
+/* Cài đặt chung */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: #333;
+    line-height: 1.6;
+    background-color: #fff;
+}
+
+a {
+    text-decoration: none;
+    color: #2563eb;
+}
+
+/* Thanh menu */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    background-color: #f2f2f2;
+}
+
+header h2 {
+    color: #2563eb;
+}
+
+nav {
+    display: flex;
+    gap: 20px;
+}
+
+nav a {
+    color: #333;
+}
+
+nav a:hover {
+    color: #2563eb;
+}
+
+/* Banner trang chủ */
+.banner {
+    padding: 50px 20px;
+    text-align: center;
+    background-color: #f5f5f5;
+}
+
+.banner h1 {
+    margin-bottom: 10px;
+}
+
+.banner p {
+    margin-bottom: 20px;
+}
+
+.banner a {
+    display: inline-block;
+    padding: 10px 20px;
+    color: #fff;
+    background-color: #2563eb;
+    border-radius: 4px;
+}
+
+/* Nội dung các phần */
+section:not(.banner) {
+    padding: 30px 40px;
+}
+
+section h2 {
+    margin-bottom: 20px;
+}
+
+/* Danh sách sản phẩm */
+.products {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.product {
+    flex: 1 1 200px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.product h3 {
+    margin-bottom: 10px;
+}
+
+.product p {
+    margin-bottom: 12px;
+}
+
+.product a {
+    display: inline-block;
+    margin-top: 5px;
+}
+
+/* Chân trang */
+footer {
+    padding: 20px;
+    text-align: center;
+    background-color: #f2f2f2;
+}
+
+/* Giao diện điện thoại */
+@media (max-width: 767px) {
+    header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px 15px;
+    }
+
+    section:not(.banner) {
+        padding: 25px 20px;
+    }
+
+    .products {
+        flex-direction: column;
+    }
+}
+
+/*================login====================*/
+
+/* Trang đăng nhập */
+.login-container {
+    width: 90%;
+    max-width: 420px;
+    margin: 40px auto;
+    padding: 25px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.login-container h2 {
+    margin-bottom: 10px;
+}
+
+.login-container > p {
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.login-container button {
+    width: 100%;
+    padding: 10px;
+}
+
+.login-container .error {
+    padding: 10px;
+    color: #b91c1c;
+    background-color: #fee2e2;
+}
+
+.login-container .demo-account {
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.login-container .back-home {
+    margin-top: 15px;
+}
