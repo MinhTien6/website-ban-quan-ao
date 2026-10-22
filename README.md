@@ -1,6 +1,76 @@
 # Website bán quần áo
 
-Dự án website bán quần áo sử dụng PHP và MySQL.
+Dự án website bán quần áo sử dụng PHP 8+ và MySQL (mô hình MVC đơn giản, PDO prepared statement).
+
+## Cài đặt nhanh
+
+### 1. Yêu cầu hệ thống
+- **XAMPP** (Apache 2.4+, MySQL 5.7+ hoặc MariaDB 10.4+).
+- **PHP 8.0 trở lên** (đã bật tiện ích mở rộng `pdo_mysql`, `mbstring`).
+- Trình duyệt web hiện đại (Chrome, Edge, Firefox...).
+
+### 2. Các bước cài đặt và chạy trên máy cá nhân
+1. **Đặt mã nguồn vào thư mục `htdocs`**:
+   - Sao chép hoặc clone toàn bộ thư mục dự án vào thư mục `htdocs` của XAMPP (ví dụ: `C:\xampp\htdocs\website-ban-quan-ao`).
+2. **Khởi động dịch vụ trong XAMPP Control Panel**:
+   - Nhấn **Start** cho cả hai dịch vụ **Apache** và **MySQL**.
+3. **Import cơ sở dữ liệu**:
+   - Mở trình duyệt và truy cập phpMyAdmin tại: `http://localhost/phpmyadmin/`.
+   - Tạo cơ sở dữ liệu `shop_quanao` với Collation `utf8mb4_unicode_ci` (hoặc chuyển sang thẻ **Import**).
+   - Chọn thẻ **Import** -> chọn tệp `database/shop_quanao.sql` trong dự án -> nhấn **Import** ở cuối trang.
+4. **Cấu hình kết nối cơ sở dữ liệu**:
+   - Sao chép tệp `config/database.example.php` thành `config/database.php`.
+   - Mở `config/database.php` và điều chỉnh lại thông tin nếu máy bạn có mật khẩu MySQL khác mặc định:
+     ```php
+     $host = 'localhost';
+     $dbname = 'shop_quanao';
+     $username = 'root';
+     $password = '';
+     ```
+5. **Truy cập ứng dụng**:
+   - Mở trình duyệt và truy cập: `http://localhost/<tên-thư-mục>/` (ví dụ: `http://localhost/website-ban-quan-ao/`).
+
+### 3. Danh sách tài khoản thử nghiệm (Demo Accounts)
+
+| Vai trò | Email đăng nhập | Mật khẩu | Ghi chú |
+|---|---|---|---|
+| **Quản trị viên (Admin)** | `admin@shop.local` | `Admin@123` | Có quyền truy cập trang Quản trị (`admin/index.php`) |
+| **Khách hàng 1 (User)** | `lan.nguyen@example.com` | `User@123` | Tài khoản người dùng bình thường |
+| **Khách hàng 2 (User)** | `minh.tran@example.com` | `User@123` | Tài khoản người dùng bình thường |
+| **Khách hàng 3 (Khóa)** | `khoa@example.com` | `User@123` | Tài khoản bị khóa (`status = 0`) để kiểm tra thông báo lỗi |
+
+### 4. Kiểm tra CSDL tự động
+Dự án đã tích hợp sẵn kịch bản kiểm tra toàn diện cấu trúc CSDL, các khóa ngoại và dữ liệu mẫu:
+- Truy cập trên trình duyệt: `http://localhost/<tên-thư-mục>/tests/check_db.php`
+- Đảm bảo tất cả các bài kiểm tra đều báo màu xanh (PASS).
+
+## Quy ước lập trình chung (Coding Conventions)
+
+Để 5 thành viên (TV2 -> TV6) phát triển code đồng nhất từ Tuần 2, toàn bộ nhóm thống nhất:
+
+1. **Cơ sở dữ liệu & Truy vấn**:
+   - Sử dụng đúng CSDL `shop_quanao` và schema trong `database/shop_quanao.sql`.
+   - Bắt buộc dùng **PDO Prepared Statement** (biến `$pdo` từ `config/database.php`), không dùng truy vấn ghép chuỗi trực tiếp.
+   - Định danh người dùng bằng **email** (không có cột `username`).
+   - Cột trạng thái `status`: `1 = hoạt động / hiển thị`, `0 = khóa / ẩn`.
+2. **Mã nguồn PHP & Bảo mật**:
+   - Mọi dữ liệu xuất ra HTML bắt buộc dùng hàm `e($value)` trong `includes/functions.php` (chống XSS).
+   - Mật khẩu băm bằng `password_hash($password, PASSWORD_DEFAULT)` và kiểm tra bằng `password_verify()`.
+   - Phiên đăng nhập chuẩn hóa: `$_SESSION['user'] = ['id' => ..., 'full_name' => ..., 'email' => ..., 'role' => ...]`.
+   - Kiểm tra quyền: dùng `requireLogin()` (cần đăng nhập) hoặc `requireAdmin()` (cần quyền admin) từ `includes/auth.php`.
+   - Định dạng tiền tệ: dùng `formatPrice($amount)`.
+   - Thông báo tạm thời giữa các trang: dùng `setFlash($type, $msg)` và `getFlash()`.
+   - Tải lên hình ảnh: dùng hàm `uploadImage($file, $subFolder)` trong `includes/functions.php`.
+   - Phân trang: dùng hàm `paginate()` và `renderPagination()`.
+   - Tạo slug: dùng hàm `createSlug()`.
+3. **Quy ước đặt tên**:
+   - Tên bảng, cột CSDL: `snake_case` tiếng Anh (`full_name`, `created_at`, `sale_price`).
+   - Biến, hàm PHP: `camelCase` (`$fullName`, `isLoggedIn()`, `formatPrice()`).
+   - Lớp (Class): `PascalCase` (`Product`, `Category`, `User`, `Order`).
+   - File code lưu định dạng **UTF-8 không BOM**, ký tự xuống dòng **LF**.
+   - Mỗi file và hàm đều có chú thích ngắn bằng tiếng Việt.
+
+---
 
 ## Hướng dẫn sử dụng Git và GitHub
 
