@@ -24,7 +24,7 @@ try {
 <div class="admin-dashboard-wrapper">
     <div class="admin-welcome-box">
         <h3>Chào mừng quay trở lại, <?= e($adminUser['full_name']) ?>!</h3>
-        <p>Đây là giao diện quản trị nền tảng (Tuần 1 & 2 do TV1 thiết lập). Các module quản lý chuyên sâu sẽ do các thành viên TV2, TV3, TV5, TV6 tiếp tục phát triển ở các tuần tiếp theo theo kế hoạch.</p>
+        <p>Hệ thống quản lý website bán quần áo FashionStore. Theo dõi nhanh các chỉ số hoạt động kinh doanh và quản trị bán hàng.</p>
     </div>
 
     <!-- Khối thẻ thống kê nhanh -->
@@ -65,18 +65,9 @@ try {
             </div>
         </div>
     </div>
-
-    <div class="admin-info-card">
-        <h4>📋 Thông tin phân công kỹ thuật các tuần tiếp theo:</h4>
-        <ul class="admin-task-list">
-            <li><strong>TV2 (Tuần 3):</strong> Module Quản lý người dùng & phân quyền (`admin/users/`), Hồ sơ cá nhân.</li>
-            <li><strong>TV3 (Tuần 3):</strong> Module CRUD danh mục (`admin/categories/`) & CRUD sản phẩm (`admin/products/`) có upload nhiều ảnh.</li>
-            <li><strong>TV4 (Tuần 4):</strong> Trang danh sách sản phẩm, lọc, tìm kiếm, phân trang và trang chi tiết sản phẩm.</li>
-            <li><strong>TV5 (Tuần 4, 5):</strong> Module Giỏ hàng, thanh toán đặt hàng và CRUD mã giảm giá.</li>
-            <li><strong>TV6 (Tuần 4, 5):</strong> Module Quản lý đơn hàng, đổi trạng thái đơn, CRUD banner, duyệt đánh giá và biểu đồ Chart.js cho Dashboard.</li>
-        </ul>
-    </div>
 </div>
+
+
 
 <?php
 require_once __DIR__ . '/includes/footer.php';

@@ -273,3 +273,113 @@ function renderPagination(array $pagination, string $baseUrl, string $pageParam 
     $html .= '</div>';
     return $html;
 }
+
+/**
+ * Lấy hoặc tạo mã CSRF Token duy nhất trong phiên
+ *
+ * @return string Mã CSRF token
+ */
+function csrfToken(): string
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Sinh trường input ẩn chứa CSRF Token dùng trong form HTML
+ *
+ * @return string HTML input ẩn
+ */
+function csrfField(): string
+{
+    $token = csrfToken();
+    return '<input type="hidden" name="csrf_token" value="' . e($token) . '">';
+}
+
+/**
+ * Xác thực CSRF Token từ form POST
+ *
+ * @param string|null $token Token gửi lên từ form (mặc định lấy từ $_POST['csrf_token'])
+ * @return bool True nếu hợp lệ, False nếu sai hoặc thiếu
+ */
+function verifyCsrfToken(?string $token = null): bool
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $submittedToken = $token ?? ($_POST['csrf_token'] ?? '');
+    $sessionToken = $_SESSION['csrf_token'] ?? '';
+
+    if ($submittedToken === '' || $sessionToken === '') {
+        return false;
+    }
+
+    return hash_equals($sessionToken, $submittedToken);
+}
+
+/**
+ * Xử lý tải lên nhiều tệp tin hình ảnh cùng lúc (hỗ trợ TV3 quản lý sản phẩm)
+ *
+ * @param array $files Mảng $_FILES['tên_input'] (dạng đa tệp: files['name'][i], ...)
+ * @param string $subFolder Thư mục con trong public/uploads
+ * @param int $maxSizeMb Dung lượng tối đa mỗi ảnh (MB)
+ * @param array $allowedExtensions Các định dạng ảnh cho phép
+ * @return array{success: bool, files: array<array{path: string, filename: string}>, errors: array<string>}
+ */
+function uploadMultipleImages(
+    array $files,
+    string $subFolder = 'products',
+    int $maxSizeMb = 5,
+    array $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp']
+): array {
+    $uploaded = [];
+    $errors = [];
+
+    // Kiểm tra cấu trúc mảng đa file của PHP
+    if (!isset($files['name']) || !is_array($files['name'])) {
+        return [
+            'success' => false,
+            'files'   => [],
+            'errors'  => ['Dữ liệu tệp tải lên không đúng định dạng mảng.'],
+        ];
+    }
+
+    $fileCount = count($files['name']);
+    for ($i = 0; $i < $fileCount; $i++) {
+        // Bỏ qua nếu người dùng không chọn file ở input này
+        if ($files['error'][$i] === UPLOAD_ERR_NO_FILE) {
+            continue;
+        }
+
+        $singleFile = [
+            'name'     => $files['name'][$i],
+            'type'     => $files['type'][$i] ?? '',
+            'tmp_name' => $files['tmp_name'][$i],
+            'error'    => $files['error'][$i],
+            'size'     => $files['size'][$i],
+        ];
+
+        $result = uploadImage($singleFile, $subFolder, $maxSizeMb, $allowedExtensions);
+        if ($result['success']) {
+            $uploaded[] = [
+                'path'     => $result['path'],
+                'filename' => $result['filename'],
+            ];
+        } else {
+            $fileName = e($files['name'][$i]);
+            $errors[] = "Ảnh [{$fileName}]: " . ($result['error'] ?? 'Lỗi không xác định.');
+        }
+    }
+
+    return [
+        'success' => count($uploaded) > 0 && empty($errors),
+        'files'   => $uploaded,
+        'errors'  => $errors,
+    ];
+}
+

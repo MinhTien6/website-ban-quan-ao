@@ -18,53 +18,57 @@ $error = '';
 $email = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-
-    if ($email === '' || $password === '') {
-        $error = 'Vui lòng nhập đầy đủ email và mật khẩu.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Email không hợp lệ.';
+    if (!verifyCsrfToken()) {
+        $error = 'Yêu cầu không hợp lệ hoặc phiên làm việc đã hết hạn. Vui lòng thử lại.';
     } else {
-        try {
-            // Tìm tài khoản theo email
-            $stmt = $pdo->prepare(
-                "SELECT id, full_name, email, password_hash, role, status
-                 FROM users
-                 WHERE email = :email
-                 LIMIT 1"
-            );
-            $stmt->execute(['email' => $email]);
-            $user = $stmt->fetch();
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
 
-            // Kiểm tra mật khẩu (thông báo lỗi chung tránh lộ thông tin người dùng)
-            if (!$user || !password_verify($password, $user['password_hash'])) {
-                $error = 'Email hoặc mật khẩu không đúng.';
-            } elseif ((int)$user['status'] !== 1) {
-                // Kiểm tra trạng thái tài khoản
-                $error = 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.';
-            } else {
-                // Đăng nhập thành công, tái tạo ID phiên để chống tấn công Session Fixation
-                session_regenerate_id(true);
+        if ($email === '' || $password === '') {
+            $error = 'Vui lòng nhập đầy đủ email và mật khẩu.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = 'Email không hợp lệ.';
+        } else {
+            try {
+                // Tìm tài khoản theo email
+                $stmt = $pdo->prepare(
+                    "SELECT id, full_name, email, password_hash, role, status
+                     FROM users
+                     WHERE email = :email
+                     LIMIT 1"
+                );
+                $stmt->execute(['email' => $email]);
+                $user = $stmt->fetch();
 
-                // Chuẩn hóa mảng phiên đăng nhập duy nhất
-                $_SESSION['user'] = [
-                    'id'        => (int)$user['id'],
-                    'full_name' => $user['full_name'],
-                    'email'     => $user['email'],
-                    'role'      => $user['role'],
-                ];
-
-                // Phân luồng chuyển hướng
-                if ($user['role'] === 'admin') {
-                    redirect('admin/index.php');
+                // Kiểm tra mật khẩu (thông báo lỗi chung tránh lộ thông tin người dùng)
+                if (!$user || !password_verify($password, $user['password_hash'])) {
+                    $error = 'Email hoặc mật khẩu không đúng.';
+                } elseif ((int)$user['status'] !== 1) {
+                    // Kiểm tra trạng thái tài khoản
+                    $error = 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.';
                 } else {
-                    redirect('index.php');
+                    // Đăng nhập thành công, tái tạo ID phiên để chống tấn công Session Fixation
+                    session_regenerate_id(true);
+
+                    // Chuẩn hóa mảng phiên đăng nhập duy nhất
+                    $_SESSION['user'] = [
+                        'id'        => (int)$user['id'],
+                        'full_name' => $user['full_name'],
+                        'email'     => $user['email'],
+                        'role'      => $user['role'],
+                    ];
+
+                    // Phân luồng chuyển hướng
+                    if ($user['role'] === 'admin') {
+                        redirect('admin/index.php');
+                    } else {
+                        redirect('index.php');
+                    }
                 }
+            } catch (PDOException $e) {
+                error_log("Lỗi đăng nhập: " . $e->getMessage());
+                $error = 'Đã có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau.';
             }
-        } catch (PDOException $e) {
-            error_log("Lỗi đăng nhập: " . $e->getMessage());
-            $error = 'Đã có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau.';
         }
     }
 }
@@ -84,7 +88,9 @@ require_once __DIR__ . '/includes/header.php';
         <?php endif; ?>
 
         <form action="<?= BASE_URL ?>/login.php" method="post" class="auth-form" novalidate>
+            <?= csrfField() ?>
             <div class="form-group">
+
                 <label for="email">Địa chỉ Email</label>
                 <input
                     type="email"

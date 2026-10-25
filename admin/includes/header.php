@@ -48,30 +48,30 @@ $flash = getFlash();
             </a>
             
             <div class="nav-heading">Quản lý bán hàng</div>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 3 - TV3">
+            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 2 - TV3">
                 📁 Quản lý danh mục
             </a>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 3 - TV3">
-                👕 Quản lý sản phẩm
-            </a>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 4, 5 - TV6">
-                📦 Quản lý đơn hàng
-            </a>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 5 - TV5">
-                🎟️ Quản lý mã giảm giá
-            </a>
-
-            <div class="nav-heading">Hệ thống & Tương tác</div>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 3 - TV2">
-                👥 Quản lý người dùng
+            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 2 - TV3">
+                👕 Quản lý sản phẩm (nhiều ảnh, biến thể)
             </a>
             <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 3 - TV6">
-                🖼️ Quản lý banner
+                📦 Quản lý đơn hàng (đổi trạng thái)
             </a>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 5 - TV6">
+
+            <div class="nav-heading">Hệ thống & Tài khoản</div>
+            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 2 - TV2">
+                👥 Quản lý người dùng & phân quyền
+            </a>
+
+            <div class="nav-heading">Mở rộng (Nếu dư thời gian)</div>
+            <a href="#" class="nav-item nav-disabled" title="Phần làm thêm">
+                🎟️ Quản lý mã giảm giá
+            </a>
+            <a href="#" class="nav-item nav-disabled" title="Phần làm thêm">
                 ⭐ Kiểm duyệt đánh giá
             </a>
         </nav>
+
 
         <div class="admin-sidebar-footer">
             <div class="admin-user-info">
