@@ -328,7 +328,7 @@ class Product
         }
 
         $sql = "SELECT p.*, c.name AS category_name, pi.image_path AS main_image,
-                       SUM(pv.stock) AS total_stock
+                       COALESCE(SUM(pv.stock), 0) AS total_stock
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_main = 1
@@ -367,5 +367,229 @@ class Product
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Thêm mới sản phẩm (Admin - TV3)
+     *
+     * @param array $data Dữ liệu sản phẩm
+     * @return int ID của sản phẩm vừa tạo
+     */
+    public function create(array $data): int
+    {
+        $sql = "INSERT INTO products (name, slug, price, sale_price, description, category_id, status)
+                VALUES (:name, :slug, :price, :sale_price, :description, :category_id, :status)";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'name'        => $data['name'],
+            'slug'        => $data['slug'],
+            'price'       => $data['price'],
+            'sale_price'  => !empty($data['sale_price']) ? $data['sale_price'] : null,
+            'description' => $data['description'] ?? null,
+            'category_id' => (int)$data['category_id'],
+            'status'      => isset($data['status']) ? (int)$data['status'] : 1,
+        ]);
+
+        return (int)$this->pdo->lastInsertId();
+    }
+
+    /**
+     * Cập nhật thông tin sản phẩm (Admin - TV3)
+     *
+     * @param int $id ID sản phẩm cần cập nhật
+     * @param array $data Dữ liệu cần cập nhật
+     * @return bool
+     */
+    public function update(int $id, array $data): bool
+    {
+        $sql = "UPDATE products 
+                SET name = :name, slug = :slug, price = :price, sale_price = :sale_price, 
+                    description = :description, category_id = :category_id, status = :status
+                WHERE id = :id";
+
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            'id'          => $id,
+            'name'        => $data['name'],
+            'slug'        => $data['slug'],
+            'price'       => $data['price'],
+            'sale_price'  => !empty($data['sale_price']) ? $data['sale_price'] : null,
+            'description' => $data['description'] ?? null,
+            'category_id' => (int)$data['category_id'],
+            'status'      => isset($data['status']) ? (int)$data['status'] : 1,
+        ]);
+    }
+
+    /**
+     * Xóa sản phẩm và các ảnh liên quan (Admin - TV3)
+     *
+     * @param int $id ID sản phẩm cần xóa
+     * @return bool
+     */
+    public function delete(int $id): bool
+    {
+        // Lấy danh sách ảnh để xóa file vật lý trên máy chủ
+        $images = $this->getImages($id);
+        foreach ($images as $img) {
+            $filePath = ROOT_PATH . '/public/' . ltrim($img['image_path'], '/');
+            if (file_exists($filePath) && is_file($filePath)) {
+                @unlink($filePath);
+            }
+        }
+
+        // Bảng product_images và product_variants có khóa ngoại ON DELETE CASCADE
+        $sql = "DELETE FROM products WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute(['id' => $id]);
+    }
+
+    /**
+     * Thêm hình ảnh cho sản phẩm (Admin - TV3)
+     *
+     * @param int $productId ID sản phẩm
+     * @param string $imagePath Đường dẫn ảnh
+     * @param bool $isMain Có phải ảnh đại diện chính không
+     * @param int $sortOrder Thứ tự sắp xếp
+     * @return int ID ảnh vừa thêm
+     */
+    public function addImage(int $productId, string $imagePath, bool $isMain = false, int $sortOrder = 0): int
+    {
+        if ($isMain) {
+            // Đặt các ảnh hiện tại về không phải ảnh chính
+            $resetSql = "UPDATE product_images SET is_main = 0 WHERE product_id = :product_id";
+            $resetStmt = $this->pdo->prepare($resetSql);
+            $resetStmt->execute(['product_id' => $productId]);
+        }
+
+        $sql = "INSERT INTO product_images (product_id, image_path, is_main, sort_order)
+                VALUES (:product_id, :image_path, :is_main, :sort_order)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'product_id' => $productId,
+            'image_path' => $imagePath,
+            'is_main'    => $isMain ? 1 : 0,
+            'sort_order' => $sortOrder,
+        ]);
+
+        return (int)$this->pdo->lastInsertId();
+    }
+
+    /**
+     * Xóa 1 ảnh của sản phẩm
+     *
+     * @param int $imageId ID ảnh cần xóa
+     * @return bool
+     */
+    public function deleteImage(int $imageId): bool
+    {
+        $sql = "SELECT * FROM product_images WHERE id = :id LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['id' => $imageId]);
+        $img = $stmt->fetch();
+        if (!$img) {
+            return false;
+        }
+
+        $filePath = ROOT_PATH . '/public/' . ltrim($img['image_path'], '/');
+        if (file_exists($filePath) && is_file($filePath)) {
+            @unlink($filePath);
+        }
+
+        $delSql = "DELETE FROM product_images WHERE id = :id";
+        $delStmt = $this->pdo->prepare($delSql);
+        $res = $delStmt->execute(['id' => $imageId]);
+
+        // Nếu ảnh vừa xóa là ảnh chính, gán ảnh đầu tiên còn lại làm ảnh chính
+        if ($img['is_main']) {
+            $nextSql = "UPDATE product_images SET is_main = 1 WHERE product_id = :product_id ORDER BY sort_order ASC, id ASC LIMIT 1";
+            $nextStmt = $this->pdo->prepare($nextSql);
+            $nextStmt->execute(['product_id' => $img['product_id']]);
+        }
+
+        return $res;
+    }
+
+    /**
+     * Đặt ảnh làm ảnh đại diện chính của sản phẩm
+     *
+     * @param int $productId ID sản phẩm
+     * @param int $imageId ID ảnh được chọn
+     * @return bool
+     */
+    public function setMainImage(int $productId, int $imageId): bool
+    {
+        $resetSql = "UPDATE product_images SET is_main = 0 WHERE product_id = :product_id";
+        $resetStmt = $this->pdo->prepare($resetSql);
+        $resetStmt->execute(['product_id' => $productId]);
+
+        $sql = "UPDATE product_images SET is_main = 1 WHERE id = :id AND product_id = :product_id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            'id'         => $imageId,
+            'product_id' => $productId,
+        ]);
+    }
+
+    /**
+     * Đồng bộ danh sách biến thể size/màu/tồn kho của sản phẩm (Admin - TV3)
+     *
+     * @param int $productId ID sản phẩm
+     * @param array $variants Danh sách biến thể [{'size', 'color', 'stock'}]
+     * @return void
+     */
+    public function syncVariants(int $productId, array $variants): void
+    {
+        $delSql = "DELETE FROM product_variants WHERE product_id = :product_id";
+        $delStmt = $this->pdo->prepare($delSql);
+        $delStmt->execute(['product_id' => $productId]);
+
+        $insSql = "INSERT INTO product_variants (product_id, size, color, stock)
+                   VALUES (:product_id, :size, :color, :stock)";
+        $insStmt = $this->pdo->prepare($insSql);
+
+        foreach ($variants as $v) {
+            $size = trim($v['size'] ?? '');
+            $color = trim($v['color'] ?? '');
+            $stock = max(0, (int)($v['stock'] ?? 0));
+
+            // Chỉ lưu nếu có size hoặc màu hoặc số lượng
+            if ($size !== '' || $color !== '' || $stock > 0) {
+                $insStmt->execute([
+                    'product_id' => $productId,
+                    'size'       => $size !== '' ? $size : null,
+                    'color'      => $color !== '' ? $color : null,
+                    'stock'      => $stock,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Lấy danh sách sản phẩm cảnh báo tồn kho thấp (Admin Tuần 3 - TV3)
+     *
+     * @param int $threshold Ngưỡng cảnh báo (mặc định 10 cái)
+     * @param int $limit Số lượng sản phẩm
+     * @return array
+     */
+    public function getLowStockProducts(int $threshold = 10, int $limit = 10): array
+    {
+        $sql = "SELECT p.*, c.name AS category_name, pi.image_path AS main_image,
+                       COALESCE(SUM(pv.stock), 0) AS total_stock
+                FROM products p
+                LEFT JOIN categories c ON p.category_id = c.id
+                LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_main = 1
+                LEFT JOIN product_variants pv ON p.id = pv.product_id
+                WHERE p.status = 1
+                GROUP BY p.id
+                HAVING total_stock <= :threshold
+                ORDER BY total_stock ASC
+                LIMIT :limit";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':threshold', $threshold, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 }

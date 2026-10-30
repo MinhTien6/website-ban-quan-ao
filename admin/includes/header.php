@@ -21,6 +21,8 @@ $adminPageTitle = isset($pageTitle) && $pageTitle !== ''
     ? e($pageTitle) . ' - Quản trị ' . e(SITE_NAME)
     : 'Quản trị - ' . e(SITE_NAME);
 $flash = getFlash();
+
+$currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -40,7 +42,7 @@ $flash = getFlash();
         </div>
 
         <nav class="admin-nav">
-            <a href="<?= BASE_URL ?>/admin/index.php" class="nav-item active">
+            <a href="<?= BASE_URL ?>/admin/index.php" class="nav-item <?= $currentScript === 'index.php' ? 'active' : '' ?>">
                 📊 Bảng điều khiển (Dashboard)
             </a>
             <a href="<?= BASE_URL ?>/index.php" target="_blank" class="nav-item">
@@ -48,10 +50,10 @@ $flash = getFlash();
             </a>
             
             <div class="nav-heading">Quản lý bán hàng</div>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 2 - TV3">
+            <a href="<?= BASE_URL ?>/admin/categories.php" class="nav-item <?= $currentScript === 'categories.php' ? 'active' : '' ?>" title="Chức năng Tuần 2 - TV3">
                 📁 Quản lý danh mục
             </a>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 2 - TV3">
+            <a href="<?= BASE_URL ?>/admin/products.php" class="nav-item <?= in_array($currentScript, ['products.php', 'product-add.php', 'product-edit.php']) ? 'active' : '' ?>" title="Chức năng Tuần 2 - TV3">
                 👕 Quản lý sản phẩm (nhiều ảnh, biến thể)
             </a>
             <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 3 - TV6">
@@ -71,7 +73,6 @@ $flash = getFlash();
                 ⭐ Kiểm duyệt đánh giá
             </a>
         </nav>
-
 
         <div class="admin-sidebar-footer">
             <div class="admin-user-info">
