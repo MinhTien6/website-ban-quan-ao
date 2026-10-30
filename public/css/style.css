@@ -916,3 +916,36 @@ button {
         grid-template-columns: 1fr;
     }
 }
+.nav-cart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 11px 17px;
+    background: #a52a3a;
+    color: #fff !important;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    transition: .2s;
+}
+
+.nav-cart:hover {
+    background: #84202e;
+    transform: translateY(-2px);
+}
+
+.nav-cart-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 21px;
+    height: 21px;
+    padding: 0 4px;
+    border-radius: 50%;
+    background: #fff;
+    color: #a52a3a;
+    font-size: 11px;
+    font-weight: 700;
+}

@@ -368,4 +368,94 @@ class Product
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();
     }
+/**
+ * Lấy thông tin biến thể theo ID, kèm thông tin sản phẩm
+ *
+ * @param int $variantId
+ * @return array|false
+ */
+public function getVariantById(int $variantId): array|false
+{
+    $sql = "SELECT
+                pv.id AS variant_id,
+                pv.product_id,
+                pv.size,
+                pv.color,
+                pv.stock,
+                p.name,
+                p.price,
+                p.sale_price,
+                p.status,
+                pi.image_path AS main_image
+            FROM product_variants pv
+            INNER JOIN products p ON pv.product_id = p.id
+            LEFT JOIN product_images pi
+                ON p.id = pi.product_id AND pi.is_main = 1
+            WHERE pv.id = :variant_id
+              AND p.status = 1
+            LIMIT 1";
+
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute([
+        'variant_id' => $variantId
+    ]);
+
+    return $stmt->fetch();
+}
+/**
+ * Thêm sản phẩm vào giỏ hàng Session
+ *
+ * @param array $variant Thông tin biến thể sản phẩm
+ * @param int $quantity Số lượng cần thêm
+ * @return bool
+ */
+function addToCart(array $variant, int $quantity = 1): bool
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    if ($quantity < 1 || (int)$variant['stock'] < 1) {
+        return false;
+    }
+
+    $variantId = (int)$variant['variant_id'];
+    $cart = getCart();
+
+    $currentQuantity = isset($cart[$variantId])
+        ? (int)$cart[$variantId]['quantity']
+        : 0;
+
+    // Không cho thêm vượt quá tồn kho
+    if ($currentQuantity + $quantity > (int)$variant['stock']) {
+        return false;
+    }
+
+    // Ưu tiên giá khuyến mãi nếu hợp lệ
+    $price = (float)$variant['price'];
+    $salePrice = (float)($variant['sale_price'] ?? 0);
+
+    if ($salePrice > 0 && $salePrice < $price) {
+        $price = $salePrice;
+    }
+
+    if ($currentQuantity > 0) {
+        $cart[$variantId]['quantity'] += $quantity;
+    } else {
+        $cart[$variantId] = [
+            'product_id' => (int)$variant['product_id'],
+            'variant_id' => $variantId,
+            'name'       => $variant['name'],
+            'size'       => $variant['size'],
+            'color'      => $variant['color'],
+            'price'      => $price,
+            'quantity'   => $quantity,
+            'image'      => $variant['main_image'] ?? ''
+        ];
+    }
+
+    $_SESSION['cart'] = $cart;
+
+    return true;
+}
 }

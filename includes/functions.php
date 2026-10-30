@@ -383,3 +383,116 @@ function uploadMultipleImages(
     ];
 }
 
+
+/**
+ * Lấy giỏ hàng hiện tại từ Session
+ */
+function getCart(): array
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
+        $_SESSION['cart'] = [];
+    }
+
+    return $_SESSION['cart'];
+}
+
+/**
+ * Đếm tổng số sản phẩm trong giỏ hàng
+ */
+function getCartCount(): int
+{
+    $cart = getCart();
+    $count = 0;
+
+    foreach ($cart as $item) {
+        $count += (int)($item['quantity'] ?? 0);
+    }
+
+    return $count;
+}
+
+/**
+ * Tính tổng tiền giỏ hàng
+ */
+function getCartTotal(): float
+{
+    $cart = getCart();
+    $total = 0;
+
+    foreach ($cart as $item) {
+        $price = (float)($item['price'] ?? 0);
+        $quantity = (int)($item['quantity'] ?? 0);
+
+        $total += $price * $quantity;
+    }
+
+    return $total;
+}
+
+/**
+ * Xóa toàn bộ giỏ hàng trong Session
+ */
+function clearCart(): void
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    $_SESSION['cart'] = [];
+}
+/**
+ * Thêm sản phẩm vào giỏ hàng Session
+ */
+function addToCart(array $variant, int $quantity = 1): bool
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    if (
+        $quantity < 1 ||
+        (int)$variant['stock'] < 1 ||
+        $quantity > (int)$variant['stock']
+    ) {
+        return false;
+    }
+
+    $variantId = (int)$variant['variant_id'];
+    $cart = getCart();
+
+    $currentQuantity = (int)($cart[$variantId]['quantity'] ?? 0);
+
+    if ($currentQuantity + $quantity > (int)$variant['stock']) {
+        return false;
+    }
+
+    $price = (float)$variant['price'];
+    $salePrice = (float)($variant['sale_price'] ?? 0);
+
+    if ($salePrice > 0 && $salePrice < $price) {
+        $price = $salePrice;
+    }
+
+    if ($currentQuantity > 0) {
+        $cart[$variantId]['quantity'] += $quantity;
+    } else {
+        $cart[$variantId] = [
+            'product_id' => (int)$variant['product_id'],
+            'variant_id' => $variantId,
+            'name' => $variant['name'],
+            'size' => $variant['size'],
+            'color' => $variant['color'],
+            'price' => $price,
+            'quantity' => $quantity,
+            'image' => $variant['main_image'] ?? ''
+        ];
+    }
+
+    $_SESSION['cart'] = $cart;
+
+    return true;
+}   
