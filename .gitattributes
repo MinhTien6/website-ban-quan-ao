@@ -1,0 +1,10 @@
+# Tự động chuẩn hóa ký tự xuống dòng cho toàn bộ dự án
+* text=auto
+
+# Định dạng tệp nhị phân / hình ảnh
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.pdf binary
