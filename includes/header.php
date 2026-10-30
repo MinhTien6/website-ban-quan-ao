@@ -40,8 +40,13 @@ $flash = getFlash();
             <?php if (($user['role'] ?? '') === 'admin'): ?>
                 <a href="<?= BASE_URL ?>/admin/index.php" class="nav-admin">Quản trị</a>
             <?php endif; ?>
-            <span class="user-greeting">Xin chào, <?= e($user['full_name']) ?></span>
-            <a href="<?= BASE_URL ?>/logout.php" class="nav-logout">Đăng xuất</a>
+            <span class="user-greeting">
+    		Xin chào, <?= e($user['full_name']) ?>
+		</span>
+
+		<a href="<?= BASE_URL ?>/profile.php">Tài khoản của tôi</a>
+
+		<a href="<?= BASE_URL ?>/logout.php" class="nav-logout"> Đăng xuất </a>
         <?php else: ?>
             <a href="<?= BASE_URL ?>/login.php">Đăng nhập</a>
             <a href="<?= BASE_URL ?>/register.php">Đăng ký</a>

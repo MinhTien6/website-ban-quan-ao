@@ -11,7 +11,11 @@ require_once __DIR__ . '/includes/auth.php';
 
 // Nếu đã đăng nhập thì chuyển về trang chủ
 if (isLoggedIn()) {
-    redirect('index.php');
+    if (isAdmin()) {
+        redirect('admin/index.php');
+    } else {
+        redirect('index.php');
+    }
 }
 
 $error = '';
