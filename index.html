@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang chủ | GenZ Fashion Store</title>
+    <link rel="stylesheet" href="public/css/style.css">
+</head>
+<body>
+
+    <!-- 1. HEADER: Thanh điều hướng chung -->
+    <header class="site-header">
+        <div class="container header-inner flex-between">
+            <!-- Logo -->
+            <div class="logo">
+                <a href="index.php">GENZ<span>WEAR</span></a>
+            </div>
+            
+            <!-- Menu 5 mục theo yêu cầu -->
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.php" class="active">Trang chủ</a></li>
+                    <li><a href="products.php">Sản phẩm</a></li>
+                    <li><a href="products.php?sort=new">Hàng mới</a></li>
+                    <li><a href="products.php?sort=bestseller">Hàng bán chạy</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-icons">
+                <a href="search.php" class="header-action" title="Tìm kiếm">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </a>
+
+                <a href="login.php" class="header-action">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z"/>
+                    </svg>
+                    <span>TÀI KHOẢN</span>
+                </a>
+
+                <a href="cart.php" class="header-action">
+                    <span>GIỎ HÀNG</span>
+                    <div class="cart-icon-wrap">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18 6h-2c0-2.21-1.79-4-4-4S8 3.79 8 6H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6-2c1.1 0 2 .9 2 2h-4c0-1.1.9-2 2-2z"/>
+                        </svg>
+                        <span class="badge">1</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2. MAIN: Nội dung chính của Trang chủ -->
+    <main>
+        <!-- Vùng Banner chính phong cách GenZ Unisex -->
+        <section class="hero-banner">
+            <div class="container">
+                <span class="banner-tag">UNISEX STREETWEAR • NAM & NỮ</span>
+                <h1>ĐỊNH HÌNH CHẤT RIÊNG GEN Z</h1>
+                <p>Bộ sưu tập Áo thun Blokecore, Baby Tee, Quần Cargo & Hoodie rộng mới nhất</p>
+                <a href="products.php" class="btn btn-primary">Khám phá ngay →</a>
+            </div>
+        </section>
+
+        <!-- Vùng Danh sách Sản phẩm nổi bật -->
+        <section class="container mb-40">
+            <h2 class="section-title">Sản phẩm nổi bật</h2>
+            
+            <!-- Lưới sản phẩm 4 cột (Khung ảnh trung tính chờ chèn ảnh thật) -->
+            <div class="product-grid">
+                
+                <!-- Sản phẩm 1 (Unisex Nam/Nữ) -->
+                <article class="product-card">
+                    <div class="product-img">
+                        <span class="product-tag tag-new">NEW</span>
+                        <a href="detail.php?id=1">
+                            <img src="https://placehold.co/300x400/eef0f5/687082?text=Anh+San+Pham+1" alt="Áo thun Unisex">
+                        </a>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">
+                            <a href="detail.php?id=1">Áo Thun Jersey Unisex Phong Cách Blokecore Form Rộng</a>
+                        </h3>
+                        <p class="product-price">250.000đ</p>
+                        <button class="btn btn-outline">Thêm vào giỏ</button>
+                    </div>
+                </article>
+
+                <!-- Sản phẩm 2 (Nữ/Unisex) -->
+                <article class="product-card">
+                    <div class="product-img">
+                        <span class="product-tag tag-hot">HOT</span>
+                        <a href="detail.php?id=2">
+                            <img src="https://placehold.co/300x400/eef0f5/687082?text=Anh+San+Pham+2" alt="Áo Baby Tee Nữ">
+                        </a>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">
+                            <a href="detail.php?id=2">Áo Thun Nữ Baby Tee In Hoạ Tiết Ngôi Sao Y2K</a>
+                        </h3>
+                        <p class="product-price">195.000đ</p>
+                        <button class="btn btn-outline">Thêm vào giỏ</button>
+                    </div>
+                </article>
+
+                <!-- Sản phẩm 3 (Nam/Nữ) -->
+                <article class="product-card">
+                    <div class="product-img">
+                        <span class="product-tag tag-new">NEW</span>
+                        <a href="detail.php?id=3">
+                            <img src="https://placehold.co/300x400/eef0f5/687082?text=Anh+San+Pham+3" alt="Quần Cargo">
+                        </a>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">
+                            <a href="detail.php?id=3">Quần Dài Cargo Túi Hộp Ống Rộng Nam Nữ</a>
+                        </h3>
+                        <p class="product-price">350.000đ</p>
+                        <button class="btn btn-outline">Thêm vào giỏ</button>
+                    </div>
+                </article>
+
+                <!-- Sản phẩm 4 (Unisex) -->
+                <article class="product-card">
+                    <div class="product-img">
+                        <a href="detail.php?id=4">
+                            <img src="https://placehold.co/300x400/eef0f5/687082?text=Anh+San+Pham+4" alt="Áo Khoác Varsity">
+                        </a>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">
+                            <a href="detail.php?id=4">Áo Khoác Dù Unisex Phối Màu Streetwear 2 Lớp</a>
+                        </h3>
+                        <p class="product-price">420.000đ</p>
+                        <button class="btn btn-outline">Thêm vào giỏ</button>
+                    </div>
+                </article>
+
+            </div>
+
+            <!-- Nút Xem tất cả sản phẩm nằm dưới lưới sản phẩm -->
+            <div class="view-all-wrap text-center">
+                <a href="products.php" class="btn btn-view-all">Tất cả sản phẩm →</a>
+            </div>
+        </section>
+    </main>
+
+    <!-- 3. FOOTER CHUẨN LOCAL BRAND -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h3 class="footer-logo">GENZ<span>WEAR</span></h3>
+                    <ul class="footer-features">
+                        <li>🚚 Ship COD toàn quốc</li>
+                        <li>🎁 FREESHIP đơn hàng từ 500.000đ</li>
+                    </ul>
+                </div>
+
+                <!-- Cột 2: Liên hệ -->
+                <div class="footer-col">
+                    <h4>LIÊN HỆ</h4>
+                    <ul class="footer-contact">
+                        <li><strong>GENZWEAR STORE</strong></li>
+                        <li>📍 278 Nguyễn Văn Trỗi, Quận Phú Nhuận, TP.HCM</li>
+                        <li>✉️ support@genzwear.vn</li>
+                        <li>📞 0908769776</li>
+                    </ul>
+                </div>
+
+                <!-- Cột 3: Chính sách -->
+                <div class="footer-col">
+                    <h4>CHÍNH SÁCH</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">• Chính sách thành viên</a></li>
+                        <li><a href="#">• Chính sách đổi trả</a></li>
+                        <li><a href="#">• Chính sách vận chuyển</a></li>
+                    </ul>
+                </div>
+
+                <!-- Cột 4: Đăng ký nhận tin -->
+                <div class="footer-col">
+                    <h4>ĐĂNG KÝ NHẬN TIN</h4>
+                    <p class="footer-desc">Nhận thông tin sản phẩm mới nhất, tin khuyến mãi và nhiều hơn nữa.</p>
+                    <form class="newsletter-form" onsubmit="event.preventDefault();">
+                        <input type="email" placeholder="Email của bạn" class="newsletter-input" required>
+                        <button type="submit" class="newsletter-btn">ĐĂNG KÝ</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dòng bản quyền dưới cùng -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 GenZWear. Bản quyền thuộc về Nhóm dự án</p>
+        </div>
+    </footer>
+</body>
+</html>
