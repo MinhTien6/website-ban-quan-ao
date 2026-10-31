@@ -328,22 +328,14 @@ class Product
         }
 
         $sql = "SELECT p.*, c.name AS category_name, pi.image_path AS main_image,
-<<<<<<< HEAD
-                       SUM(pv.stock) AS total_stock
-=======
                        COALESCE(SUM(pv.stock), 0) AS total_stock
->>>>>>> feature/Hau
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_main = 1
                 LEFT JOIN product_variants pv ON p.id = pv.product_id
                 {$where}
                 GROUP BY p.id
-<<<<<<< HEAD
-                ORDER BY p.created_at DESC
-=======
                 ORDER BY p.created_at DESC, p.id DESC
->>>>>>> feature/Hau
                 LIMIT {$limit} OFFSET {$offset}";
 
         $stmt = $this->pdo->prepare($sql);
@@ -376,10 +368,8 @@ class Product
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();
     }
-<<<<<<< HEAD
-=======
 
-    /**
+    /** 
      * Thêm mới sản phẩm kèm danh sách ảnh và biến thể bằng Transaction (Phục vụ TV3 - Chuẩn Báo cáo)
      *
      * @param array $data Dữ liệu sản phẩm (name, slug, price, sale_price, description, category_id, status)
@@ -707,5 +697,4 @@ class Product
         $stmt->execute();
         return $stmt->fetchAll();
     }
->>>>>>> feature/Hau
 }
