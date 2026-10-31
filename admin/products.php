@@ -24,8 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
             try {
-                $productModel->delete($id);
-                setFlash('success', 'Đã xóa sản phẩm thành công!');
+                $deleteResult = $productModel->delete($id);
+                if ($deleteResult === 'hidden') {
+                    setFlash('info', 'Sản phẩm đã có trong đơn hàng nên được chuyển sang trạng thái Ngừng kinh doanh (Ẩn) để bảo toàn lịch sử đơn.');
+                } else {
+                    setFlash('success', 'Đã xóa sản phẩm thành công!');
+                }
             } catch (Exception $e) {
                 setFlash('error', 'Lỗi khi xóa sản phẩm: ' . $e->getMessage());
             }
@@ -56,7 +60,7 @@ $lowStockAlerts = $productModel->getLowStockProducts(10, 5);
         <p class="admin-subtitle">Danh sách sản phẩm, quản lý kho hàng, biến thể size/màu và hình ảnh (Nhiệm vụ TV3)</p>
     </div>
     <div>
-        <a href="<?= BASE_URL ?>/admin/product-add.php" class="button">
+        <a href="<?= BASE_URL ?>/admin/product_form.php" class="button">
             ➕ Thêm sản phẩm mới
         </a>
     </div>
@@ -129,7 +133,7 @@ $lowStockAlerts = $productModel->getLowStockProducts(10, 5);
                             </td>
                             <td>
                                 <div class="product-info-cell">
-                                    <a href="<?= BASE_URL ?>/admin/product-edit.php?id=<?= $p['id'] ?>" class="product-name-link">
+                                    <a href="<?= BASE_URL ?>/admin/product_form.php?id=<?= $p['id'] ?>" class="product-name-link">
                                         <?= e($p['name']) ?>
                                     </a>
                                     <small class="product-slug">slug: <?= e($p['slug']) ?></small>
@@ -170,7 +174,7 @@ $lowStockAlerts = $productModel->getLowStockProducts(10, 5);
                             </td>
                             <td style="text-align: center;">
                                 <div class="action-buttons">
-                                    <a href="<?= BASE_URL ?>/admin/product-edit.php?id=<?= $p['id'] ?>" 
+                                    <a href="<?= BASE_URL ?>/admin/product_form.php?id=<?= $p['id'] ?>" 
                                        class="btn-action btn-edit" title="Chỉnh sửa sản phẩm">✏️ Sửa</a>
                                     
                                     <form action="<?= BASE_URL ?>/admin/products.php" method="POST" 

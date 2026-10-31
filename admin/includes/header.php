@@ -53,7 +53,7 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
             <a href="<?= BASE_URL ?>/admin/categories.php" class="nav-item <?= $currentScript === 'categories.php' ? 'active' : '' ?>" title="Chức năng Tuần 2 - TV3">
                 📁 Quản lý danh mục
             </a>
-            <a href="<?= BASE_URL ?>/admin/products.php" class="nav-item <?= in_array($currentScript, ['products.php', 'product-add.php', 'product-edit.php']) ? 'active' : '' ?>" title="Chức năng Tuần 2 - TV3">
+            <a href="<?= BASE_URL ?>/admin/products.php" class="nav-item <?= in_array($currentScript, ['products.php', 'product_form.php', 'product-add.php', 'product-edit.php']) ? 'active' : '' ?>" title="Chức năng Tuần 2 - TV3">
                 👕 Quản lý sản phẩm (nhiều ảnh, biến thể)
             </a>
             <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 3 - TV6">
