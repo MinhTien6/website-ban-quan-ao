@@ -413,23 +413,9 @@ class Product
                 }
             }
 
-            // 2. Lưu các biến thể Size / Màu / Tồn kho
+            // 2. Lưu các biến thể Size / Màu / Tồn kho an toàn (Gộp trùng lặp chống lỗi uq_variant)
             if (!empty($variants)) {
-                $varStmt = $this->pdo->prepare(
-                    "INSERT INTO product_variants (product_id, size, color, stock) 
-                     VALUES (:product_id, :size, :color, :stock)"
-                );
-                foreach ($variants as $v) {
-                    if (trim($v['size'] ?? '') === '' || trim($v['color'] ?? '') === '') {
-                        continue;
-                    }
-                    $varStmt->execute([
-                        'product_id' => $productId,
-                        'size'       => trim($v['size']),
-                        'color'      => trim($v['color']),
-                        'stock'      => max(0, (int)($v['stock'] ?? 0)),
-                    ]);
-                }
+                $this->syncVariants($productId, $variants);
             }
 
             $this->pdo->commit();
@@ -632,7 +618,7 @@ class Product
     }
 
     /**
-     * Đồng bộ danh sách biến thể size/màu/tồn kho của sản phẩm (Admin - TV3)
+     * Đồng bộ danh sách biến thể size/màu/tồn kho an toàn (Tự động gộp nếu trùng Size & Màu)
      *
      * @param int $productId ID sản phẩm
      * @param array $variants Danh sách biến thể [{'size', 'color', 'stock'}]
@@ -640,27 +626,47 @@ class Product
      */
     public function syncVariants(int $productId, array $variants): void
     {
-        $delSql = "DELETE FROM product_variants WHERE product_id = :product_id";
-        $delStmt = $this->pdo->prepare($delSql);
+        $delStmt = $this->pdo->prepare("DELETE FROM product_variants WHERE product_id = :product_id");
         $delStmt->execute(['product_id' => $productId]);
 
-        $insSql = "INSERT INTO product_variants (product_id, size, color, stock)
-                   VALUES (:product_id, :size, :color, :stock)";
-        $insStmt = $this->pdo->prepare($insSql);
-
+        // Gộp các dòng trùng cặp (size, color) để không bao giờ vi phạm UNIQUE KEY uq_variant
+        $uniqueVariants = [];
         foreach ($variants as $v) {
-            $size = trim($v['size'] ?? '');
+            $size  = trim($v['size'] ?? '');
             $color = trim($v['color'] ?? '');
             $stock = max(0, (int)($v['stock'] ?? 0));
 
-            if ($size !== '' || $color !== '' || $stock > 0) {
-                $insStmt->execute([
-                    'product_id' => $productId,
-                    'size'       => $size !== '' ? $size : null,
-                    'color'      => $color !== '' ? $color : null,
-                    'stock'      => $stock,
-                ]);
+            if ($size === '' && $color === '') {
+                continue;
             }
+
+            $sizeVal  = $size !== '' ? $size : 'Free';
+            $colorVal = $color !== '' ? $color : 'Mặc định';
+            $key = mb_strtolower($sizeVal . '|' . $colorVal, 'UTF-8');
+
+            if (!isset($uniqueVariants[$key])) {
+                $uniqueVariants[$key] = [
+                    'size'  => $sizeVal,
+                    'color' => $colorVal,
+                    'stock' => $stock,
+                ];
+            } else {
+                $uniqueVariants[$key]['stock'] += $stock;
+            }
+        }
+
+        $insStmt = $this->pdo->prepare(
+            "INSERT INTO product_variants (product_id, size, color, stock) 
+             VALUES (:product_id, :size, :color, :stock)"
+        );
+
+        foreach ($uniqueVariants as $uv) {
+            $insStmt->execute([
+                'product_id' => $productId,
+                'size'       => $uv['size'],
+                'color'      => $uv['color'],
+                'stock'      => $uv['stock'],
+            ]);
         }
     }
 

@@ -47,9 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $slug = createSlug($slug);
             }
 
-            // Kiểm tra trùng slug
-            $existing = $categoryModel->getBySlug($slug);
-            if ($existing) {
+            // Kiểm tra trùng slug (kể cả danh mục đang ẩn)
+            $checkSlugStmt = $pdo->prepare("SELECT id FROM categories WHERE slug = :slug LIMIT 1");
+            $checkSlugStmt->execute(['slug' => $slug]);
+            if ($checkSlugStmt->fetch()) {
                 $slug .= '-' . time();
             }
 
@@ -87,6 +88,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $slug = createSlug($name);
             } else {
                 $slug = createSlug($slug);
+            }
+
+            // Kiểm tra trùng slug với danh mục khác (kể cả danh mục đang ẩn)
+            $checkSlugStmt = $pdo->prepare("SELECT id FROM categories WHERE slug = :slug AND id != :id LIMIT 1");
+            $checkSlugStmt->execute(['slug' => $slug, 'id' => $id]);
+            if ($checkSlugStmt->fetch()) {
+                $slug .= '-' . time();
             }
 
             try {

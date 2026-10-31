@@ -75,9 +75,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $slug = createSlug($slug);
     }
 
-    // Kiểm tra trùng slug
-    $existingSlugProduct = $productModel->getBySlug($slug);
-    if ($existingSlugProduct && (!$isEdit || $existingSlugProduct['id'] != $productId)) {
+    // Kiểm tra trùng slug (kể cả sản phẩm đang ẩn status = 0)
+    $checkSlugSql = "SELECT id FROM products WHERE slug = :slug" . ($isEdit ? " AND id != :id" : "") . " LIMIT 1";
+    $checkSlugStmt = $pdo->prepare($checkSlugSql);
+    $checkSlugParams = ['slug' => $slug];
+    if ($isEdit) {
+        $checkSlugParams['id'] = $productId;
+    }
+    $checkSlugStmt->execute($checkSlugParams);
+    if ($checkSlugStmt->fetch()) {
         $slug .= '-' . time();
     }
 
