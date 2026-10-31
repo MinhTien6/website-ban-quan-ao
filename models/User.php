@@ -80,20 +80,46 @@ class User
      * @param array{full_name: string, phone?: string, address?: string} $data
      * @return bool
      */
-    public function updateProfile(int $id, array $data): bool
+
+    /**
+     * Cập nhật tài khoản từ trang quản trị
+     */
+    public function updateUser(int $id, array $data): bool
     {
-        $sql = "UPDATE users 
-                SET full_name = :full_name, phone = :phone, address = :address
+        $sql = "UPDATE users
+                SET full_name = :full_name,
+                    email = :email,
+                    phone = :phone,
+                    address = :address,
+                    role = :role
                 WHERE id = :id";
 
         $stmt = $this->pdo->prepare($sql);
+
         return $stmt->execute([
             'id'        => $id,
             'full_name' => $data['full_name'],
+            'email'     => $data['email'],
             'phone'     => $data['phone'] ?? null,
             'address'   => $data['address'] ?? null,
+            'role'      => $data['role'],
         ]);
     }
+
+        public function updateProfile(int $id, array $data): bool
+        {
+            $sql = "UPDATE users 
+                    SET full_name = :full_name, phone = :phone, address = :address
+                    WHERE id = :id";
+
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute([
+                'id'        => $id,
+                'full_name' => $data['full_name'],
+                'phone'     => $data['phone'] ?? null,
+                'address'   => $data['address'] ?? null,
+            ]);
+        }
 
     /**
      * Đổi mật khẩu người dùng
@@ -125,10 +151,11 @@ class User
         $params = [];
         $where = "WHERE 1=1";
 
-        if ($keyword !== '') {
-            $where .= " AND (full_name LIKE :keyword OR email LIKE :keyword)";
-            $params['keyword'] = '%' . $keyword . '%';
-        }
+    if ($keyword !== '') {
+        $where .= " AND (full_name LIKE :keyword_name OR email LIKE :keyword_email)";
+        $params['keyword_name'] = '%' . $keyword . '%';
+        $params['keyword_email'] = '%' . $keyword . '%';
+    }
 
         $sql = "SELECT id, full_name, email, phone, address, role, status, created_at 
                 FROM users 
@@ -153,9 +180,10 @@ class User
         $where = "WHERE 1=1";
 
         if ($keyword !== '') {
-            $where .= " AND (full_name LIKE :keyword OR email LIKE :keyword)";
-            $params['keyword'] = '%' . $keyword . '%';
-        }
+        $where .= " AND (full_name LIKE :keyword_name OR email LIKE :keyword_email)";
+        $params['keyword_name'] = '%' . $keyword . '%';
+        $params['keyword_email'] = '%' . $keyword . '%';
+    }
 
         $sql = "SELECT COUNT(*) FROM users {$where}";
         $stmt = $this->pdo->prepare($sql);
@@ -196,4 +224,17 @@ class User
             'role' => $role,
         ]);
     }
+    /**
+     * Xóa tài khoản người dùng
+     */
+    public function delete(int $id): bool
+    {
+        $sql = "DELETE FROM users WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+
+        return $stmt->execute([
+            'id' => $id
+        ]);
+    }
+
 }

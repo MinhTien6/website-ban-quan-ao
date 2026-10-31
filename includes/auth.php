@@ -32,6 +32,40 @@ function currentUser(): ?array
  *
  * @return bool True nếu là admin, ngược lại False
  */
+/**
+ * Cập nhật thông tin người dùng trong session từ database
+ */
+function refreshCurrentUser(): void
+{
+    if (!isLoggedIn()) {
+        return;
+    }
+
+    global $pdo;
+
+    if (!isset($pdo)) {
+        return;
+    }
+
+    require_once __DIR__ . '/../models/User.php';
+
+    $userModel = new User($pdo);
+    $user = $userModel->findById((int)$_SESSION['user']['id']);
+
+    if ($user === false || (int)$user['status'] !== 1) {
+        unset($_SESSION['user']);
+        session_regenerate_id(true);
+        return;
+    }
+
+    $_SESSION['user'] = [
+        'id'        => (int)$user['id'],
+        'full_name' => $user['full_name'],
+        'email'     => $user['email'],
+        'role'      => $user['role']
+    ];
+}
+
 function isAdmin(): bool
 {
     $user = currentUser();

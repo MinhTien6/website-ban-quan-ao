@@ -59,7 +59,7 @@ $flash = getFlash();
             </a>
 
             <div class="nav-heading">Hệ thống & Tài khoản</div>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 2 - TV2">
+            <a href="<?= BASE_URL ?>/admin/users.php" class="nav-item">
                 👥 Quản lý người dùng & phân quyền
             </a>
 
