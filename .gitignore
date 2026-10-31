@@ -10,7 +10,7 @@
 config/database.php
 
 # Thư mục upload người dùng (chỉ giữ .gitkeep)
-public/uploads/products/*
+# public/uploads/products/*
 public/uploads/banners/*
 !public/uploads/products/.gitkeep
 !public/uploads/banners/.gitkeep
