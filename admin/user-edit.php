@@ -2,23 +2,30 @@
 <?php
 $pageTitle = 'Sửa người dùng';
 
-require_once __DIR__ . '/includes/header.php';
+// Nạp các file cần thiết trước khi xử lý POST
+require_once dirname(__DIR__) . '/config/config.php';
+require_once dirname(__DIR__) . '/config/database.php';
+require_once dirname(__DIR__) . '/includes/functions.php';
+require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/models/User.php';
+
+// Kiểm tra quyền Admin
+requireAdmin();
 
 $userModel = new User($pdo);
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 if (!$id || $id <= 0) {
-    header('Location: ' . BASE_URL . '/admin/users.php');
-    exit;
+    setFlash('error', 'ID người dùng không hợp lệ.');
+    redirect('admin/users.php');
 }
 
 $user = $userModel->findById($id);
 
 if (!$user) {
-    header('Location: ' . BASE_URL . '/admin/users.php');
-    exit;
+    setFlash('error', 'Không tìm thấy người dùng.');
+    redirect('admin/users.php');
 }
 
 $errors = [];
@@ -30,6 +37,13 @@ $address = $user['address'] ?? '';
 $role = $user['role'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // Kiểm tra CSRF
+    if (!verifyCsrfToken()) {
+        setFlash('error', 'Yêu cầu không hợp lệ hoặc phiên làm việc đã hết hạn.');
+        redirect('admin/users.php');
+    }
+
     $fullName = trim($_POST['full_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
@@ -48,10 +62,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Vai trò không hợp lệ.';
     }
 
+    // Ngăn Admin tự hạ quyền của chính mình
+    $currentUser = currentUser();
+
+    if (
+        $currentUser &&
+        (int)$currentUser['id'] === (int)$id &&
+        $user['role'] === 'admin' &&
+        $role === 'user'
+    ) {
+        $errors[] = 'Bạn không thể tự hạ quyền Admin của chính mình.';
+    }
+
     if (empty($errors)) {
         $existingUser = $userModel->findByEmail($email);
 
-        if ($existingUser && (int)$existingUser['id'] !== $id) {
+        if ($existingUser && (int)$existingUser['id'] !== (int)$id) {
             $errors[] = 'Email đã được tài khoản khác sử dụng.';
         } else {
             try {
@@ -63,8 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'role' => $role
                 ]);
 
-                header('Location: ' . BASE_URL . '/admin/users.php');
-                exit;
+                setFlash('success', 'Cập nhật thông tin người dùng thành công.');
+                redirect('admin/users.php');
+
             } catch (PDOException $e) {
                 error_log($e->getMessage());
                 $errors[] = 'Không thể cập nhật tài khoản.';
@@ -72,16 +99,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Chỉ nạp header sau khi xử lý POST
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="admin-dashboard-wrapper">
     <h3>Sửa thông tin người dùng</h3>
 
     <?php foreach ($errors as $error): ?>
-        <p style="color:red;"><?= e($error) ?></p>
+        <p style="color:red;">
+            <?= e($error) ?>
+        </p>
     <?php endforeach; ?>
 
     <form method="POST">
+        <input type="hidden" name="csrf_token"
+               value="<?= e(csrfToken()) ?>">
+
         <p>
             <label>Họ và tên</label><br>
             <input type="text" name="full_name"
@@ -109,10 +144,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p>
             <label>Vai trò</label><br>
             <select name="role">
-                <option value="user" <?= $role === 'user' ? 'selected' : '' ?>>
+                <option value="user"
+                    <?= $role === 'user' ? 'selected' : '' ?>>
                     Khách hàng
                 </option>
-                <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>
+
+                <option value="admin"
+                    <?= $role === 'admin' ? 'selected' : '' ?>>
                     Quản trị viên
                 </option>
             </select>
