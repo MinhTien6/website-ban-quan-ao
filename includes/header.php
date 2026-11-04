@@ -24,7 +24,22 @@ $flash = getFlash();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $siteTitle ?></title>
-    <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/style.css">
+    
+<!-- CSS chính dùng chung toàn website -->
+<link rel="stylesheet"
+      href="<?= BASE_URL ?>/public/css/style.css">
+
+<!-- CSS riêng của từng trang nếu có -->
+<?php
+if (
+    !empty($pageCss) &&
+    preg_match('/^[a-zA-Z0-9_-]+\.css$/', $pageCss) &&
+    $pageCss !== 'style.css'
+):
+?>
+    <link rel="stylesheet"
+          href="<?= BASE_URL ?>/public/css/<?= e($pageCss) ?>">
+<?php endif; ?>
 </head>
 <body>
 
