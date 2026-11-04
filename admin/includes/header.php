@@ -17,9 +17,13 @@ require_once dirname(__DIR__, 2) . '/includes/auth.php';
 requireAdmin();
 
 $adminUser = currentUser();
-$adminPageTitle = isset($pageTitle) && $pageTitle !== '' 
+
+$currentPage = basename($_SERVER['PHP_SELF']);
+
+$adminPageTitle = isset($pageTitle) && $pageTitle !== ''
     ? e($pageTitle) . ' - Quản trị ' . e(SITE_NAME)
     : 'Quản trị - ' . e(SITE_NAME);
+
 $flash = getFlash();
 ?>
 <!DOCTYPE html>
@@ -28,7 +32,17 @@ $flash = getFlash();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $adminPageTitle ?></title>
-    <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/style.css">
+    <link rel="stylesheet"
+      href="<?= BASE_URL ?>/public/css/style.css">
+
+<?php
+if (!empty($pageCss)
+    && preg_match('/^[a-zA-Z0-9_-]+\.css$/', $pageCss)
+) :
+?>
+    <link rel="stylesheet"
+          href="<?= BASE_URL ?>/public/css/<?= e($pageCss) ?>">
+<?php endif; ?>
 </head>
 <body class="admin-body">
 
