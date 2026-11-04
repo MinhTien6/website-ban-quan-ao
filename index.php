@@ -6,7 +6,7 @@
 $pageTitle = 'Trang chủ';
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/database.php';
-require_once __DIR__ . '/models/product.php';
+require_once __DIR__ . '/models/Product.php';
 
 // Khởi tạo model và lấy 8 sản phẩm mới nhất
 $productModel = new Product($pdo);

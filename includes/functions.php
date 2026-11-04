@@ -382,4 +382,10 @@ function uploadMultipleImages(
         'errors'  => $errors,
     ];
 }
-
+/**
+ * Tự động nạp các hàm xử lý Giỏ hàng của TV5 (nếu file tồn tại)
+ * Giúp cô lập mã nguồn nghiệp vụ giỏ hàng, tránh xung đột file functions.php chung
+ */
+if (file_exists(__DIR__ . '/cart_functions.php')) {
+    require_once __DIR__ . '/cart_functions.php';
+}
