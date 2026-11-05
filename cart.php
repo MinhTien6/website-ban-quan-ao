@@ -13,38 +13,112 @@ $cart = getCart();
 
 // Xử lý cập nhật và xóa sản phẩm
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // 1. Kiểm tra CSRF
     if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
         setFlash('error', 'Yêu cầu không hợp lệ.');
         redirect('cart.php');
     }
 
-    $variantId = (int)($_POST['variant_id'] ?? 0);
+    // 2. Lấy dữ liệu gửi lên
+    $variantId = filter_input(
+        INPUT_POST,
+        'variant_id',
+        FILTER_VALIDATE_INT
+    );
+
     $action = $_POST['action'] ?? '';
 
-    if (isset($cart[$variantId])) {
-        if ($action === 'update') {
-            $quantity = (int)($_POST['quantity'] ?? 1);
-
-            $stmt = $pdo->prepare(
-                "SELECT stock FROM product_variants WHERE id = :id"
-            );
-            $stmt->execute(['id' => $variantId]);
-            $stock = (int)$stmt->fetchColumn();
-
-            if ($quantity < 1) {
-                setFlash('error', 'Số lượng phải lớn hơn 0.');
-            } elseif ($quantity > $stock) {
-                setFlash('error', 'Số lượng vượt quá tồn kho.');
-            } else {
-                $_SESSION['cart'][$variantId]['quantity'] = $quantity;
-                setFlash('success', 'Đã cập nhật giỏ hàng.');
-            }
-        } elseif ($action === 'remove') {
-            unset($_SESSION['cart'][$variantId]);
-            setFlash('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
-        }
+    // 3. Kiểm tra dữ liệu
+    if (!$variantId || !isset($cart[$variantId])) {
+        setFlash('error', 'Sản phẩm không tồn tại trong giỏ hàng.');
+        redirect('cart.php');
     }
 
+    // 4. Xử lý xóa sản phẩm
+    if ($action === 'remove') {
+
+        unset($_SESSION['cart'][$variantId]);
+
+        setFlash('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
+        redirect('cart.php');
+    }
+
+    // 5. Xử lý cập nhật số lượng
+    if ($action === 'update') {
+
+        $quantity = filter_input(
+            INPUT_POST,
+            'quantity',
+            FILTER_VALIDATE_INT
+        );
+
+        if (!$quantity || $quantity < 1) {
+            setFlash('error', 'Số lượng phải lớn hơn 0.');
+            redirect('cart.php');
+        }
+
+        // Kiểm tra biến thể và sản phẩm còn hoạt động
+        $stmt = $pdo->prepare("
+            SELECT
+                pv.id,
+                pv.stock,
+                p.status
+            FROM product_variants pv
+            INNER JOIN products p ON p.id = pv.product_id
+            WHERE pv.id = :variant_id
+              AND p.status = 1
+            LIMIT 1
+        ");
+
+        $stmt->execute([
+            'variant_id' => $variantId
+        ]);
+
+        $variant = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$variant) {
+            unset($_SESSION['cart'][$variantId]);
+
+            setFlash(
+                'error',
+                'Sản phẩm không còn khả dụng và đã được xóa khỏi giỏ hàng.'
+            );
+
+            redirect('cart.php');
+        }
+
+        $stock = (int)$variant['stock'];
+
+        if ($stock <= 0) {
+            unset($_SESSION['cart'][$variantId]);
+
+            setFlash(
+                'error',
+                'Sản phẩm đã hết hàng và được xóa khỏi giỏ hàng.'
+            );
+
+            redirect('cart.php');
+        }
+
+        if ($quantity > $stock) {
+            setFlash(
+                'error',
+                "Số lượng vượt quá tồn kho. Hiện chỉ còn {$stock} sản phẩm."
+            );
+
+            redirect('cart.php');
+        }
+
+        // Cập nhật số lượng
+        $_SESSION['cart'][$variantId]['quantity'] = $quantity;
+
+        setFlash('success', 'Đã cập nhật giỏ hàng.');
+        redirect('cart.php');
+    }
+
+    // 6. Action không hợp lệ
+    setFlash('error', 'Thao tác không hợp lệ.');
     redirect('cart.php');
 }
 

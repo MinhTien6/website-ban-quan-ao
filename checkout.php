@@ -150,6 +150,44 @@ require_once __DIR__ . '/includes/header.php';
     font-size: 14px;
 }
 
+.btn-my-orders {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    margin-top: 12px;
+
+    background-color: #8D2335;
+    color: #FFFFFF;
+    border: 1px solid #8D2335;
+    border-radius: 8px;
+
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-my-orders:hover {
+    background-color: #721B2B;
+    border-color: #721B2B;
+    color: #FFFFFF;
+}
+
+.btn-my-orders:active {
+    background-color: #641725;
+    border-color: #641725;
+    transform: scale(0.98);
+}
+
+.btn-my-orders i {
+    font-size: 16px;
+}
+
 .checkout-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 360px;
@@ -414,6 +452,7 @@ require_once __DIR__ . '/includes/header.php';
 <section class="checkout-page">
 
     <?php if ($successOrderId): ?>
+       
 
         <!-- ĐẶT HÀNG THÀNH CÔNG -->
         <div class="checkout-success">
@@ -435,6 +474,10 @@ require_once __DIR__ . '/includes/header.php';
                 Bạn có thể tiếp tục mua sắm hoặc kiểm tra
                 trạng thái đơn hàng trong tài khoản.
             </p>
+             <a href="<?= BASE_URL ?>/my_orders.php" class="btn-my-orders">
+    <i class="fas fa-receipt"></i>
+    Đơn hàng của tôi
+</a>
 
             <a href="<?= BASE_URL ?>/index.php"
                class="checkout-success-btn">
@@ -622,15 +665,17 @@ require_once __DIR__ . '/includes/header.php';
                     <button type="submit" class="checkout-submit">
                         Xác nhận đặt hàng
                     </button>
+                    <a href="<?= BASE_URL ?>/my_orders.php" class="btn-my-orders">
+    <i class="fas fa-receipt"></i>
+    Đơn hàng của tôi
+</a>
 
                     <a href="<?= BASE_URL ?>/cart.php"
                        class="checkout-back">
                         ← Quay lại giỏ hàng
                     </a>
-                    <a href="<?= BASE_URL ?>/order-history.php"
-   class="order-history-btn">
-    <i class="fa-solid fa-box"></i>
-    <span>Đơn hàng của tôi</span>
+                    <a href="<?= BASE_URL ?>/my_orders.php">
+    Đơn hàng của tôi
 </a>
 
                 </aside>

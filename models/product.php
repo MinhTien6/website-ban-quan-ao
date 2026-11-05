@@ -273,15 +273,22 @@ class Product
      * @return array
      */
     public function getVariants(int $productId): array
-    {
-        $sql = "SELECT * FROM product_variants 
-                WHERE product_id = :id 
-                ORDER BY size ASC, color ASC";
+{
+    $sql = "SELECT
+                id,
+                product_id,
+                size,
+                color,
+                stock
+            FROM product_variants
+            WHERE product_id = :id
+            ORDER BY size ASC, color ASC";
 
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['id' => $productId]);
-        return $stmt->fetchAll();
-    }
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute(['id' => $productId]);
+
+    return $stmt->fetchAll();
+}
 
     /**
      * Lấy sản phẩm liên quan cùng danh mục

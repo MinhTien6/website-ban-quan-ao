@@ -453,46 +453,74 @@ function addToCart(array $variant, int $quantity = 1): bool
         session_start();
     }
 
+    // 1. Kiểm tra dữ liệu biến thể bắt buộc
+    $requiredFields = [
+        'variant_id',
+        'product_id',
+        'name',
+        'size',
+        'color',
+        'stock',
+        'price'
+    ];
+
+    foreach ($requiredFields as $field) {
+        if (!isset($variant[$field])) {
+            return false;
+        }
+    }
+
+    // 2. Chuẩn hóa dữ liệu
+    $variantId = (int)$variant['variant_id'];
+    $productId = (int)$variant['product_id'];
+    $stock = (int)$variant['stock'];
+    $price = (float)$variant['price'];
+    $salePrice = (float)($variant['sale_price'] ?? 0);
+
+    // 3. Kiểm tra dữ liệu hợp lệ
     if (
+        $variantId <= 0 ||
+        $productId <= 0 ||
         $quantity < 1 ||
-        (int)$variant['stock'] < 1 ||
-        $quantity > (int)$variant['stock']
+        $stock < 1 ||
+        $price < 0
     ) {
         return false;
     }
 
-    $variantId = (int)$variant['variant_id'];
-    $cart = getCart();
-
-    $currentQuantity = (int)($cart[$variantId]['quantity'] ?? 0);
-
-    if ($currentQuantity + $quantity > (int)$variant['stock']) {
-        return false;
-    }
-
-    $price = (float)$variant['price'];
-    $salePrice = (float)($variant['sale_price'] ?? 0);
-
+    // 4. Áp dụng giá khuyến mãi nếu hợp lệ
     if ($salePrice > 0 && $salePrice < $price) {
         $price = $salePrice;
     }
 
-    if ($currentQuantity > 0) {
-        $cart[$variantId]['quantity'] += $quantity;
-    } else {
-        $cart[$variantId] = [
-            'product_id' => (int)$variant['product_id'],
-            'variant_id' => $variantId,
-            'name' => $variant['name'],
-            'size' => $variant['size'],
-            'color' => $variant['color'],
-            'price' => $price,
-            'quantity' => $quantity,
-            'image' => $variant['main_image'] ?? ''
-        ];
+    // 5. Lấy giỏ hàng hiện tại
+    $cart = getCart();
+
+    $currentQuantity = (int)(
+        $cart[$variantId]['quantity'] ?? 0
+    );
+
+    // 6. Kiểm tra tổng số lượng với tồn kho
+    if (
+        $currentQuantity < 0 ||
+        ($currentQuantity + $quantity) > $stock
+    ) {
+        return false;
     }
+
+    // 7. Thêm mới hoặc cập nhật biến thể trong giỏ
+    $cart[$variantId] = [
+        'product_id' => $productId,
+        'variant_id' => $variantId,
+        'name' => (string)$variant['name'],
+        'size' => (string)$variant['size'],
+        'color' => (string)$variant['color'],
+        'price' => $price,
+        'quantity' => $currentQuantity + $quantity,
+        'image' => (string)($variant['main_image'] ?? '')
+    ];
 
     $_SESSION['cart'] = $cart;
 
     return true;
-}   
+}

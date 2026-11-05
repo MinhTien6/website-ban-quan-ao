@@ -25,7 +25,7 @@ $userId = (int)$user['id'];
 // Khởi tạo Order Model
 $orderModel = new Order($pdo);
 
-// Xử lý yêu cầu hủy đơn hàng
+/// Xử lý yêu cầu hủy đơn hàng
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
@@ -34,18 +34,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $action = $_POST['action'] ?? '';
-    $orderId = (int)($_POST['order_id'] ?? 0);
+    $orderId = filter_var(
+        $_POST['order_id'] ?? null,
+        FILTER_VALIDATE_INT
+    );
 
-    if ($action === 'cancel' && $orderId > 0) {
+    $returnTo = $_POST['return_to'] ?? 'list';
+
+    if ($action === 'cancel' && $orderId !== false && $orderId > 0) {
         try {
-            $orderModel->cancelByUser($orderId, $userId);
+            $result = $orderModel->cancelByUser($orderId, $userId);
 
-            setFlash('success', 'Đã hủy đơn hàng thành công.');
+            if ($result) {
+                setFlash('success', 'Đã hủy đơn hàng thành công.');
+            } else {
+                setFlash(
+                    'error',
+                    'Không thể hủy đơn hàng. Đơn hàng có thể đã được xử lý.'
+                );
+            }
+
         } catch (Throwable $e) {
             setFlash('error', $e->getMessage());
         }
+
     } else {
         setFlash('error', 'Thao tác không hợp lệ.');
+    }
+
+    // Giữ nguyên vị trí sau khi hủy
+    if ($returnTo === 'detail' && $orderId !== false && $orderId > 0) {
+        redirect('my_orders.php?id=' . $orderId);
     }
 
     redirect('my_orders.php');
@@ -68,9 +87,9 @@ if (isset($_GET['id'])) {
             redirect('my_orders.php');
         }
     } else {
-        setFlash('error', 'Mã đơn hàng không hợp lệ.');
-        redirect('my_orders.php');
-    }
+    setFlash('error', 'Mã đơn hàng không hợp lệ.');
+    redirect('my_orders.php');
+}
 }
 
 // Ánh xạ trạng thái đơn hàng
@@ -404,7 +423,6 @@ require_once __DIR__ . '/includes/header.php';
                 <h2>Sản phẩm trong đơn hàng</h2>
 
                 <?php foreach ($selectedOrder['items'] as $item): ?>
-
                     <div class="order-product">
 
                         <div class="order-product-info">
@@ -451,6 +469,8 @@ require_once __DIR__ . '/includes/header.php';
                         <?= csrfField() ?>
 
                         <input type="hidden" name="action" value="cancel">
+                        <input type="hidden" name="return_to" value="detail">
+                        <input type="hidden" name="return_to" value="list">
 
                         <input type="hidden"
                                name="order_id"
