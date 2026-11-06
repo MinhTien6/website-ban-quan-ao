@@ -323,8 +323,9 @@ class Product
         $where = "WHERE 1=1";
 
         if ($keyword !== '') {
-            $where .= " AND (p.name LIKE :kw OR c.name LIKE :kw)";
-            $params['kw'] = '%' . $keyword . '%';
+            $where .= " AND (p.name LIKE :kw1 OR c.name LIKE :kw2)";
+            $params['kw1'] = '%' . $keyword . '%';
+            $params['kw2'] = '%' . $keyword . '%';
         }
 
         $sql = "SELECT p.*, c.name AS category_name, pi.image_path AS main_image,
@@ -355,8 +356,9 @@ class Product
         $where = "WHERE 1=1";
 
         if ($keyword !== '') {
-            $where .= " AND (p.name LIKE :kw OR c.name LIKE :kw)";
-            $params['kw'] = '%' . $keyword . '%';
+            $where .= " AND (p.name LIKE :kw1 OR c.name LIKE :kw2)";
+            $params['kw1'] = '%' . $keyword . '%';
+            $params['kw2'] = '%' . $keyword . '%';
         }
 
         $sql = "SELECT COUNT(DISTINCT p.id) 
@@ -696,5 +698,27 @@ class Product
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Lấy thông tin biến thể theo ID, kèm thông tin sản phẩm và ảnh chính (Phục vụ TV5 giỏ hàng)
+     *
+     * @param int $variantId
+     * @return array|false
+     */
+    public function getVariantById(int $variantId): array|false
+    {
+        $sql = "SELECT pv.id AS variant_id, pv.product_id, pv.size, pv.color, pv.stock,
+                       p.name, p.price, p.sale_price, p.status,
+                       pi.image_path AS main_image
+                FROM product_variants pv
+                INNER JOIN products p ON pv.product_id = p.id
+                LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_main = 1
+                WHERE pv.id = :variant_id AND p.status = 1
+                LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['variant_id' => $variantId]);
+        return $stmt->fetch();
     }
 }

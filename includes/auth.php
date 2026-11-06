@@ -3,24 +3,23 @@
  * Quản lý phiên xác thực người dùng và phân quyền
  */
 
+// Khởi tạo session nếu chưa có
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 /**
- * Kiểm tra xem người dùng hiện tại đã đăng nhập hay chưa
- *
- * @return bool True nếu đã đăng nhập, ngược lại False
+ * Kiểm tra người dùng đã đăng nhập hay chưa
  */
 function isLoggedIn(): bool
 {
-    return isset($_SESSION['user']) && is_array($_SESSION['user']) && !empty($_SESSION['user']['id']);
+    return isset($_SESSION['user'])
+        && is_array($_SESSION['user'])
+        && !empty($_SESSION['user']['id']);
 }
 
 /**
- * Lấy thông tin người dùng hiện tại đang đăng nhập
- *
- * @return array{id: int, full_name: string, email: string, role: string}|null
+ * Lấy thông tin người dùng hiện tại
  */
 function currentUser(): ?array
 {
@@ -28,36 +27,71 @@ function currentUser(): ?array
 }
 
 /**
- * Kiểm tra xem người dùng hiện tại có quyền quản trị viên hay không
- *
- * @return bool True nếu là admin, ngược lại False
+ * Cập nhật thông tin người dùng trong session từ database
+ */
+function refreshCurrentUser(): void
+{
+    if (!isLoggedIn()) {
+        return;
+    }
+
+    global $pdo;
+
+    if (!isset($pdo)) {
+        return;
+    }
+
+    require_once __DIR__ . '/../models/User.php';
+
+    $userModel = new User($pdo);
+    $user = $userModel->findById((int) $_SESSION['user']['id']);
+
+    // Xóa session nếu tài khoản không tồn tại hoặc đã bị khóa
+    if (!$user || (int) $user['status'] !== 1) {
+        unset($_SESSION['user']);
+        session_regenerate_id(true);
+        return;
+    }
+
+    // Cập nhật thông tin mới nhất vào session
+    $_SESSION['user'] = [
+        'id'        => (int) $user['id'],
+        'full_name' => $user['full_name'],
+        'email'     => $user['email'],
+        'role'      => $user['role']
+    ];
+}
+
+/**
+ * Kiểm tra người dùng có phải Admin hay không
  */
 function isAdmin(): bool
 {
     $user = currentUser();
-    return $user !== null && ($user['role'] ?? '') === 'admin';
+
+    return $user !== null
+        && ($user['role'] ?? '') === 'admin';
 }
 
 /**
- * Kiểm tra xem người dùng có vai trò cụ thể hay không
- *
- * @param string $role Vai trò cần kiểm tra ('admin', 'user')
- * @return bool
+ * Kiểm tra người dùng có vai trò cụ thể hay không
  */
 function hasRole(string $role): bool
 {
     $user = currentUser();
-    return $user !== null && ($user['role'] ?? '') === $role;
+
+    return $user !== null
+        && ($user['role'] ?? '') === $role;
 }
 
 /**
- * Yêu cầu người dùng phải đăng nhập trước khi xem trang
- * Nếu chưa đăng nhập, lưu thông báo lỗi và chuyển hướng sang trang đăng nhập
- *
- * @return void
+ * Yêu cầu người dùng phải đăng nhập
  */
 function requireLogin(): void
 {
+    // Luôn cập nhật trạng thái và quyền từ database
+    refreshCurrentUser();
+
     if (!isLoggedIn()) {
         setFlash('error', 'Vui lòng đăng nhập để tiếp tục.');
         redirect('login.php');
@@ -65,10 +99,7 @@ function requireLogin(): void
 }
 
 /**
- * Yêu cầu quyền quản trị viên (role = 'admin')
- * Nếu không đủ quyền, lưu thông báo lỗi và chuyển hướng về trang chủ
- *
- * @return void
+ * Yêu cầu người dùng phải có quyền Admin
  */
 function requireAdmin(): void
 {
@@ -79,4 +110,3 @@ function requireAdmin(): void
         redirect('index.php');
     }
 }
-

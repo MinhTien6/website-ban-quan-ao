@@ -9,9 +9,13 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 
-// Nếu đã đăng nhập thì chuyển về trang chủ
+// Nếu đã đăng nhập thì chuyển về trang chủ hoặc trang quản trị
 if (isLoggedIn()) {
-    redirect('index.php');
+    if (isAdmin()) {
+        redirect('admin/index.php');
+    } else {
+        redirect('index.php');
+    }
 }
 
 $error = '';

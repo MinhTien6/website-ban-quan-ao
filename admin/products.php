@@ -4,9 +4,15 @@
  */
 
 $pageTitle = 'Quản lý sản phẩm';
-require_once __DIR__ . '/includes/header.php';
+
+require_once dirname(__DIR__) . '/config/config.php';
+require_once dirname(__DIR__) . '/config/database.php';
+require_once dirname(__DIR__) . '/includes/functions.php';
+require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/models/Product.php';
 require_once dirname(__DIR__) . '/models/Category.php';
+
+requireAdmin();
 
 $productModel = new Product($pdo);
 $categoryModel = new Category($pdo);
@@ -52,6 +58,8 @@ $products = $productModel->getAdminList($keyword, $limit, $pagination['offset'])
 
 // Lấy danh sách sản phẩm sắp hết hàng để hiển thị cảnh báo (Nhiệm vụ Tuần 3 TV3)
 $lowStockAlerts = $productModel->getLowStockProducts(10, 5);
+
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="admin-page-header">

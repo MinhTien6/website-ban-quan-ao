@@ -1,27 +1,33 @@
 <?php
 /**
  * Header giao diện chung của hệ thống (FashionStore)
- * Xử lý khởi tạo phiên làm việc và cấu hình trước khi render HTML
+ * Đã tích hợp đầy đủ: CSS mở rộng (TV4, TV5), Giỏ hàng (TV5) và Hồ sơ cá nhân (TV2)
  */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 1. Nạp các tệp cấu hình và hàm nền tảng cốt lõi
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/config/database.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 
-// 2. Thiết lập dữ liệu người dùng và tiêu đề trang
+if (file_exists(dirname(__DIR__) . '/includes/cart_functions.php')) {
+    require_once dirname(__DIR__) . '/includes/cart_functions.php';
+}
+
+// Đồng bộ thông tin mới nhất nếu người dùng đang đăng nhập
+if (isLoggedIn()) {
+    refreshCurrentUser();
+}
+
 $user = currentUser();
 $siteTitle = isset($pageTitle) && $pageTitle !== '' 
     ? e($pageTitle) . ' - ' . e(SITE_NAME) 
     : e(SITE_NAME);
 $flash = getFlash();
 ?>
-<!-- includes/header.php -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -29,15 +35,12 @@ $flash = getFlash();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $siteTitle ?></title>
 
-    <!-- 1. CSS CỐT LÕI CỦA HỆ THỐNG (Bắt buộc giữ nguyên cho toàn bộ website) -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/style.css">
 
-    <!-- 2. CSS RIÊNG CỦA TV4 (Giao diện hiển thị sản phẩm, banner streetwear khách hàng) -->
     <?php if (file_exists(ROOT_PATH . '/public/css/client.css')): ?>
         <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/client.css">
     <?php endif; ?>
 
-    <!-- 3. CSS RIÊNG CỦA TV5 (Giao diện giỏ hàng, bảng thanh toán checkout, đơn hàng) -->
     <?php if (file_exists(ROOT_PATH . '/public/css/cart.css')): ?>
         <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/cart.css">
     <?php endif; ?>
@@ -49,7 +52,6 @@ $flash = getFlash();
         FASHION<span>STORE</span>
     </a>
 
-    <!-- Biểu tượng giỏ hàng hiển thị số lượng tức thời (Đã bọc kiểm tra an toàn) -->
     <a href="<?= BASE_URL ?>/cart.php" class="nav-cart">
         <svg width="20" height="20" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2"
@@ -72,6 +74,8 @@ $flash = getFlash();
                 <a href="<?= BASE_URL ?>/admin/index.php" class="nav-admin">Quản trị</a>
             <?php endif; ?>
             <span class="user-greeting">Xin chào, <?= e($user['full_name']) ?></span>
+            <a href="<?= BASE_URL ?>/profile.php">Tài khoản của tôi</a>
+            <a href="<?= BASE_URL ?>/my_orders.php">Đơn hàng của tôi</a>
             <a href="<?= BASE_URL ?>/logout.php" class="nav-logout">Đăng xuất</a>
         <?php else: ?>
             <a href="<?= BASE_URL ?>/login.php">Đăng nhập</a>

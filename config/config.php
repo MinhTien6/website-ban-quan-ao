@@ -23,7 +23,7 @@ if (!defined('BASE_URL')) {
     $realRootPath = str_replace('\\', '/', realpath(ROOT_PATH) ?: ROOT_PATH);
 
     $baseUrl = '';
-    if ($docRoot !== '' && str_starts_with($realRootPath, $docRoot)) {
+    if ($docRoot !== '' && stripos($realRootPath, $docRoot) === 0) {
         $relative = substr($realRootPath, strlen($docRoot));
         $baseUrl = '/' . trim(str_replace('\\', '/', $relative), '/');
         if ($baseUrl === '/') {

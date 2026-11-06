@@ -1,7 +1,7 @@
 <?php
 /**
  * Header giao diện quản trị Admin dùng chung
- * Được bảo vệ tự động bằng requireAdmin()
+ * Đã tích hợp Menu của TV3 (Danh mục, Sản phẩm) và TV2 (Người dùng)
  */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -13,7 +13,6 @@ require_once dirname(__DIR__, 2) . '/config/database.php';
 require_once dirname(__DIR__, 2) . '/includes/functions.php';
 require_once dirname(__DIR__, 2) . '/includes/auth.php';
 
-// Kiểm tra quyền quản trị viên ngay tại header admin
 requireAdmin();
 
 $adminUser = currentUser();
@@ -35,7 +34,6 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 <body class="admin-body">
 
 <div class="admin-layout">
-    <!-- Sidebar Menu Admin -->
     <aside class="admin-sidebar">
         <div class="admin-brand">
             <a href="<?= BASE_URL ?>/admin/index.php">FASHION<span>ADMIN</span></a>
@@ -50,10 +48,10 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
             </a>
             
             <div class="nav-heading">Quản lý bán hàng</div>
-            <a href="<?= BASE_URL ?>/admin/categories.php" class="nav-item <?= $currentScript === 'categories.php' ? 'active' : '' ?>" title="Chức năng Tuần 2 - TV3">
+            <a href="<?= BASE_URL ?>/admin/categories.php" class="nav-item <?= $currentScript === 'categories.php' ? 'active' : '' ?>">
                 📁 Quản lý danh mục
             </a>
-            <a href="<?= BASE_URL ?>/admin/products.php" class="nav-item <?= in_array($currentScript, ['products.php', 'product_form.php', 'product-add.php', 'product-edit.php']) ? 'active' : '' ?>" title="Chức năng Tuần 2 - TV3">
+            <a href="<?= BASE_URL ?>/admin/products.php" class="nav-item <?= in_array($currentScript, ['products.php', 'product_form.php'], true) ? 'active' : '' ?>">
                 👕 Quản lý sản phẩm (nhiều ảnh, biến thể)
             </a>
             <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 3 - TV6">
@@ -61,16 +59,8 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
             </a>
 
             <div class="nav-heading">Hệ thống & Tài khoản</div>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 2 - TV2">
+            <a href="<?= BASE_URL ?>/admin/users.php" class="nav-item <?= in_array($currentScript, ['users.php', 'user-create.php', 'user-edit.php'], true) ? 'active' : '' ?>">
                 👥 Quản lý người dùng & phân quyền
-            </a>
-
-            <div class="nav-heading">Mở rộng (Nếu dư thời gian)</div>
-            <a href="#" class="nav-item nav-disabled" title="Phần làm thêm">
-                🎟️ Quản lý mã giảm giá
-            </a>
-            <a href="#" class="nav-item nav-disabled" title="Phần làm thêm">
-                ⭐ Kiểm duyệt đánh giá
             </a>
         </nav>
 
@@ -83,7 +73,6 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
         </div>
     </aside>
 
-    <!-- Main Content Area -->
     <div class="admin-main">
         <header class="admin-topbar">
             <div class="topbar-left">

@@ -8,9 +8,14 @@ $isEdit = isset($_GET['id']) && (int)$_GET['id'] > 0;
 $productId = $isEdit ? (int)$_GET['id'] : 0;
 $pageTitle = $isEdit ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới';
 
-require_once __DIR__ . '/includes/header.php';
+require_once dirname(__DIR__) . '/config/config.php';
+require_once dirname(__DIR__) . '/config/database.php';
+require_once dirname(__DIR__) . '/includes/functions.php';
+require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/models/Product.php';
 require_once dirname(__DIR__) . '/models/Category.php';
+
+requireAdmin();
 
 $productModel = new Product($pdo);
 $categoryModel = new Category($pdo);
@@ -154,6 +159,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="admin-page-header">

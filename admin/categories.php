@@ -4,8 +4,14 @@
  */
 
 $pageTitle = 'Quản lý danh mục';
-require_once __DIR__ . '/includes/header.php';
+
+require_once dirname(__DIR__) . '/config/config.php';
+require_once dirname(__DIR__) . '/config/database.php';
+require_once dirname(__DIR__) . '/includes/functions.php';
+require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/models/Category.php';
+
+requireAdmin();
 
 $categoryModel = new Category($pdo);
 
@@ -132,6 +138,8 @@ $categoryLookup = [];
 foreach ($allCategories as $cat) {
     $categoryLookup[$cat['id']] = $cat['name'];
 }
+
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="admin-page-header">

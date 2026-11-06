@@ -35,6 +35,13 @@ class Order
 
         try {
             // 1. Thêm vào bảng orders
+            $total = isset($orderData['total']) ? (float)$orderData['total'] : 0.0;
+            if ($total <= 0) {
+                foreach ($items as $item) {
+                    $total += (float)$item['price'] * (int)$item['quantity'];
+                }
+            }
+
             $orderSql = "INSERT INTO orders (user_id, receiver_name, phone, address, total, payment_method, status, coupon_id, created_at)
                          VALUES (:user_id, :receiver_name, :phone, :address, :total, :payment_method, 'pending', :coupon_id, NOW())";
             
@@ -44,7 +51,7 @@ class Order
                 'receiver_name'  => $orderData['receiver_name'],
                 'phone'          => $orderData['phone'],
                 'address'        => $orderData['address'],
-                'total'          => $orderData['total'],
+                'total'          => $total,
                 'payment_method' => $orderData['payment_method'] ?? 'cod',
                 'coupon_id'      => !empty($orderData['coupon_id']) ? (int)$orderData['coupon_id'] : null,
             ]);
@@ -57,8 +64,8 @@ class Order
             $itemStmt = $this->pdo->prepare($itemSql);
 
             $updateStockSql = "UPDATE product_variants 
-                               SET stock = stock - :quantity 
-                               WHERE id = :variant_id AND stock >= :quantity";
+                               SET stock = stock - :qty_deduct 
+                               WHERE id = :variant_id AND stock >= :qty_check";
             $stockStmt = $this->pdo->prepare($updateStockSql);
 
             foreach ($items as $item) {
@@ -75,7 +82,8 @@ class Order
                 if (!empty($item['variant_id'])) {
                     $stockStmt->execute([
                         'variant_id' => (int)$item['variant_id'],
-                        'quantity'   => (int)$item['quantity'],
+                        'qty_deduct' => (int)$item['quantity'],
+                        'qty_check'  => (int)$item['quantity'],
                     ]);
 
                     if ($stockStmt->rowCount() === 0) {
@@ -118,16 +126,23 @@ class Order
      * @param int $orderId
      * @return array|false
      */
-    public function getDetails(int $orderId): array|false
+    public function getDetails(int $orderId, ?int $userId = null): array|false
     {
+        $params = ['id' => $orderId];
+        $where = "WHERE o.id = :id";
+        if ($userId !== null) {
+            $where .= " AND o.user_id = :user_id";
+            $params['user_id'] = $userId;
+        }
+
         $sql = "SELECT o.*, u.full_name AS customer_name, u.email AS customer_email
                 FROM orders o
                 LEFT JOIN users u ON o.user_id = u.id
-                WHERE o.id = :id
+                {$where}
                 LIMIT 1";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['id' => $orderId]);
+        $stmt->execute($params);
         $order = $stmt->fetch();
 
         if (!$order) {

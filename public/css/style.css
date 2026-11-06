@@ -1455,3 +1455,51 @@ button {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* Trang chủ: Chọn biến thể & Thêm vào giỏ hàng (TV5) */
+.home-add-cart-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: 6px;
+}
+
+.home-add-cart-form .form-group-sm select {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background-color: #ffffff;
+    color: var(--secondary);
+}
+
+.home-cart-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.home-cart-actions .cart-qty-input {
+    width: 60px;
+    padding: 6px 8px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-align: center;
+}
+
+.home-cart-actions .button-sm {
+    flex: 1;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.empty-state-sm {
+    font-size: 13px;
+    color: var(--text-light);
+    margin: 8px 0 0;
+    font-style: italic;
+}
