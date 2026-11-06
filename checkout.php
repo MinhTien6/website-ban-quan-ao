@@ -126,328 +126,6 @@ $pageCss = 'checkout.css';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<style>
-.checkout-page {
-    max-width: 1180px;
-    margin: 35px auto 60px;
-    padding: 0 20px;
-    color: #252525;
-}
-
-.checkout-heading {
-    margin-bottom: 28px;
-}
-
-.checkout-heading h1 {
-    font-size: 27px;
-    margin: 0 0 8px;
-}
-
-.checkout-heading p {
-    color: #777;
-    margin: 0;
-    font-size: 14px;
-}
-
-.btn-my-orders {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 16px;
-    margin-top: 12px;
-
-    background-color: #8D2335;
-    color: #FFFFFF;
-    border: 1px solid #8D2335;
-    border-radius: 8px;
-
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-
-    cursor: pointer;
-    transition: all 0.25s ease;
-}
-
-.btn-my-orders:hover {
-    background-color: #721B2B;
-    border-color: #721B2B;
-    color: #FFFFFF;
-}
-
-.btn-my-orders:active {
-    background-color: #641725;
-    border-color: #641725;
-    transform: scale(0.98);
-}
-
-.btn-my-orders i {
-    font-size: 16px;
-}
-
-.checkout-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    gap: 25px;
-    align-items: start;
-}
-
-.checkout-card,
-.checkout-summary {
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 14px;
-    overflow: hidden;
-}
-
-.checkout-card {
-    padding: 25px;
-    margin-bottom: 20px;
-}
-
-.checkout-card h2,
-.checkout-summary h2 {
-    font-size: 19px;
-    margin: 0 0 22px;
-}
-
-.checkout-form-group {
-    margin-bottom: 19px;
-}
-
-.checkout-form-group label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.checkout-form-group input,
-.checkout-form-group textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 12px 14px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font: inherit;
-    font-size: 14px;
-    outline: none;
-    transition: border-color .2s;
-}
-
-.checkout-form-group input:focus,
-.checkout-form-group textarea:focus {
-    border-color: #a52a3a;
-}
-
-.checkout-form-group textarea {
-    min-height: 100px;
-    resize: vertical;
-}
-
-.payment-option {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
-    border: 1px solid #e5e5e5;
-    border-radius: 9px;
-    margin-bottom: 12px;
-    cursor: pointer;
-    transition: .2s;
-}
-
-.payment-option:has(input:checked) {
-    border-color: #a52a3a;
-    background: #fff9f9;
-}
-
-.payment-option input {
-    margin-top: 4px;
-    accent-color: #a52a3a;
-}
-
-.payment-option strong {
-    display: block;
-    font-size: 14px;
-    margin-bottom: 5px;
-}
-
-.payment-option small {
-    color: #777;
-    font-size: 12px;
-}
-
-.checkout-summary {
-    padding: 23px;
-    position: sticky;
-    top: 20px;
-}
-
-.checkout-product {
-    display: flex;
-    gap: 12px;
-    padding: 14px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.checkout-product-image {
-    width: 65px;
-    height: 78px;
-    object-fit: cover;
-    border-radius: 7px;
-    background: #f5f5f5;
-    flex-shrink: 0;
-}
-
-.checkout-product-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.checkout-product-name {
-    font-size: 13px;
-    font-weight: 700;
-    margin: 0 0 6px;
-}
-
-.checkout-product-meta {
-    color: #777;
-    font-size: 12px;
-    margin: 4px 0;
-}
-
-.checkout-product-price {
-    color: #a52a3a;
-    font-size: 13px;
-    font-weight: 700;
-    margin-top: 6px;
-}
-
-.checkout-summary-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 16px 0;
-    font-size: 14px;
-    color: #666;
-}
-
-.checkout-summary-total {
-    border-top: 1px solid #eee;
-    padding-top: 18px;
-    margin-top: 20px;
-    color: #222;
-    font-weight: 700;
-}
-
-.checkout-summary-total strong {
-    color: #a52a3a;
-    font-size: 20px;
-}
-
-.checkout-submit {
-    width: 100%;
-    border: none;
-    background: #a52a3a;
-    color: white;
-    padding: 15px;
-    border-radius: 9px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 15px;
-    transition: background .2s;
-}
-
-.checkout-submit:hover {
-    background: #84202e;
-}
-
-.checkout-back {
-    display: block;
-    text-align: center;
-    color: #555;
-    text-decoration: none;
-    margin-top: 16px;
-    font-size: 13px;
-}
-
-.checkout-success {
-    max-width: 650px;
-    margin: 55px auto;
-    padding: 45px 25px;
-    text-align: center;
-    background: white;
-    border: 1px solid #eee;
-    border-radius: 15px;
-}
-
-.checkout-success-icon {
-    font-size: 55px;
-    color: #238b57;
-    margin-bottom: 15px;
-}
-
-.checkout-success h1 {
-    font-size: 25px;
-    margin-bottom: 12px;
-}
-
-.checkout-success p {
-    color: #666;
-    line-height: 1.7;
-}
-
-.checkout-order-code {
-    display: inline-block;
-    background: #f8f1f2;
-    color: #a52a3a;
-    font-size: 18px;
-    font-weight: 700;
-    padding: 12px 22px;
-    border-radius: 8px;
-    margin: 15px 0;
-}
-
-.checkout-success-btn {
-    display: inline-block;
-    background: #a52a3a;
-    color: white;
-    text-decoration: none;
-    padding: 13px 25px;
-    border-radius: 8px;
-    margin-top: 15px;
-    font-weight: 600;
-}
-
-@media (max-width: 850px) {
-    .checkout-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .checkout-summary {
-        position: static;
-    }
-}
-
-@media (max-width: 550px) {
-    .checkout-page {
-        padding: 0 14px;
-    }
-
-    .checkout-card {
-        padding: 18px;
-    }
-
-    .checkout-heading h1 {
-        font-size: 23px;
-    }
-}
-</style>
-
 <section class="checkout-page">
 
     <?php if ($successOrderId): ?>
@@ -561,12 +239,13 @@ require_once __DIR__ . '/includes/header.php';
                                 type="radio"
                                 name="payment_method"
                                 value="cod"
-                                checked>
+                                checked
+                                onchange="toggleBankInfo()">
 
                             <span>
                                 <strong>Thanh toán khi nhận hàng (COD)</strong>
                                 <small>
-                                    Thanh toán trực tiếp khi nhận được sản phẩm.
+                                    Thanh toán bằng tiền mặt trực tiếp cho nhân viên giao hàng khi nhận được sản phẩm.
                                 </small>
                             </span>
 
@@ -577,18 +256,39 @@ require_once __DIR__ . '/includes/header.php';
                             <input
                                 type="radio"
                                 name="payment_method"
-                                value="bank">
+                                value="bank"
+                                onchange="toggleBankInfo()">
 
                             <span>
                                 <strong>Chuyển khoản ngân hàng</strong>
                                 <small>
-                                    Chọn phương thức chuyển khoản cho đơn hàng.
+                                    Chuyển khoản qua tài khoản ngân hàng của FashionStore.
                                 </small>
                             </span>
 
                         </label>
 
+                        <!-- Khung thông tin chuyển khoản theo đúng Mục 1.2 Kế hoạch dự án -->
+                        <div id="bank-transfer-info">
+                            <strong style="color: #a52a3a; display: block; margin-bottom: 6px;">🏦 Thông tin tài khoản nhận thanh toán:</strong>
+                            <p style="margin: 2px 0;">• <strong>Ngân hàng:</strong> Vietcombank - Chi nhánh TP. Hồ Chí Minh</p>
+                            <p style="margin: 2px 0;">• <strong>Số tài khoản:</strong> <code>1029384756</code></p>
+                            <p style="margin: 2px 0;">• <strong>Chủ tài khoản:</strong> CONG TY THOI TRANG FASHIONSTORE</p>
+                            <p style="margin: 2px 0;">• <strong>Số tiền:</strong> <strong style="color: #a52a3a;"><?= formatPrice($cartTotal) ?></strong></p>
+                            <p style="margin: 2px 0;">• <strong>Nội dung CK:</strong> <code>THANHTOAN <?= e($defaultPhone ?: 'SDT_CUA_BAN') ?></code></p>
+                        </div>
+
                     </div>
+
+                    <script>
+                    function toggleBankInfo() {
+                        const isBank = document.querySelector('input[name="payment_method"][value="bank"]').checked;
+                        const infoBox = document.getElementById('bank-transfer-info');
+                        if (infoBox) {
+                            infoBox.style.display = isBank ? 'block' : 'none';
+                        }
+                    }
+                    </script>
 
                 </div>
 
@@ -673,9 +373,6 @@ require_once __DIR__ . '/includes/header.php';
                        class="checkout-back">
                         ← Quay lại giỏ hàng
                     </a>
-                    <a href="<?= BASE_URL ?>/my_orders.php">
-    Đơn hàng của tôi
-</a>
 
                 </aside>
 
