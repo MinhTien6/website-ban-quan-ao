@@ -1,161 +1,129 @@
-
 <?php
-session_start();
+/**
+ * Trang đăng nhập
+ */
 
-require_once __DIR__ . "/config/database.php";
+$pageTitle = 'Đăng nhập';
+require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/auth.php';
 
-$error = "";
+// Nếu đã đăng nhập thì chuyển về trang chủ
+if (isLoggedIn()) {
+    redirect('index.php');
+}
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $username = trim($_POST["username"] ?? "");
-    $password = $_POST["password"] ?? "";
+$error = '';
+$email = '';
 
-    // Tài khoản thử nghiệm
-    $demoUser = "user";
-    $demoPassword = "123456";
-
-    if ($username === $demoUser && $password === $demoPassword) {
-        // Tìm tài khoản thử nghiệm trong database
-        $stmt = $conn->prepare(
-            "SELECT id, fullname, username, email, role, status
-             FROM users
-             WHERE username = ?
-             LIMIT 1"
-        );
-        $stmt->execute([$demoUser]);
-        $user = $stmt->fetch();
-
-        if ($user && $user["status"] === "active") {
-            session_regenerate_id(true);
-
-            $_SESSION["user_id"] = $user["id"];
-            $_SESSION["fullname"] = $user["fullname"];
-            $_SESSION["username"] = $user["username"];
-            $_SESSION["email"] = $user["email"];
-            $_SESSION["role"] = $user["role"];
-            $_SESSION["logged_in"] = true;
-
-            header("Location: index.php");
-            exit;
-        }
-
-        $error = "Tài khoản thử nghiệm chưa tồn tại hoặc đã bị khóa.";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken()) {
+        $error = 'Yêu cầu không hợp lệ hoặc phiên làm việc đã hết hạn. Vui lòng thử lại.';
     } else {
-        // Đăng nhập bằng tài khoản đã đăng ký
-        $stmt = $conn->prepare(
-            "SELECT id, fullname, username, email,
-                    password_hash, role, status
-             FROM users
-             WHERE username = ?
-             LIMIT 1"
-        );
-        $stmt->execute([$username]);
-        $user = $stmt->fetch();
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
 
-        if (!$user || !password_verify(
-            $password,
-            $user["password_hash"]
-        )) {
-            $error = "Tên đăng nhập hoặc mật khẩu không đúng!";
-        } elseif ($user["status"] !== "active") {
-            $error = "Tài khoản của bạn đã bị khóa.";
+        if ($email === '' || $password === '') {
+            $error = 'Vui lòng nhập đầy đủ email và mật khẩu.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = 'Email không hợp lệ.';
         } else {
-            session_regenerate_id(true);
+            try {
+                // Tìm tài khoản theo email
+                $stmt = $pdo->prepare(
+                    "SELECT id, full_name, email, password_hash, role, status
+                     FROM users
+                     WHERE email = :email
+                     LIMIT 1"
+                );
+                $stmt->execute(['email' => $email]);
+                $user = $stmt->fetch();
 
-            $_SESSION["user_id"] = $user["id"];
-            $_SESSION["fullname"] = $user["fullname"];
-            $_SESSION["username"] = $user["username"];
-            $_SESSION["email"] = $user["email"];
-            $_SESSION["role"] = $user["role"];
-            $_SESSION["logged_in"] = true;
+                // Kiểm tra mật khẩu (thông báo lỗi chung tránh lộ thông tin người dùng)
+                if (!$user || !password_verify($password, $user['password_hash'])) {
+                    $error = 'Email hoặc mật khẩu không đúng.';
+                } elseif ((int)$user['status'] !== 1) {
+                    // Kiểm tra trạng thái tài khoản
+                    $error = 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.';
+                } else {
+                    // Đăng nhập thành công, tái tạo ID phiên để chống tấn công Session Fixation
+                    session_regenerate_id(true);
 
-            if ($user["role"] === "admin") {
-                header("Location: admin.php");
-            } else {
-                header("Location: index.php");
+                    // Chuẩn hóa mảng phiên đăng nhập duy nhất
+                    $_SESSION['user'] = [
+                        'id'        => (int)$user['id'],
+                        'full_name' => $user['full_name'],
+                        'email'     => $user['email'],
+                        'role'      => $user['role'],
+                    ];
+
+                    // Phân luồng chuyển hướng
+                    if ($user['role'] === 'admin') {
+                        redirect('admin/index.php');
+                    } else {
+                        redirect('index.php');
+                    }
+                }
+            } catch (PDOException $e) {
+                error_log("Lỗi đăng nhập: " . $e->getMessage());
+                $error = 'Đã có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau.';
             }
-
-            exit;
         }
     }
 }
+
+require_once __DIR__ . '/includes/header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập - FashionStore</title>
-    <link rel="stylesheet" href="public/css/c.css">
-</head>
-<body>
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <h1 class="auth-title">Đăng nhập</h1>
+        <p class="auth-subtitle">Đăng nhập vào tài khoản của bạn để trải nghiệm mua sắm.</p>
 
-<header>
-    <h2>FashionStore</h2>
-    <nav>
-        <a href="index.php">Trang chủ</a>
-        <a href="index.php#products">Sản phẩm</a>
-        <a href="register.php">Đăng ký</a>
-    </nav>
-</header>
+        <?php if ($error !== ''): ?>
+            <div class="alert alert-error">
+                <?= e($error) ?>
+            </div>
+        <?php endif; ?>
 
-<main class="login-container">
-    <h2>Đăng nhập</h2>
-    <p>Đăng nhập vào tài khoản FashionStore của bạn.</p>
+        <form action="<?= BASE_URL ?>/login.php" method="post" class="auth-form" novalidate>
+            <?= csrfField() ?>
+            <div class="form-group">
 
-    <?php if ($error !== ""): ?>
-        <p class="error">
-            <?= htmlspecialchars($error) ?>
-        </p>
-    <?php endif; ?>
+                <label for="email">Địa chỉ Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    autocomplete="email"
+                    value="<?= e($email) ?>"
+                    placeholder="ví dụ: ban@example.com"
+                >
+            </div>
 
-    <form action="login.php" method="post">
-        <div class="form-group">
-            <label for="username">Tên đăng nhập</label>
-            <input
-                type="text"
-                id="username"
-                name="username"
-                autocomplete="username"
-                required
-                value="<?= htmlspecialchars($_POST["username"] ?? "") ?>"
-            >
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    autocomplete="current-password"
+                    placeholder="Nhập mật khẩu"
+                >
+            </div>
+
+            <button type="submit" class="button button-block">Đăng nhập</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Chưa có tài khoản? <a href="<?= BASE_URL ?>/register.php">Đăng ký ngay</a></p>
         </div>
-
-        <div class="form-group">
-            <label for="password">Mật khẩu</label>
-            <input
-                type="password"
-                id="password"
-                name="password"
-                autocomplete="current-password"
-                required
-            >
-        </div>
-
-        <button type="submit">Đăng nhập</button>
-    </form>
-
-    <p style="margin-top: 15px;">
-    Chưa có tài khoản?
-    <a href="register.php">Đăng ký ngay</a>
-    </p>
-
-    <div style="margin-top: 20px; padding: 12px; background: #f2f2f2; border-radius: 5px;">
-        <h3>Tài khoản thử nghiệm</h3>
-        <p>Tên đăng nhập: <strong>user</strong></p>
-        <p>Mật khẩu: <strong>123456</strong></p>
-        <p style="font-size: 13px;">
-            coi có đăng kí được không rồi dùng tk này phòng hờ.
-        </p>
     </div>
+</div>
 
-</main>
-
-<footer>
-    <p>&copy; 2026 FashionStore</p>
-</footer>
-
-</body>
-</html>
+<?php
+require_once __DIR__ . '/includes/footer.php';
+?>

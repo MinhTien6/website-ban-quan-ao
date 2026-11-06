@@ -1,106 +1,90 @@
-
 <?php
-$products = [
-    [
-        "id" => 1,
-        "name" => "Áo thun",
-        "price" => 150000
-    ],
-    [
-        "id" => 2,
-        "name" => "Áo sơ mi",
-        "price" => 220000
-    ],
-    [
-        "id" => 3,
-        "name" => "Quần jean",
-        "price" => 300000
-    ],
-    [
-        "id" => 4,
-        "name" => "Áo khoác",
-        "price" => 350000
-    ]
-];
+/**
+ * Trang chủ FashionStore
+ */
+
+$pageTitle = 'Trang chủ';
+require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/models/Product.php';
+
+// Khởi tạo model và lấy 8 sản phẩm mới nhất
+$productModel = new Product($pdo);
+$latestProducts = $productModel->getLatest(8);
+
+require_once __DIR__ . '/includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website bán quần áo</title>
-    <link rel="stylesheet" href="public/css/c.css">
-</head>
-<body>
 
-    <!-- Menu -->
-    <header>
-        <h2>FashionStore</h2>
-
-        <nav>
-            <a href="index.php">Trang chủ</a>
-            <a href="#products">Sản phẩm</a>
-            <a href="#about">Giới thiệu</a>
-            <a href="#contact">Liên hệ</a>
-            <a href="login.php">Đăng nhập</a>
-        </nav>
-    </header>
-
-    <!-- Nội dung chính -->
-    <main>
-        <section class="banner">
-            <h1>Chào mừng đến với FashionStore</h1>
-            <p>Cửa hàng quần áo dành cho bạn.</p>
-            <a href="#products">Xem sản phẩm</a>
-        </section>
-
-        <!-- Danh sách sản phẩm -->
-        
-<section id="products">
-    <h2>Sản phẩm</h2>
-
-    <div class="products">
-        <?php foreach ($products as $product): ?>
-            <div class="product">
-                <h3>
-                    <?= htmlspecialchars($product["name"]) ?>
-                </h3>
-
-                <p>
-                    Giá:
-                    <?= number_format($product["price"], 0, ",", ".") ?>đ
-                </p>
-
-                <a href="product.php?id=<?= $product["id"] ?>">
-                    Xem chi tiết
-                </a>
-            </div>
-        <?php endforeach; ?>
+<section class="hero">
+    <div class="hero-content">
+        <p class="eyebrow">BỘ SƯU TẬP MỚI 2026</p>
+        <h1>Phong cách thời trang hiện đại & thanh lịch</h1>
+        <p>Khám phá các mẫu trang phục mới nhất với chất liệu cao cấp và kiểu dáng dẫn đầu xu hướng.</p>
+        <a href="#products" class="button">Xem sản phẩm ngay</a>
     </div>
 </section>
 
+<section id="products" class="section">
+    <div class="section-heading">
+        <h2>Sản phẩm mới nhất</h2>
+    </div>
 
-        <!-- Giới thiệu -->
-        <section id="about">
-            <h2>Giới thiệu</h2>
-            <p>
-                FashionStore cung cấp các sản phẩm quần áo
-                với nhiều lựa chọn phù hợp cho nhu cầu hằng ngày.
-            </p>
-        </section>
+    <?php if (empty($latestProducts)): ?>
+        <p class="empty-state">Hiện chưa có sản phẩm nào được hiển thị.</p>
+    <?php else: ?>
+        <div class="product-grid">
+            <?php foreach ($latestProducts as $product): ?>
+                <?php
+                // Kiểm tra sự tồn tại của file ảnh trên máy chủ
+                $imagePath = $product['main_image'] ?? '';
+                $hasImage = false;
+                $imageUrl = '';
 
-        <!-- Liên hệ -->
-        <section id="contact">
-            <h2>Liên hệ</h2>
-            <p>Email: fashionstore@example.com</p>
-            <p>Điện thoại: 0123 456 789</p>
-        </section>
-    </main>
+                if ($imagePath !== '') {
+                    $localPath = ROOT_PATH . '/public/' . ltrim($imagePath, '/');
+                    if (file_exists($localPath) && !is_dir($localPath)) {
+                        $hasImage = true;
+                        $imageUrl = BASE_URL . '/public/' . ltrim($imagePath, '/');
+                    }
+                }
+                ?>
+                <div class="product-card">
+                    <div class="product-card-image">
+                        <?php if ($hasImage): ?>
+                            <img src="<?= e($imageUrl) ?>" alt="<?= e($product['name']) ?>" loading="lazy">
+                        <?php else: ?>
+                            <div class="product-image-placeholder">
+                                <span>Chưa có ảnh</span>
+                            </div>
+                        <?php endif; ?>
+                    </div>
 
-    <!-- Chân trang -->
-    <footer>
-        <p>&copy; 2026 FashionStore</p>
-    </footer>
+                    <?php if (!empty($product['category_name'])): ?>
+                        <div class="category"><?= e($product['category_name']) ?></div>
+                    <?php endif; ?>
 
-</body>
-</html>
+                    <h3 class="product-title" title="<?= e($product['name']) ?>">
+                        <?= e($product['name']) ?>
+                    </h3>
+
+                    <div class="product-price">
+                        <?php if (!empty($product['sale_price']) && (float)$product['sale_price'] > 0 && (float)$product['sale_price'] < (float)$product['price']): ?>
+                            <span class="price-sale"><?= formatPrice($product['sale_price']) ?></span>
+                            <span class="price-original"><?= formatPrice($product['price']) ?></span>
+                        <?php else: ?>
+                            <span class="price-regular"><?= formatPrice($product['price']) ?></span>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="product-actions">
+                        <button type="button" class="button button-disabled" disabled>Xem chi tiết</button>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</section>
+
+<?php
+require_once __DIR__ . '/includes/footer.php';
+?>

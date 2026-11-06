@@ -1,6 +1,143 @@
-# Website bán quần áo
+# Website Bán Quần Áo (FashionStore)
 
-Dự án website bán quần áo sử dụng PHP và MySQL.
+> **Kế hoạch dự án (Bản rút gọn 4 tuần)**  
+> Công nghệ: **PHP 8 + MySQL** (Mô hình MVC đơn giản kiểu trang, PDO Prepared Statement, Bootstrap 5 / CSS thuần)
+
+---
+
+## 1. Tổng quan & Thiết kế hệ thống
+
+Hệ thống gồm 2 phân hệ chính:
+- **Trang khách hàng**: Xem sản phẩm, tìm kiếm, lọc theo danh mục & giá, chi tiết biến thể size/màu, giỏ hàng (session), đặt hàng COD / chuyển khoản, xem lịch sử đơn, đăng ký, đăng nhập, đổi mật khẩu, sửa hồ sơ.
+- **Trang quản trị (Admin)**: Dashboard thống kê cơ bản, CRUD danh mục, CRUD sản phẩm (upload nhiều ảnh, editor mô tả, biến thể & tồn kho), quản lý đơn hàng (đổi trạng thái), quản lý người dùng & phân quyền.
+
+### Sơ đồ hệ thống mới (Đã lưu tại thư mục `docs/`):
+1. **Sơ đồ thực thể liên kết (ERD - 7 bảng cốt lõi)**: `docs/erd.png`
+   - `users` (1 - n) `orders`
+   - `categories` (1 - n) `products`
+   - `products` (1 - n) `product_images`
+   - `products` (1 - n) `product_variants`
+   - `orders` (1 - n) `order_items`
+   - `products` (1 - n) `order_items`
+   - `product_variants` (1 - n) `order_items`
+2. **Sơ đồ trường hợp sử dụng (Use Case)**: `docs/usecase.png`
+   - **Khách**: Xem/tìm kiếm/lọc sản phẩm, xem chi tiết, giỏ hàng (session), đăng ký, đăng nhập.
+   - **User (Thành viên)**: Kế thừa Khách + Đặt hàng, xem lịch sử/hủy đơn, cập nhật hồ sơ/đổi mật khẩu, đăng xuất.
+   - **Admin**: Đăng nhập admin, dashboard thống kê, quản lý danh mục, quản lý sản phẩm (nhiều ảnh, editor, biến thể), quản lý đơn hàng, quản lý người dùng & phân quyền.
+
+---
+
+## 2. Cấu trúc thư mục dự án
+
+```text
+website-ban-quan-ao/
+  ├── admin/                  # Trang quản trị (bảo vệ quyền truy cập bằng requireAdmin)
+  │    ├── includes/          # Header, footer sidebar của admin
+  │    └── index.php          # Dashboard thống kê
+  ├── config/                 # Cấu hình hệ thống & kết nối CSDL PDO
+  │    ├── config.php         # Hằng số chung (BASE_URL, ROOT_PATH, UPLOAD_DIR...)
+  │    ├── database.php       # File kết nối CSDL thực tế (được .gitignore bảo vệ)
+  │    └── database.example.php # File mẫu cấu hình kết nối CSDL
+  ├── database/
+  │    └── shop_quanao.sql    # File cấu trúc CSDL + dữ liệu mẫu 30 sản phẩm
+  ├── docs/                   # Tài liệu thiết kế & sơ đồ
+  │    ├── erd.png            # Sơ đồ CSDL 7 bảng cốt lõi
+  │    └── usecase.png        # Sơ đồ Use Case chuẩn hệ thống
+  ├── includes/               # Các file nhúng dùng chung
+  │    ├── auth.php           # Middleware xác thực & phân quyền (isLoggedIn, isAdmin, requireLogin, requireAdmin)
+  │    ├── functions.php      # Hàm tiện ích (XSS e(), CSRF, formatPrice, upload ảnh, phân trang...)
+  │    ├── header.php         # Header giao diện người dùng
+  │    └── footer.php         # Footer giao diện người dùng
+  ├── models/                 # Các lớp Model truy vấn CSDL
+  │    ├── Category.php       # Model danh mục sản phẩm
+  │    ├── Order.php          # Model đơn hàng & trừ tồn kho bằng transaction
+  │    ├── Product.php        # Model sản phẩm, tìm kiếm, lọc, biến thể, ảnh
+  │    └── User.php           # Model người dùng, phân quyền, hồ sơ
+  ├── public/                 # Tài nguyên tĩnh công khai
+  │    ├── css/style.css      # Toàn bộ CSS đồng nhất cho client & admin
+  │    ├── js/                # Mã JavaScript
+  │    ├── images/            # Hình ảnh tĩnh của trang web
+  │    └── uploads/products/  # Thư mục lưu trữ ảnh sản phẩm tải lên
+  ├── tests/                  # Kiểm thử tự động & test case
+  │    ├── check_db.php       # Script kiểm tra toàn vẹn CSDL (chạy được CLI & Web)
+  │    └── test_cases.md      # Bảng 5 nhóm test case chi tiết
+  ├── index.php               # Trang chủ website
+  ├── login.php               # Trang đăng nhập (có CSRF, phân luồng admin/user)
+  ├── logout.php              # Xử lý đăng xuất an toàn
+  ├── register.php            # Trang đăng ký tài khoản mới (có CSRF, mã hóa bcrypt)
+  └── README.md               # Tài liệu hướng dẫn dự án
+```
+
+---
+
+## 3. Phân công công việc 6 thành viên (Kế hoạch 4 tuần)
+
+| TV | Vai trò | Tuần 1 (Nền tảng & Xác thực) | Tuần 2 (CRUD Admin & Khách cơ bản) | Tuần 3 (Mua hàng & Quản lý đơn) | Tuần 4 (Kiểm thử, Slide, Deploy) |
+|:---:|:---|:---|:---|:---|:---|
+| **TV1** | **Trưởng nhóm, kiến trúc, CSDL, tích hợp** | ERD, SQL, repo, quy ước, khung MVC, hàm chung, CSRF, upload | Ghép code, review PR, bảo mật chung | Ghép code, đóng băng tính năng, hỗ trợ lỗi | Deploy, hoàn thiện README, đóng gói nộp |
+| **TV2** | **Xác thực & Người dùng** | Đăng ký, đăng nhập, đăng xuất, phân quyền | Hồ sơ cá nhân, Admin quản lý user (khóa/mở khóa) | Test phân quyền, hỗ trợ lấy thông tin người nhận | Sửa lỗi, slide phần mình, tập thuyết trình |
+| **TV3** | **Admin sản phẩm & danh mục** | Dữ liệu và ảnh mẫu, cấu trúc danh mục | CRUD danh mục, CRUD sản phẩm (nhiều ảnh, editor, biến thể) | Tồn kho, cảnh báo tồn thấp, sửa lỗi | Sửa lỗi, slide phần mình, tập thuyết trình |
+| **TV4** | **Giao diện người dùng** | CSS chung (`style.css`), layout trang chủ | Danh sách sản phẩm, lọc, tìm kiếm, phân trang, chi tiết | Responsive di động, hoàn thiện UI | Sửa lỗi, slide phần mình, tập thuyết trình |
+| **TV5** | **Giỏ hàng & Đặt hàng** | Thiết kế luồng giỏ hàng session | Giỏ hàng hoàn chỉnh (thêm/sửa/xóa, tính tổng) | Thanh toán COD/CK, tạo đơn (transaction trừ kho), lịch sử đơn, hủy đơn | Sửa lỗi, slide phần mình, tập thuyết trình |
+| **TV6** | **Admin đơn hàng, test, tài liệu** | Sơ đồ Use case, layout admin, kế hoạch test | Admin đơn hàng (danh sách, chi tiết), khung dashboard | Đổi trạng thái đơn, thống kê dashboard, test toàn bộ | Slide tổng, kịch bản demo, tập thuyết trình chung |
+
+---
+
+## 4. Hướng dẫn cài đặt nhanh
+
+### Yêu cầu môi trường:
+- **XAMPP** (Apache 2.4+, MySQL 5.7+ hoặc MariaDB 10.4+).
+- **PHP 8.0 trở lên** (bật `pdo_mysql`, `mbstring`, `fileinfo`).
+
+### Các bước cài đặt:
+1. **Đặt thư mục dự án**: Đặt vào thư mục `htdocs` của XAMPP (`C:\xampp\htdocs\website-ban-quan-ao`).
+2. **Khởi động XAMPP**: Bật nút **Start** cho cả **Apache** và **MySQL**.
+3. **Import CSDL**:
+   - Truy cập phpMyAdmin tại: `http://localhost/phpmyadmin/`.
+   - Chọn thẻ **Import** -> chọn tệp `database/shop_quanao.sql` -> nhấn **Import**.
+4. **Cấu hình CSDL**:
+   - Tệp `config/database.php` đã được tạo sẵn theo cấu hình XAMPP mặc định (`root` / mật khẩu rỗng). Nếu máy bạn dùng mật khẩu MySQL khác, hãy chỉnh sửa tệp này.
+5. **Kiểm tra tự động CSDL**:
+   - Chạy lệnh: `php tests/check_db.php` hoặc mở `http://localhost/website-ban-quan-ao/tests/check_db.php`.
+   - Đảm bảo tất cả tiêu chí đều hiển thị **PASS / ĐẠT**.
+6. **Mở website**:
+   - Truy cập: `http://localhost/website-ban-quan-ao/`.
+
+---
+
+## 5. Tài khoản thử nghiệm (Demo Accounts)
+
+| Vai trò | Email đăng nhập | Mật khẩu | Quyền hạn / Ghi chú |
+|---|---|---|---|
+| **Quản trị viên (Admin)** | `admin@shop.local` | `Admin@123` | Toàn quyền trang quản trị (`admin/index.php`) |
+| **Khách hàng 1 (User)** | `lan.nguyen@example.com` | `User@123` | Mua hàng, xem lịch sử đơn, sửa hồ sơ |
+| **Khách hàng 2 (User)** | `minh.tran@example.com` | `User@123` | Tài khoản thành viên hoạt động |
+| **Khách hàng 3 (Khóa)** | `khoa@example.com` | `User@123` | Tài khoản bị khóa (`status = 0`) để test thông báo lỗi |
+
+---
+
+## 6. Quy ước lập trình chung (Coding Conventions)
+
+1. **Cơ sở dữ liệu & Truy vấn**:
+   - Luôn sử dụng đúng CSDL `shop_quanao` và 7 bảng cốt lõi theo ERD.
+   - Bắt buộc dùng **PDO Prepared Statement** (`$pdo`), tuyệt đối không nối chuỗi SQL trực tiếp.
+   - Định danh người dùng bằng `email` (không dùng cột `username`).
+   - Cột `status`: `1 = hoạt động / hiển thị`, `0 = khóa / ẩn`.
+2. **Bảo mật**:
+   - **XSS**: Mọi biến in ra HTML đều bọc qua hàm `e($value)`.
+   - **CSRF**: Mọi form `POST` phải chèn `<?= csrfField() ?>` và kiểm tra `verifyCsrfToken()`.
+   - **Mật khẩu**: Băm bằng `password_hash($password, PASSWORD_DEFAULT)` và xác thực bằng `password_verify()`.
+   - **Phân quyền**: Dùng `requireLogin()` (cần đăng nhập) và `requireAdmin()` (cần quyền admin) từ `includes/auth.php`.
+   - **Tải tệp tin**: Dùng `uploadImage()` hoặc `uploadMultipleImages()` trong `includes/functions.php`.
+3. **Quy ước đặt tên**:
+   - CSDL: Bảng và cột theo `snake_case` tiếng Anh (`full_name`, `created_at`, `sale_price`).
+   - PHP: Tên biến và hàm theo `camelCase` (`$fullName`, `isLoggedIn()`, `formatPrice()`).
+   - Class / Model: Đặt theo `PascalCase` (`Product`, `Category`, `User`, `Order`).
+   - Mã nguồn lưu chuẩn **UTF-8 không BOM**, ký tự xuống dòng **LF**.
+   - Mỗi file và hàm đều có chú thích tiếng Việt rõ ràng.
+
+
+---
 
 ## Hướng dẫn sử dụng Git và GitHub
 
