@@ -68,3 +68,26 @@ Sau khi import tệp `database/shop_quanao.sql` vào MySQL/phpMyAdmin:
 |---|---|---|---|---|---|
 | **UI_01** | Desktop (Chrome, Edge, Firefox) | Bố cục header, navigation, banner, grid sản phẩm, bảng admin | Hiển thị rõ ràng, không vỡ layout, màu sắc đồng bộ theo `style.css` | | Chờ test |
 | **UI_02** | Mobile (Màn hình < 768px) | Mở giao diện trên thiết bị di động hoặc F12 Device Mode | Menu tự co giãn, bảng admin có thanh cuộn ngang, form đăng nhập vừa vặn màn hình | | Chờ test |
+
+---
+
+## 6. Kiểm thử riêng nhiệm vụ TV6 (Tuần 1 & 2)
+
+**Tiền điều kiện:** Import `database/shop_quanao.sql`, cấu hình kết nối trong `config/database.php`, đăng nhập bằng tài khoản Admin mẫu. Bộ dữ liệu SQL ban đầu có 5 đơn hàng, mỗi đơn thuộc một trạng thái.
+
+| Mã TC | Chức năng | Các bước thực hiện | Kết quả mong đợi | Kết quả thực tế | Trạng thái |
+|---|---|---|---|---|---|
+| **TV6-W1-01** | Bảo vệ layout Admin | Mở `/admin/orders.php` khi đã đăng xuất | Middleware chặn truy cập và chuyển người dùng sang đăng nhập | | Chờ test |
+| **TV6-W1-02** | Phân quyền Admin | Đăng nhập bằng tài khoản role `user`, truy cập `/admin/orders.php` | Không xem được trang quản trị; bị chuyển về trang khách hàng | | Chờ test |
+| **TV6-W1-03** | Menu Admin | Đăng nhập Admin, mở các trang dashboard và quản lý đơn | Menu hiển thị; mục hiện tại có trạng thái active; liên kết đơn hàng mở đúng trang | | Chờ test |
+| **TV6-W1-04** | Use Case | Đối chiếu `docs/usecase.png` với các chức năng khách, user và admin đã có | Vai trò và các luồng chính được thể hiện đúng; Admin có thể vào khu quản trị | | Chờ test |
+| **TV6-W2-01** | Dashboard thống kê | Mở `/admin/index.php` với database mẫu | Tổng đơn = 5, đơn chờ = 1, đơn hoàn thành = 1, doanh thu hoàn thành = 762.300đ | | Chờ test |
+| **TV6-W2-02** | Đơn hàng mới nhất | Xem bảng đơn gần đây trên Dashboard | Hiện tối đa 5 đơn, đúng người nhận, thời gian, tổng tiền và trạng thái | | Chờ test |
+| **TV6-W2-03** | Danh sách đơn | Mở `/admin/orders.php` | Có 5 đơn mẫu; mỗi dòng có thông tin chính và nút Chi tiết | | Chờ test |
+| **TV6-W2-04** | Lọc trạng thái | Chọn lần lượt Chờ xác nhận, Đã xác nhận, Đang giao, Hoàn thành, Đã hủy | Mỗi lựa chọn chỉ hiển thị đơn có trạng thái tương ứng; chọn Tất cả hiện lại toàn bộ | | Chờ test |
+| **TV6-W2-05** | Phân trang danh sách | Tạo thêm hơn 10 đơn hoặc dùng dữ liệu nhiều trang, chuyển trang danh sách | Mỗi trang có tối đa 10 đơn; bộ lọc trạng thái được giữ khi chuyển trang | | Chờ test |
+| **TV6-W2-06** | Chi tiết đơn hợp lệ | Mở chi tiết đơn #1 | Có người nhận, tài khoản, địa chỉ, điện thoại, thanh toán, trạng thái và 2 dòng sản phẩm; tổng = 762.300đ | | Chờ test |
+| **TV6-W2-07** | Mã đơn không hợp lệ | Truy cập `/admin/order_detail.php?id=99999` | Trả về HTTP 404 và thông báo không tìm thấy đơn, không lộ lỗi SQL | | Chờ test |
+| **TV6-W2-08** | Hiển thị responsive | Mở danh sách và chi tiết trên màn hình nhỏ | Bảng cuộn ngang, các khối chi tiết xếp một cột, không tràn khỏi màn hình | | Chờ test |
+
+Các test case ở trên là kế hoạch kiểm thử; chưa đánh dấu kết quả thực tế trước khi chạy với database của máy.

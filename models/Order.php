@@ -160,6 +160,8 @@ class Order
      */
     public function getList(string $status = 'all', int $limit = 10, int $offset = 0): array
     {
+        $limit = max(1, min($limit, 100));
+        $offset = max(0, $offset);
         $params = [];
         $where = "WHERE 1=1";
 
@@ -204,6 +206,32 @@ class Order
         return (int)$stmt->fetchColumn();
     }
 
+    /**
+     * Thống kê các số liệu chính để hiển thị trên Dashboard Admin.
+     * Doanh thu chỉ tính các đơn đã hoàn thành.
+     */
+    public function getDashboardStats(): array
+    {
+        $sql = "SELECT
+                    COUNT(*) AS total_orders,
+                    COALESCE(SUM(status = 'pending'), 0) AS pending_orders,
+                    COALESCE(SUM(status = 'completed'), 0) AS completed_orders,
+                    COALESCE(SUM(CASE WHEN status = 'completed' THEN total ELSE 0 END), 0) AS revenue
+                FROM orders";
+        return $this->pdo->query($sql)->fetch() ?: [
+            'total_orders' => 0,
+            'pending_orders' => 0,
+            'completed_orders' => 0,
+            'revenue' => 0,
+        ];
+    }
+
+    /** Lấy vài đơn gần nhất để hiển thị nhanh trên Dashboard. */
+    public function getRecentOrders(int $limit = 5): array
+    {
+        $limit = max(1, min($limit, 20));
+        return $this->getList('all', $limit, 0);
+    }
     /**
      * Cập nhật trạng thái đơn hàng (Admin - TV6)
      *

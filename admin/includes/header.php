@@ -56,8 +56,8 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
             <a href="<?= BASE_URL ?>/admin/products.php" class="nav-item <?= in_array($currentScript, ['products.php', 'product_form.php', 'product-add.php', 'product-edit.php']) ? 'active' : '' ?>" title="Chức năng Tuần 2 - TV3">
                 👕 Quản lý sản phẩm (nhiều ảnh, biến thể)
             </a>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 3 - TV6">
-                📦 Quản lý đơn hàng (đổi trạng thái)
+            <a href="<?= BASE_URL ?>/admin/orders.php" class="nav-item <?= in_array($currentScript, ['orders.php', 'order_detail.php']) ? 'active' : '' ?>" title="Chức năng Tuần 2 - TV6">
+                📦 Quản lý đơn hàng
             </a>
 
             <div class="nav-heading">Hệ thống & Tài khoản</div>

@@ -1455,3 +1455,147 @@ button {
         grid-template-columns: 1fr;
     }
 }
+
+/* TV6 - Danh sách và chi tiết đơn hàng */
+.admin-orders-page,
+.order-detail-page {
+    max-width: 1320px;
+    margin: 0 auto;
+}
+
+.orders-page-heading,
+.recent-orders-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.orders-page-heading h1 {
+    margin: 0 0 6px;
+    color: var(--secondary);
+    font-size: 22px;
+}
+
+.orders-page-heading p,
+.recent-orders-heading p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.orders-total {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.order-filter-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.order-filter-form label {
+    color: var(--secondary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.order-filter-form .form-control {
+    width: min(260px, 100%);
+}
+
+.order-table-wrap,
+.order-items-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.order-customer-email {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.order-status {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-pending { color: #9a6700; background: #fff4cc; }
+.status-confirmed { color: #1d4ed8; background: #dbeafe; }
+.status-shipping { color: #6d28d9; background: #ede9fe; }
+.status-completed { color: #15803d; background: #dcfce7; }
+.status-cancelled { color: #b91c1c; background: #fee2e2; }
+
+.order-back-link {
+    display: inline-flex;
+    margin-bottom: 18px;
+}
+
+.order-detail-kicker {
+    margin: 0 0 6px !important;
+    color: var(--text-muted);
+    font-size: 11px !important;
+    font-weight: 700;
+    letter-spacing: .08em;
+}
+
+.order-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.order-detail-grid .admin-info-card,
+.order-items-card {
+    padding: 20px;
+}
+
+.order-detail-grid h2,
+.order-items-card h2 {
+    margin: 0 0 16px;
+    color: var(--secondary);
+    font-size: 16px;
+}
+
+.order-info-list { margin: 0; }
+.order-info-list div { display: grid; grid-template-columns: 145px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); }
+.order-info-list dt { color: var(--text-muted); font-size: 12px; }
+.order-info-list dd { margin: 0; color: var(--text); font-size: 13px; overflow-wrap: anywhere; }
+
+.order-product-cell { display: flex; align-items: center; gap: 10px; min-width: 190px; }
+.order-product-cell img,
+.order-product-placeholder { width: 46px; height: 52px; border-radius: 5px; object-fit: cover; background: #f1f5f9; }
+.order-product-placeholder { display: inline-grid; place-items: center; font-size: 20px; }
+.order-grand-total { display: flex; justify-content: flex-end; align-items: center; gap: 20px; padding-top: 16px; color: var(--secondary); }
+.order-grand-total strong { color: var(--primary); font-size: 20px; }
+
+.recent-orders-card { padding: 20px; }
+.recent-orders-heading h4 { margin: 0 0 5px; color: var(--secondary); font-size: 16px; }
+.recent-orders-heading { margin-bottom: 14px; }
+
+@media (max-width: 900px) {
+    .admin-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .order-detail-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+    .orders-page-heading { align-items: flex-start; flex-direction: column; }
+    .order-filter-form { align-items: stretch; flex-direction: column; }
+    .order-filter-form .form-control { width: 100%; }
+    .order-detail-grid .admin-info-card,
+    .order-items-card,
+    .recent-orders-card { padding: 14px; }
+    .order-info-list div { grid-template-columns: 110px minmax(0, 1fr); }
+    .admin-content { padding: 16px; }
+}
