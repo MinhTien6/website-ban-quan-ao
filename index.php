@@ -10,7 +10,7 @@ require_once __DIR__ . '/models/Product.php';
 
 // Khởi tạo model và lấy 8 sản phẩm mới nhất
 $productModel = new Product($pdo);
-
+   
 // Xử lý thêm sản phẩm vào Session Cart (TV5)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
