@@ -401,6 +401,7 @@ class Product
 
             // 1. Lưu nhiều ảnh sản phẩm
             if (!empty($imagePaths)) {
+                $mainIdx = ($mainIndex >= 0 && $mainIndex < count($imagePaths)) ? $mainIndex : 0;
                 $imgStmt = $this->pdo->prepare(
                     "INSERT INTO product_images (product_id, image_path, is_main, sort_order) 
                      VALUES (:product_id, :image_path, :is_main, :sort_order)"
@@ -409,7 +410,7 @@ class Product
                     $imgStmt->execute([
                         'product_id' => $productId,
                         'image_path' => $path,
-                        'is_main'    => ($idx === $mainIndex) ? 1 : 0,
+                        'is_main'    => ($idx === $mainIdx) ? 1 : 0,
                         'sort_order' => $idx + 1,
                     ]);
                 }
@@ -436,12 +437,13 @@ class Product
      * @param int $id ID sản phẩm cần cập nhật
      * @param array $data Dữ liệu sản phẩm
      * @param array $newImagePaths Danh sách ảnh mới tải lên thêm (nếu có)
-     * @param int|null $mainImageId ID ảnh được chọn làm ảnh chính (nếu có)
+     * @param int|null $mainImageId ID ảnh hiện có được chọn làm ảnh chính (nếu có)
      * @param array $variants Danh sách biến thể cập nhật
+     * @param int|null $newMainIndex Chỉ số của ảnh mới tải lên được chọn làm ảnh chính (nếu có)
      * @return bool
      * @throws Throwable
      */
-    public function update(int $id, array $data, array $newImagePaths = [], ?int $mainImageId = null, array $variants = []): bool
+    public function update(int $id, array $data, array $newImagePaths = [], ?int $mainImageId = null, array $variants = [], ?int $newMainIndex = null): bool
     {
         $this->pdo->beginTransaction();
         try {
@@ -463,6 +465,7 @@ class Product
             ]);
 
             // Thêm các ảnh mới tải lên
+            $newImageIds = [];
             if (!empty($newImagePaths)) {
                 $maxOrderStmt = $this->pdo->prepare("SELECT COALESCE(MAX(sort_order), 0) FROM product_images WHERE product_id = :id");
                 $maxOrderStmt->execute(['id' => $id]);
@@ -473,20 +476,36 @@ class Product
                      VALUES (:product_id, :image_path, :is_main, :sort_order)"
                 );
                 foreach ($newImagePaths as $idx => $path) {
+                    $isNewMain = ($newMainIndex !== null && $idx === $newMainIndex);
                     $imgStmt->execute([
                         'product_id' => $id,
                         'image_path' => $path,
-                        'is_main'    => 0,
+                        'is_main'    => $isNewMain ? 1 : 0,
                         'sort_order' => $maxOrder + $idx + 1,
                     ]);
+                    $newImageIds[$idx] = (int)$this->pdo->lastInsertId();
                 }
             }
 
             // Đổi ảnh chính nếu chỉ định
-            if ($mainImageId !== null && $mainImageId > 0) {
+            if ($newMainIndex !== null && isset($newImageIds[$newMainIndex])) {
+                $chosenId = $newImageIds[$newMainIndex];
+                $this->pdo->prepare("UPDATE product_images SET is_main = 0 WHERE product_id = :id AND id != :chosen_id")
+                          ->execute(['id' => $id, 'chosen_id' => $chosenId]);
+                $this->pdo->prepare("UPDATE product_images SET is_main = 1 WHERE id = :chosen_id AND product_id = :id")
+                          ->execute(['chosen_id' => $chosenId, 'id' => $id]);
+            } elseif ($mainImageId !== null && $mainImageId > 0) {
                 $this->pdo->prepare("UPDATE product_images SET is_main = 0 WHERE product_id = :id")->execute(['id' => $id]);
                 $this->pdo->prepare("UPDATE product_images SET is_main = 1 WHERE id = :img_id AND product_id = :id")
                           ->execute(['img_id' => $mainImageId, 'id' => $id]);
+            }
+
+            // Đảm bảo luôn có ít nhất 1 ảnh làm ảnh chính nếu sản phẩm có ảnh
+            $checkMainStmt = $this->pdo->prepare("SELECT COUNT(*) FROM product_images WHERE product_id = :id AND is_main = 1");
+            $checkMainStmt->execute(['id' => $id]);
+            if ((int)$checkMainStmt->fetchColumn() === 0) {
+                $this->pdo->prepare("UPDATE product_images SET is_main = 1 WHERE product_id = :id ORDER BY sort_order ASC, id ASC LIMIT 1")
+                          ->execute(['id' => $id]);
             }
 
             // Đồng bộ lại danh sách biến thể nếu được truyền vào
@@ -522,8 +541,9 @@ class Product
 
         // Lấy ảnh để xóa file vật lý
         $images = $this->getImages($id);
+        $baseDir = defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__);
         foreach ($images as $img) {
-            $filePath = ROOT_PATH . '/public/' . ltrim($img['image_path'], '/');
+            $filePath = $baseDir . '/public/' . ltrim($img['image_path'], '/');
             if (file_exists($filePath) && is_file($filePath)) {
                 @unlink($filePath);
             }
@@ -580,7 +600,8 @@ class Product
             return false;
         }
 
-        $filePath = ROOT_PATH . '/public/' . ltrim($img['image_path'], '/');
+        $baseDir = defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__);
+        $filePath = $baseDir . '/public/' . ltrim($img['image_path'], '/');
         if (file_exists($filePath) && is_file($filePath)) {
             @unlink($filePath);
         }
@@ -620,7 +641,7 @@ class Product
     }
 
     /**
-     * Đồng bộ danh sách biến thể size/màu/tồn kho an toàn (Tự động gộp nếu trùng Size & Màu)
+     * Đồng bộ danh sách biến thể size/màu/tồn kho an toàn (Tự động gộp nếu trùng Size & Màu, giữ nguyên ID biến thể hiện có)
      *
      * @param int $productId ID sản phẩm
      * @param array $variants Danh sách biến thể [{'size', 'color', 'stock'}]
@@ -628,10 +649,7 @@ class Product
      */
     public function syncVariants(int $productId, array $variants): void
     {
-        $delStmt = $this->pdo->prepare("DELETE FROM product_variants WHERE product_id = :product_id");
-        $delStmt->execute(['product_id' => $productId]);
-
-        // Gộp các dòng trùng cặp (size, color) để không bao giờ vi phạm UNIQUE KEY uq_variant
+        // 1. Gộp các dòng trùng cặp (size, color) từ dữ liệu truyền vào để chống lỗi uq_variant
         $uniqueVariants = [];
         foreach ($variants as $v) {
             $size  = trim($v['size'] ?? '');
@@ -657,18 +675,55 @@ class Product
             }
         }
 
-        $insStmt = $this->pdo->prepare(
+        // 2. Lấy danh sách các biến thể hiện có của sản phẩm trong CSDL
+        $getExistingStmt = $this->pdo->prepare("SELECT id, size, color, stock FROM product_variants WHERE product_id = :product_id");
+        $getExistingStmt->execute(['product_id' => $productId]);
+        $existing = $getExistingStmt->fetchAll();
+
+        $existingMap = [];
+        foreach ($existing as $item) {
+            $k = mb_strtolower(($item['size'] ?? 'Free') . '|' . ($item['color'] ?? 'Mặc định'), 'UTF-8');
+            $existingMap[$k] = $item;
+        }
+
+        $keepIds = [];
+        $updateStmt = $this->pdo->prepare("UPDATE product_variants SET stock = :stock WHERE id = :id");
+        $insertStmt = $this->pdo->prepare(
             "INSERT INTO product_variants (product_id, size, color, stock) 
-             VALUES (:product_id, :size, :color, :stock)"
+             VALUES (:product_id, :size, :color, :stock)
+             ON DUPLICATE KEY UPDATE stock = VALUES(stock)"
         );
 
-        foreach ($uniqueVariants as $uv) {
-            $insStmt->execute([
-                'product_id' => $productId,
-                'size'       => $uv['size'],
-                'color'      => $uv['color'],
-                'stock'      => $uv['stock'],
-            ]);
+        foreach ($uniqueVariants as $key => $uv) {
+            if (isset($existingMap[$key])) {
+                // Biến thể đã có: Cập nhật tồn kho và giữ nguyên ID để bảo toàn giỏ hàng & chi tiết đơn hàng
+                $existingId = (int)$existingMap[$key]['id'];
+                $updateStmt->execute([
+                    'stock' => $uv['stock'],
+                    'id'    => $existingId,
+                ]);
+                $keepIds[] = $existingId;
+            } else {
+                // Biến thể mới: Chèn mới vào bảng
+                $insertStmt->execute([
+                    'product_id' => $productId,
+                    'size'       => $uv['size'],
+                    'color'      => $uv['color'],
+                    'stock'      => $uv['stock'],
+                ]);
+                $keepIds[] = (int)$this->pdo->lastInsertId();
+            }
+        }
+
+        // 3. Xóa những biến thể cũ không còn trong danh sách gửi lên
+        if (!empty($keepIds)) {
+            $placeholders = implode(',', array_fill(0, count($keepIds), '?'));
+            $delStmt = $this->pdo->prepare("DELETE FROM product_variants WHERE product_id = ? AND id NOT IN ($placeholders)");
+            $delParams = array_merge([$productId], $keepIds);
+            $delStmt->execute($delParams);
+        } else {
+            $delStmt = $this->pdo->prepare("DELETE FROM product_variants WHERE product_id = :product_id");
+            $delStmt->execute(['product_id' => $productId]);
         }
     }
 
