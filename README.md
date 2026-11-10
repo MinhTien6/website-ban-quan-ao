@@ -39,7 +39,7 @@ website-ban-quan-ao/
   │    ├── database.php       # File kết nối CSDL thực tế (được .gitignore bảo vệ)
   │    └── database.example.php # File mẫu cấu hình kết nối CSDL
   ├── database/
-  │    └── shop_quanao.sql    # File cấu trúc CSDL + dữ liệu mẫu 30 sản phẩm
+  │    └── shop_quanao.sql    # File cấu trúc CSDL + dữ liệu mẫu 26 sản phẩm thời trang
   ├── docs/                   # Tài liệu thiết kế & sơ đồ
   │    ├── erd.png            # Sơ đồ CSDL 7 bảng cốt lõi
   │    └── usecase.png        # Sơ đồ Use Case chuẩn hệ thống

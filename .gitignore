@@ -19,3 +19,4 @@ public/uploads/banners/*
 *.swp
 .idea/
 .vscode/
+.continue/

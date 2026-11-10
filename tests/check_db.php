@@ -74,10 +74,10 @@ check('Có đầy đủ các ràng buộc khóa ngoại (FK)', $fk >= 7, "Tìm t
 // 4. Số dòng dữ liệu mẫu cho các bảng chính
 $expected = [
     'users'            => 4,
-    'categories'       => 8,
-    'products'         => 30,
-    'product_images'   => 90,
-    'product_variants' => 176,
+    'categories'       => 7,
+    'products'         => 26,
+    'product_images'   => 53,
+    'product_variants' => 168,
     'orders'           => 5,
     'order_items'      => 9,
 ];

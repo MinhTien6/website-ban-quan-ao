@@ -9,8 +9,7 @@
 --    User 2: minh.tran@example.com  / User@123
 --    User 3: (tài khoản bị khóa) khoa@example.com / User@123
 --
---  Ảnh sản phẩm: 30 sản phẩm x 3 ảnh = 90 ảnh thực tế riêng biệt (không trùng lặp)
---  Đường dẫn: public/uploads/products/<slug>-{1|2|3}.jpg (ảnh 1 là ảnh chính)
+--  Ảnh sản phẩm: image_path trỏ tới public/uploads/products/ (Bộ ảnh thực tế mặt trước & mặt sau đồng bộ từ nhánh feature/Hau, không có phụ kiện)
 -- =====================================================================
 
 CREATE DATABASE IF NOT EXISTS shop_quanao
@@ -246,11 +245,10 @@ INSERT INTO categories (id, name, slug, description, parent_id, status) VALUES
   (3, 'Quần jean', 'quan-jean', 'Quần jean nam nữ nhiều kiểu dáng', NULL, 1),
   (4, 'Váy đầm', 'vay-dam', 'Váy, đầm, chân váy nữ', NULL, 1),
   (5, 'Áo khoác', 'ao-khoac', 'Áo khoác và áo ấm các loại', NULL, 1),
-  (6, 'Phụ kiện', 'phu-kien', 'Mũ, thắt lưng, túi, khăn', NULL, 1),
   (7, 'Áo khoác bomber', 'ao-khoac-bomber', 'Bomber dù, bomber da', 5, 1),
   (8, 'Hoodie', 'hoodie', 'Áo hoodie nỉ, hoodie zip', 5, 1);
 
--- Sản phẩm (30 sản phẩm; một số có giá khuyến mãi)
+-- Sản phẩm (26 sản phẩm thời trang; một số có giá khuyến mãi)
 INSERT INTO products (id, name, slug, price, sale_price, description, category_id, status, views, created_at) VALUES
   (1, 'Áo thun basic cotton cổ tròn', 'ao-thun-basic-cotton-co-tron', 189000, 149000, '<p>Áo thun cotton 100% mềm mịn, form regular dễ phối đồ.</p><ul><li>Chất liệu: theo mô tả sản phẩm</li><li>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</li></ul>', 1, 1, 57, '2026-09-04 10:00:00'),
   (2, 'Áo thun oversize form rộng', 'ao-thun-oversize-form-rong', 249000, NULL, '<p>Form oversize phong cách Hàn Quốc, vải dày dặn không bai xù.</p><ul><li>Chất liệu: theo mô tả sản phẩm</li><li>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</li></ul>', 1, 1, 94, '2026-09-07 10:00:00'),
@@ -277,104 +275,63 @@ INSERT INTO products (id, name, slug, price, sale_price, description, category_i
   (23, 'Áo bomber dù 2 lớp', 'ao-bomber-du-2-lop', 589000, 499000, '<p>Bomber vải dù chống gió, lót trong mềm mại.</p><ul><li>Chất liệu: theo mô tả sản phẩm</li><li>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</li></ul>', 7, 1, 121, '2026-09-14 10:00:00'),
   (24, 'Áo bomber da PU', 'ao-bomber-da-pu', 749000, NULL, '<p>Da PU cao cấp, đường may chắc chắn, cá tính.</p><ul><li>Chất liệu: theo mô tả sản phẩm</li><li>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</li></ul>', 7, 1, 158, '2026-09-17 10:00:00'),
   (25, 'Hoodie nỉ bông form rộng', 'hoodie-ni-bong-form-rong', 449000, NULL, '<p>Nỉ bông dày ấm, mũ 2 lớp, túi kangaroo tiện lợi.</p><ul><li>Chất liệu: theo mô tả sản phẩm</li><li>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</li></ul>', 8, 1, 195, '2026-09-20 10:00:00'),
-  (26, 'Hoodie zip khóa kéo', 'hoodie-zip-khoa-keo', 479000, 419000, '<p>Hoodie khóa kéo dễ mặc, vải nỉ da cá không xù.</p><ul><li>Chất liệu: theo mô tả sản phẩm</li><li>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</li></ul>', 8, 1, 232, '2026-09-23 10:00:00'),
-  (27, 'Mũ lưỡi trai thêu logo', 'mu-luoi-trai-theu-logo', 159000, NULL, '<p>Mũ lưỡi trai cotton, khóa điều chỉnh phía sau.</p><ul><li>Chất liệu: theo mô tả sản phẩm</li><li>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</li></ul>', 6, 1, 269, '2026-09-26 10:00:00'),
-  (28, 'Thắt lưng da bò', 'that-lung-da-bo', 289000, 249000, '<p>Dây nịt da bò thật, khóa kim loại không gỉ.</p><ul><li>Chất liệu: theo mô tả sản phẩm</li><li>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</li></ul>', 6, 1, 56, '2026-09-01 10:00:00'),
-  (29, 'Túi tote vải canvas', 'tui-tote-vai-canvas', 199000, NULL, '<p>Túi tote canvas dày, có khóa kéo và ngăn phụ.</p><ul><li>Chất liệu: theo mô tả sản phẩm</li><li>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</li></ul>', 6, 1, 93, '2026-09-04 10:00:00'),
-  (30, 'Khăn choàng len', 'khan-choang-len', 219000, NULL, '<p>Khăn len mềm mịn, giữ ấm cổ cho mùa lạnh.</p><ul><li>Chất liệu: theo mô tả sản phẩm</li><li>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</li></ul>', 6, 1, 130, '2026-09-07 10:00:00');
+  (26, 'Hoodie zip khóa kéo', 'hoodie-zip-khoa-keo', 479000, 419000, '<p>Hoodie khóa kéo dễ mặc, vải nỉ da cá không xù.</p><ul><li>Chất liệu: theo mô tả sản phẩm</li><li>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</li></ul>', 8, 1, 232, '2026-09-23 10:00:00');
 
--- Ảnh sản phẩm: mỗi sản phẩm 3 ảnh, ảnh 1 là ảnh chính
+-- Ảnh sản phẩm: mỗi sản phẩm có ảnh thực tế (mặt trước, mặt sau) đồng bộ từ nhánh feature/Hau
 INSERT INTO product_images (id, product_id, image_path, is_main, sort_order) VALUES
-  (1, 1, 'uploads/products/ao-thun-basic-cotton-co-tron-1.jpg', 1, 1),
-  (2, 1, 'uploads/products/ao-thun-basic-cotton-co-tron-2.jpg', 0, 2),
-  (3, 1, 'uploads/products/ao-thun-basic-cotton-co-tron-3.jpg', 0, 3),
-  (4, 2, 'uploads/products/ao-thun-oversize-form-rong-1.jpg', 1, 1),
-  (5, 2, 'uploads/products/ao-thun-oversize-form-rong-2.jpg', 0, 2),
-  (6, 2, 'uploads/products/ao-thun-oversize-form-rong-3.jpg', 0, 3),
-  (7, 3, 'uploads/products/ao-polo-nam-vai-ca-sau-1.jpg', 1, 1),
-  (8, 3, 'uploads/products/ao-polo-nam-vai-ca-sau-2.jpg', 0, 2),
-  (9, 3, 'uploads/products/ao-polo-nam-vai-ca-sau-3.jpg', 0, 3),
-  (10, 4, 'uploads/products/ao-thun-in-hinh-graphic-1.jpg', 1, 1),
-  (11, 4, 'uploads/products/ao-thun-in-hinh-graphic-2.jpg', 0, 2),
-  (12, 4, 'uploads/products/ao-thun-in-hinh-graphic-3.jpg', 0, 3),
-  (13, 5, 'uploads/products/ao-croptop-nu-om-body-1.jpg', 1, 1),
-  (14, 5, 'uploads/products/ao-croptop-nu-om-body-2.jpg', 0, 2),
-  (15, 5, 'uploads/products/ao-croptop-nu-om-body-3.jpg', 0, 3),
-  (16, 6, 'uploads/products/ao-thun-tay-dai-thu-dong-1.jpg', 1, 1),
-  (17, 6, 'uploads/products/ao-thun-tay-dai-thu-dong-2.jpg', 0, 2),
-  (18, 6, 'uploads/products/ao-thun-tay-dai-thu-dong-3.jpg', 0, 3),
-  (19, 7, 'uploads/products/ao-so-mi-trang-cong-so-1.jpg', 1, 1),
-  (20, 7, 'uploads/products/ao-so-mi-trang-cong-so-2.jpg', 0, 2),
-  (21, 7, 'uploads/products/ao-so-mi-trang-cong-so-3.jpg', 0, 3),
-  (22, 8, 'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg', 1, 1),
-  (23, 8, 'uploads/products/ao-so-mi-ke-soc-xanh-2.jpg', 0, 2),
-  (24, 8, 'uploads/products/ao-so-mi-ke-soc-xanh-3.jpg', 0, 3),
-  (25, 9, 'uploads/products/ao-so-mi-linen-tay-ngan-1.jpg', 1, 1),
-  (26, 9, 'uploads/products/ao-so-mi-linen-tay-ngan-2.jpg', 0, 2),
-  (27, 9, 'uploads/products/ao-so-mi-linen-tay-ngan-3.jpg', 0, 3),
-  (28, 10, 'uploads/products/ao-so-mi-flannel-caro-1.jpg', 1, 1),
-  (29, 10, 'uploads/products/ao-so-mi-flannel-caro-2.jpg', 0, 2),
-  (30, 10, 'uploads/products/ao-so-mi-flannel-caro-3.jpg', 0, 3),
-  (31, 11, 'uploads/products/ao-so-mi-nu-co-no-1.jpg', 1, 1),
-  (32, 11, 'uploads/products/ao-so-mi-nu-co-no-2.jpg', 0, 2),
-  (33, 11, 'uploads/products/ao-so-mi-nu-co-no-3.jpg', 0, 3),
-  (34, 12, 'uploads/products/quan-jean-slim-fit-xanh-dam-1.jpg', 1, 1),
-  (35, 12, 'uploads/products/quan-jean-slim-fit-xanh-dam-2.jpg', 0, 2),
-  (36, 12, 'uploads/products/quan-jean-slim-fit-xanh-dam-3.jpg', 0, 3),
-  (37, 13, 'uploads/products/quan-jean-ong-rong-nu-1.jpg', 1, 1),
-  (38, 13, 'uploads/products/quan-jean-ong-rong-nu-2.jpg', 0, 2),
-  (39, 13, 'uploads/products/quan-jean-ong-rong-nu-3.jpg', 0, 3),
-  (40, 14, 'uploads/products/quan-jean-rach-goi-1.jpg', 1, 1),
-  (41, 14, 'uploads/products/quan-jean-rach-goi-2.jpg', 0, 2),
-  (42, 14, 'uploads/products/quan-jean-rach-goi-3.jpg', 0, 3),
-  (43, 15, 'uploads/products/quan-jean-baggy-1.jpg', 1, 1),
-  (44, 15, 'uploads/products/quan-jean-baggy-2.jpg', 0, 2),
-  (45, 15, 'uploads/products/quan-jean-baggy-3.jpg', 0, 3),
-  (46, 16, 'uploads/products/quan-short-jean-nam-1.jpg', 1, 1),
-  (47, 16, 'uploads/products/quan-short-jean-nam-2.jpg', 0, 2),
-  (48, 16, 'uploads/products/quan-short-jean-nam-3.jpg', 0, 3),
-  (49, 17, 'uploads/products/vay-midi-hoa-nhi-1.jpg', 1, 1),
-  (50, 17, 'uploads/products/vay-midi-hoa-nhi-2.jpg', 0, 2),
-  (51, 17, 'uploads/products/vay-midi-hoa-nhi-3.jpg', 0, 3),
-  (52, 18, 'uploads/products/dam-suong-cong-so-1.jpg', 1, 1),
-  (53, 18, 'uploads/products/dam-suong-cong-so-2.jpg', 0, 2),
-  (54, 18, 'uploads/products/dam-suong-cong-so-3.jpg', 0, 3),
-  (55, 19, 'uploads/products/chan-vay-chu-a-1.jpg', 1, 1),
-  (56, 19, 'uploads/products/chan-vay-chu-a-2.jpg', 0, 2),
-  (57, 19, 'uploads/products/chan-vay-chu-a-3.jpg', 0, 3),
-  (58, 20, 'uploads/products/dam-maxi-du-tiec-1.jpg', 1, 1),
-  (59, 20, 'uploads/products/dam-maxi-du-tiec-2.jpg', 0, 2),
-  (60, 20, 'uploads/products/dam-maxi-du-tiec-3.jpg', 0, 3),
-  (61, 21, 'uploads/products/vay-xep-ly-1.jpg', 1, 1),
-  (62, 21, 'uploads/products/vay-xep-ly-2.jpg', 0, 2),
-  (63, 21, 'uploads/products/vay-xep-ly-3.jpg', 0, 3),
-  (64, 22, 'uploads/products/ao-khoac-jean-unisex-1.jpg', 1, 1),
-  (65, 22, 'uploads/products/ao-khoac-jean-unisex-2.jpg', 0, 2),
-  (66, 22, 'uploads/products/ao-khoac-jean-unisex-3.jpg', 0, 3),
-  (67, 23, 'uploads/products/ao-bomber-du-2-lop-1.jpg', 1, 1),
-  (68, 23, 'uploads/products/ao-bomber-du-2-lop-2.jpg', 0, 2),
-  (69, 23, 'uploads/products/ao-bomber-du-2-lop-3.jpg', 0, 3),
-  (70, 24, 'uploads/products/ao-bomber-da-pu-1.jpg', 1, 1),
-  (71, 24, 'uploads/products/ao-bomber-da-pu-2.jpg', 0, 2),
-  (72, 24, 'uploads/products/ao-bomber-da-pu-3.jpg', 0, 3),
-  (73, 25, 'uploads/products/hoodie-ni-bong-form-rong-1.jpg', 1, 1),
-  (74, 25, 'uploads/products/hoodie-ni-bong-form-rong-2.jpg', 0, 2),
-  (75, 25, 'uploads/products/hoodie-ni-bong-form-rong-3.jpg', 0, 3),
-  (76, 26, 'uploads/products/hoodie-zip-khoa-keo-1.jpg', 1, 1),
-  (77, 26, 'uploads/products/hoodie-zip-khoa-keo-2.jpg', 0, 2),
-  (78, 26, 'uploads/products/hoodie-zip-khoa-keo-3.jpg', 0, 3),
-  (79, 27, 'uploads/products/mu-luoi-trai-theu-logo-1.jpg', 1, 1),
-  (80, 27, 'uploads/products/mu-luoi-trai-theu-logo-2.jpg', 0, 2),
-  (81, 27, 'uploads/products/mu-luoi-trai-theu-logo-3.jpg', 0, 3),
-  (82, 28, 'uploads/products/that-lung-da-bo-1.jpg', 1, 1),
-  (83, 28, 'uploads/products/that-lung-da-bo-2.jpg', 0, 2),
-  (84, 28, 'uploads/products/that-lung-da-bo-3.jpg', 0, 3),
-  (85, 29, 'uploads/products/tui-tote-vai-canvas-1.jpg', 1, 1),
-  (86, 29, 'uploads/products/tui-tote-vai-canvas-2.jpg', 0, 2),
-  (87, 29, 'uploads/products/tui-tote-vai-canvas-3.jpg', 0, 3),
-  (88, 30, 'uploads/products/khan-choang-len-1.jpg', 1, 1),
-  (89, 30, 'uploads/products/khan-choang-len-2.jpg', 0, 2),
-  (90, 30, 'uploads/products/khan-choang-len-3.jpg', 0, 3);
+  (1, 1, 'uploads/products/Ao-thun-oversize-basic-mat-truoc.jpg', 1, 1),
+  (2, 1, 'uploads/products/Ao-thun-oversize-basic-mat-sau.webp', 0, 2),
+  (3, 2, 'uploads/products/Ao-thun-oversize-basic-mat-truoc.jpg', 1, 1),
+  (4, 2, 'uploads/products/Ao-thun-oversize-basic-mat-sau.webp', 0, 2),
+  (5, 3, 'uploads/products/Ao-polo-tron-mat-truoc.jpg', 1, 1),
+  (6, 3, 'uploads/products/Ao-polo-tron-mat-sau.webp', 0, 2),
+  (7, 3, 'uploads/products/Ao-polo-co-tron-mat-truoc.jpg', 0, 3),
+  (8, 4, 'uploads/products/Ao-thun-in-logo-mat-truoc.jpg', 1, 1),
+  (9, 4, 'uploads/products/Ao-thun-in-logo-mat-sau.webp', 0, 2),
+  (10, 5, 'uploads/products/Ao-croptop-mat-truoc.jpg', 1, 1),
+  (11, 5, 'uploads/products/Ao-croptop-mat-sau.webp', 0, 2),
+  (12, 6, 'uploads/products/Ao-thun-in-logo-mat-truoc.jpg', 1, 1),
+  (13, 6, 'uploads/products/Ao-thun-in-logo-mat-sau.webp', 0, 2),
+  (14, 7, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-truoc.jpg', 1, 1),
+  (15, 7, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-sau.webp', 0, 2),
+  (16, 8, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-truoc.jpg', 1, 1),
+  (17, 8, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-sau.webp', 0, 2),
+  (18, 9, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-truoc.jpg', 1, 1),
+  (19, 9, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-sau.webp', 0, 2),
+  (20, 10, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-truoc.jpg', 1, 1),
+  (21, 10, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-sau.webp', 0, 2),
+  (22, 11, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-truoc.jpg', 1, 1),
+  (23, 11, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-sau.webp', 0, 2),
+  (24, 12, 'uploads/products/Quan-jeans-straight-mat-truoc.jpg', 1, 1),
+  (25, 12, 'uploads/products/Quan-jeans-straight-mat-sau.webp', 0, 2),
+  (26, 13, 'uploads/products/Quan-jeans-ong-rong-mat-truoc.jpg', 1, 1),
+  (27, 13, 'uploads/products/Quan-jeans-ong-rong-mat-sau.webp', 0, 2),
+  (28, 14, 'uploads/products/Quan-tay-ong-rong-mat-truoc.jpg', 1, 1),
+  (29, 14, 'uploads/products/Quan-tay-ong-rong-mat-sau.webp', 0, 2),
+  (30, 15, 'uploads/products/Quan-kaki-mat-truoc.jpg', 1, 1),
+  (31, 15, 'uploads/products/Quan-kaki-mat-sau.webp', 0, 2),
+  (32, 16, 'uploads/products/Quan-short-the-thao-mat-truoc.jpg', 1, 1),
+  (33, 16, 'uploads/products/Quan-short-the-thao-mat-sau.webp', 0, 2),
+  (34, 17, 'uploads/products/Chan-vay-midi-mat-truoc.jpg', 1, 1),
+  (35, 17, 'uploads/products/Chan-vay-midi-mat-sau.webp', 0, 2),
+  (36, 18, 'uploads/products/Chan-vay-midi-mat-truoc.jpg', 1, 1),
+  (37, 18, 'uploads/products/Chan-vay-midi-mat-sau.webp', 0, 2),
+  (38, 19, 'uploads/products/Quan-short-nu-mat-truoc.jpg', 1, 1),
+  (39, 19, 'uploads/products/Quan-short-nu-mat-sau.webp', 0, 2),
+  (40, 20, 'uploads/products/Chan-vay-xep-ly-mat-truoc.jpg', 1, 1),
+  (41, 20, 'uploads/products/Chan-vay-xep-li-mat-sau.webp', 0, 2),
+  (42, 21, 'uploads/products/Chan-vay-xep-ly-mat-truoc.jpg', 1, 1),
+  (43, 21, 'uploads/products/Chan-vay-xep-li-mat-sau.webp', 0, 2),
+  (44, 22, 'uploads/products/Ao-khoac-denim-mat-truoc.jpg', 1, 1),
+  (45, 22, 'uploads/products/Ao-khoac-denim-mat-sau.webp', 0, 2),
+  (46, 23, 'uploads/products/Ao-khoac-varsity-mat-truoc.jpg', 1, 1),
+  (47, 23, 'uploads/products/Ao-khoac-varsity-mat-sau.webp', 0, 2),
+  (48, 24, 'uploads/products/Ao-khoac-varsity-mat-truoc.jpg', 1, 1),
+  (49, 24, 'uploads/products/Ao-khoac-varsity-mat-sau.webp', 0, 2),
+  (50, 25, 'uploads/products/Ao-khoac-hoodie-oversize-mat-truoc.jpg', 1, 1),
+  (51, 25, 'uploads/products/Ao-khoac-hoodie-oversize-mat-sau.webp', 0, 2),
+  (52, 26, 'uploads/products/Ao-khoac-hoodie-zip-mat-truoc.jpg', 1, 1),
+  (53, 26, 'uploads/products/Ao-khoac-hoodie-zip-mat-sau.webp', 0, 2);
 
 -- Biến thể size/màu + tồn kho (SP 14 sắp hết hàng, SP 5 size S hết hàng để demo cảnh báo)
 INSERT INTO product_variants (id, product_id, size, color, stock) VALUES
@@ -545,15 +502,7 @@ INSERT INTO product_variants (id, product_id, size, color, stock) VALUES
   (165, 26, 'S', 'Xanh navy', 22),
   (166, 26, 'M', 'Xanh navy', 25),
   (167, 26, 'L', 'Xanh navy', 28),
-  (168, 26, 'XL', 'Xanh navy', 31),
-  (169, 27, 'Free', 'Đen', 11),
-  (170, 27, 'Free', 'Trắng', 14),
-  (171, 28, 'Free', 'Đen', 24),
-  (172, 28, 'Free', 'Nâu', 27),
-  (173, 29, 'Free', 'Be', 7),
-  (174, 29, 'Free', 'Đen', 10),
-  (175, 30, 'Free', 'Xám', 20),
-  (176, 30, 'Free', 'Đỏ', 23);
+  (168, 26, 'XL', 'Xanh navy', 31);
 
 -- Mã giảm giá (HETHAN đã hết hạn để test dữ liệu biên)
 INSERT INTO coupons (id, code, discount_type, discount_value, min_order, expires_at, usage_limit) VALUES
@@ -566,9 +515,9 @@ INSERT INTO coupons (id, code, discount_type, discount_value, min_order, expires
 INSERT INTO orders (id, user_id, receiver_name, phone, address, total, payment_method, status, coupon_id, created_at) VALUES
   (1, 2, 'Nguyễn Thị Lan', '0912345678', '12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh', 762300, 'cod', 'completed', 1, '2026-10-01 09:15:00'),
   (2, 3, 'Trần Văn Minh', '0987654321', '45 Lê Lợi, Quận 3, TP. Hồ Chí Minh', 788000, 'bank', 'shipping', NULL, '2026-10-12 14:40:00'),
-  (3, 2, 'Nguyễn Thị Lan', '0912345678', '12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh', 558000, 'cod', 'pending', 2, '2026-10-20 19:05:00'),
+  (3, 2, 'Nguyễn Thị Lan', '0912345678', '12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh', 528000, 'cod', 'pending', 2, '2026-10-20 19:05:00'),
   (4, 3, 'Trần Văn Minh', '0987654321', '45 Lê Lợi, Quận 3, TP. Hồ Chí Minh', 349000, 'cod', 'cancelled', NULL, '2026-10-05 11:30:00'),
-  (5, 2, 'Nguyễn Thị Lan', '0912345678', '12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh', 897000, 'bank', 'confirmed', NULL, '2026-10-21 08:50:00');
+  (5, 2, 'Nguyễn Thị Lan', '0912345678', '12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh', 797000, 'bank', 'confirmed', NULL, '2026-10-21 08:50:00');
 
 -- Chi tiết đơn hàng
 INSERT INTO order_items (id, order_id, product_id, variant_id, quantity, price) VALUES
@@ -577,10 +526,10 @@ INSERT INTO order_items (id, order_id, product_id, variant_id, quantity, price) 
   (3, 2, 17, 99, 1, 459000),
   (4, 2, 21, 125, 1, 329000),
   (5, 3, 25, 155, 1, 449000),
-  (6, 3, 27, 169, 1, 159000),
+  (6, 3, 5, 26, 1, 129000),
   (7, 4, 7, 38, 1, 349000),
   (8, 5, 23, 140, 1, 499000),
-  (9, 5, 29, 173, 2, 199000);
+  (9, 5, 1, 4, 2, 149000);
 
 -- Đánh giá (đánh giá số 5 đang chờ duyệt)
 INSERT INTO reviews (id, product_id, user_id, rating, comment, status, created_at) VALUES
