@@ -9,8 +9,8 @@
 --    User 2: minh.tran@example.com  / User@123
 --    User 3: (tài khoản bị khóa) khoa@example.com / User@123
 --
---  Ảnh sản phẩm: image_path trỏ tới public/uploads/products/<slug>-1.jpg ...
---  (TV3 đặt file ảnh đúng tên, hoặc sửa đường dẫn trong bảng product_images)
+--  Ảnh sản phẩm: 30 sản phẩm x 3 ảnh = 90 ảnh thực tế riêng biệt (không trùng lặp)
+--  Đường dẫn: public/uploads/products/<slug>-{1|2|3}.jpg (ảnh 1 là ảnh chính)
 -- =====================================================================
 
 CREATE DATABASE IF NOT EXISTS shop_quanao
@@ -611,4 +611,4 @@ INSERT INTO banners (id, title, image_path, link, sort_order, status) VALUES
   (2, 'Sale đến 30% - Áo khoác & Hoodie', 'uploads/banners/banner-2.jpg', 'products.php?category=ao-khoac', 2, 1),
   (3, 'Freeship đơn từ 500.000đ', 'uploads/banners/banner-3.jpg', 'products.php', 3, 1);
 
--- Hết file. Kiểm tra nhanh:  SELECT COUNT(*) FROM products;  -- kỳ vọng 30git add database/shop_quanao.sql tests/check_db.php
+-- Hết file. Kiểm tra nhanh:  SELECT COUNT(*) FROM products;  -- kỳ vọng 30 sản phẩm, 90 ảnh, 176 biến thể
