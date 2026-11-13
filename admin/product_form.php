@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Xử lý tải lên nhiều ảnh (uploadMultipleImages)
     $uploadedImagePaths = [];
     if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
-        $uploadResult = uploadMultipleImages($_FILES['images'], 'products');
+        $uploadResult = uploadMultipleImages($_FILES['images'], 'products', 5, ['jpg', 'jpeg', 'png', 'webp'], $slug);
         if ($uploadResult['success']) {
             foreach ($uploadResult['files'] as $f) {
                 $uploadedImagePaths[] = $f['path'];

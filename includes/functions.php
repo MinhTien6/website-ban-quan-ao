@@ -137,7 +137,8 @@ function uploadImage(
     array $file,
     string $subFolder = 'products',
     int $maxSizeMb = 5,
-    array $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp']
+    array $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'],
+    ?string $customPrefix = null
 ): array {
     if (!isset($file['error']) || is_array($file['error'])) {
         return ['success' => false, 'error' => 'Tham số tệp tin tải lên không hợp lệ.'];
@@ -172,9 +173,22 @@ function uploadImage(
         return ['success' => false, 'error' => 'Không thể tạo thư mục lưu trữ ảnh trên máy chủ.'];
     }
 
-    // Đặt tên tệp duy nhất để tránh ghi đè
-    $newFileName = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
-    $targetFilePath = $targetDir . '/' . $newFileName;
+    // Đặt tên tệp theo slug nếu có, hoặc theo ngày giờ ngẫu nhiên
+    if (!empty($customPrefix)) {
+        $cleanPrefix = createSlug($customPrefix);
+        if ($cleanPrefix === '') {
+            $cleanPrefix = 'san-pham';
+        }
+        $index = 1;
+        do {
+            $newFileName = $cleanPrefix . '-' . $index . '.' . $extension;
+            $targetFilePath = $targetDir . '/' . $newFileName;
+            $index++;
+        } while (file_exists($targetFilePath));
+    } else {
+        $newFileName = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+        $targetFilePath = $targetDir . '/' . $newFileName;
+    }
 
     if (!move_uploaded_file($file['tmp_name'], $targetFilePath)) {
         return ['success' => false, 'error' => 'Không thể lưu tệp ảnh vào thư mục đích.'];
@@ -335,7 +349,8 @@ function uploadMultipleImages(
     array $files,
     string $subFolder = 'products',
     int $maxSizeMb = 5,
-    array $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp']
+    array $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'],
+    ?string $customPrefix = null
 ): array {
     $uploaded = [];
     $errors = [];
@@ -364,7 +379,7 @@ function uploadMultipleImages(
             'size'     => $files['size'][$i],
         ];
 
-        $result = uploadImage($singleFile, $subFolder, $maxSizeMb, $allowedExtensions);
+        $result = uploadImage($singleFile, $subFolder, $maxSizeMb, $allowedExtensions, $customPrefix);
         if ($result['success']) {
             $uploaded[] = [
                 'path'     => $result['path'],
