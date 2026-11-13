@@ -51,6 +51,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect($isEdit ? "admin/product_form.php?id={$productId}" : 'admin/product_form.php');
     }
 
+    // Xử lý xóa 1 ảnh hiện có trong CSDL (Chế độ Edit)
+    if (isset($_POST['action']) && $_POST['action'] === 'delete_image') {
+        $delImgId = (int)($_POST['image_id'] ?? 0);
+        if ($isEdit && $delImgId > 0) {
+            $productModel->deleteImage($delImgId);
+            setFlash('success', 'Đã xóa ảnh sản phẩm thành công!');
+            redirect("admin/product_form.php?id={$productId}");
+        }
+    }
+
     $name = trim($_POST['name'] ?? '');
     $slug = trim($_POST['slug'] ?? '');
     $categoryId = (int)($_POST['category_id'] ?? 0);
@@ -330,6 +340,9 @@ require_once __DIR__ . '/includes/header.php';
                                         <input type="radio" name="main_image_id" value="<?= $img['id'] ?>" <?= $img['is_main'] ? 'checked' : '' ?>>
                                         Ảnh chính
                                     </label>
+                                    <button type="button" class="btn-action-sm btn-delete-sm" onclick="deleteExistingPhoto(<?= $img['id'] ?>)" title="Xóa ảnh này">
+                                        🗑️ Xóa
+                                    </button>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -354,6 +367,23 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 </form>
+
+<?php if ($isEdit): ?>
+<!-- Form ẩn xử lý xóa ảnh an toàn qua POST CSRF -->
+<form id="delete-image-form" action="<?= BASE_URL ?>/admin/product_form.php?id=<?= $productId ?>" method="POST" style="display:none;">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="delete_image">
+    <input type="hidden" name="image_id" id="delete_image_id_input" value="">
+</form>
+<script>
+function deleteExistingPhoto(id) {
+    if (confirm('Bạn có chắc chắn muốn xóa ảnh này khỏi sản phẩm?')) {
+        document.getElementById('delete_image_id_input').value = id;
+        document.getElementById('delete-image-form').submit();
+    }
+}
+</script>
+<?php endif; ?>
 
 <!-- Tích hợp CKEditor 5 theo yêu cầu Giảng viên (Không cần API key, CDN ổn định 100%) -->
 <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
