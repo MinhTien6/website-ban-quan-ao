@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Xử lý tải lên nhiều ảnh (uploadMultipleImages)
     $uploadedImagePaths = [];
     if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
-        $uploadResult = uploadMultipleImages($_FILES['images'], 'products');
+        $uploadResult = uploadMultipleImages($_FILES['images'], 'products', 5, ['jpg', 'jpeg', 'png', 'webp'], $slug);
         if ($uploadResult['success']) {
             foreach ($uploadResult['files'] as $f) {
                 $uploadedImagePaths[] = $f['path'];
@@ -340,7 +340,7 @@ require_once __DIR__ . '/includes/header.php';
                     <label for="images">Tải lên ảnh mới (chọn nhiều ảnh) <?= !$isEdit ? '<span class="required">*</span>' : '' ?></label>
                     <input type="file" id="images" name="images[]" class="form-control" 
                            multiple accept="image/jpeg,image/png,image/webp" <?= !$isEdit ? 'required' : '' ?>>
-                    <small class="form-hint">Nhấn giữ phím Ctrl để chọn 2-3 ảnh cùng lúc (.jpg, .png, .webp tối đa 5MB/ảnh).</small>
+                    <small class="form-hint">Nhấn giữ phím Ctrl để chọn 2-3 ảnh cùng lúc (.jpg, .png, .webp tối đa 5MB/ảnh). Tên ảnh sẽ dựa trên slug sản phẩm, ví dụ ao-polo-co-1.webp.</small>
                 </div>
 
                 <div id="image-preview" class="image-preview-grid"></div>
