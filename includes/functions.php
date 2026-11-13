@@ -131,6 +131,8 @@ function createSlug(string $string): string
  * @param string $subFolder Thư mục con trong public/uploads (vd: 'products', 'banners')
  * @param int $maxSizeMb Dung lượng tối đa tính bằng MB
  * @param array $allowedExtensions Các định dạng ảnh cho phép
+ * @param string|null $fileNamePrefix Tiền tố tên tệp, thường là slug sản phẩm
+ * @param int $sequence Số thứ tự ảnh trong bộ ảnh của sản phẩm
  * @return array{success: bool, path?: string, error?: string}
  */
 function uploadImage(
@@ -138,7 +140,8 @@ function uploadImage(
     string $subFolder = 'products',
     int $maxSizeMb = 5,
     array $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'],
-    ?string $customPrefix = null
+    ?string $fileNamePrefix = null,
+    int $sequence = 1
 ): array {
     if (!isset($file['error']) || is_array($file['error'])) {
         return ['success' => false, 'error' => 'Tham số tệp tin tải lên không hợp lệ.'];
@@ -173,22 +176,25 @@ function uploadImage(
         return ['success' => false, 'error' => 'Không thể tạo thư mục lưu trữ ảnh trên máy chủ.'];
     }
 
-    // Đặt tên tệp theo slug nếu có, hoặc theo ngày giờ ngẫu nhiên
-    if (!empty($customPrefix)) {
-        $cleanPrefix = createSlug($customPrefix);
-        if ($cleanPrefix === '') {
-            $cleanPrefix = 'san-pham';
-        }
-        $index = 1;
-        do {
-            $newFileName = $cleanPrefix . '-' . $index . '.' . $extension;
-            $targetFilePath = $targetDir . '/' . $newFileName;
-            $index++;
-        } while (file_exists($targetFilePath));
+    if ($fileNamePrefix === null) {
+        $fileNameStem = date('Ymd_His') . '_' . bin2hex(random_bytes(4));
     } else {
-        $newFileName = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
-        $targetFilePath = $targetDir . '/' . $newFileName;
+        $safePrefix = trim((string) preg_replace('/[^a-zA-Z0-9_-]+/', '-', $fileNamePrefix), '-_');
+        if ($safePrefix === '') {
+            return ['success' => false, 'error' => 'Tên sản phẩm không hợp lệ để đặt tên ảnh.'];
+        }
+
+        $fileNameStem = strtolower($safePrefix) . '-' . max(1, $sequence);
     }
+
+    // Tăng số thứ tự nếu tên ảnh đã tồn tại để không ghi đè tệp cũ
+    $newFileName = $fileNameStem . '.' . $extension;
+    $collisionNumber = 2;
+    while (file_exists($targetDir . '/' . $newFileName)) {
+        $newFileName = $fileNameStem . '-' . $collisionNumber . '.' . $extension;
+        $collisionNumber++;
+    }
+    $targetFilePath = $targetDir . '/' . $newFileName;
 
     if (!move_uploaded_file($file['tmp_name'], $targetFilePath)) {
         return ['success' => false, 'error' => 'Không thể lưu tệp ảnh vào thư mục đích.'];
@@ -343,6 +349,7 @@ function verifyCsrfToken(?string $token = null): bool
  * @param string $subFolder Thư mục con trong public/uploads
  * @param int $maxSizeMb Dung lượng tối đa mỗi ảnh (MB)
  * @param array $allowedExtensions Các định dạng ảnh cho phép
+ * @param string|null $fileNamePrefix Tiền tố tên tệp, thường là slug sản phẩm
  * @return array{success: bool, files: array<array{path: string, filename: string}>, errors: array<string>}
  */
 function uploadMultipleImages(
@@ -350,7 +357,7 @@ function uploadMultipleImages(
     string $subFolder = 'products',
     int $maxSizeMb = 5,
     array $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'],
-    ?string $customPrefix = null
+    ?string $fileNamePrefix = null
 ): array {
     $uploaded = [];
     $errors = [];
@@ -379,7 +386,7 @@ function uploadMultipleImages(
             'size'     => $files['size'][$i],
         ];
 
-        $result = uploadImage($singleFile, $subFolder, $maxSizeMb, $allowedExtensions, $customPrefix);
+        $result = uploadImage($singleFile, $subFolder, $maxSizeMb, $allowedExtensions, $fileNamePrefix, $i + 1);
         if ($result['success']) {
             $uploaded[] = [
                 'path'     => $result['path'],
