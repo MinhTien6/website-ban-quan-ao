@@ -13,6 +13,140 @@ class Order
         $this->pdo = $pdo;
     }
 
+/**
+ * Kiểm tra mã giảm giá và tính số tiền được giảm.
+ *
+ * @param string $code Mã giảm giá
+ * @param float $subtotal Tổng tiền hàng trước khi giảm
+ * @return array
+ * @throws Exception
+ */
+public function getCouponDiscount(
+    string $code,
+    float $subtotal
+): array {
+    $code = strtoupper(trim($code));
+
+    if ($code === '') {
+        throw new InvalidArgumentException(
+            'Vui lòng nhập mã giảm giá.'
+        );
+    }
+
+    if (!is_finite($subtotal) || $subtotal <= 0) {
+        throw new InvalidArgumentException(
+            'Tổng tiền đơn hàng không hợp lệ.'
+        );
+    }
+
+    // 1. Tìm mã giảm giá
+    $stmt = $this->pdo->prepare("
+        SELECT
+            id,
+            code,
+            discount_type,
+            discount_value,
+            min_order,
+            expires_at,
+            usage_limit
+        FROM coupons
+        WHERE code = :code
+        LIMIT 1
+    ");
+
+    $stmt->execute(['code' => $code]);
+
+    $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$coupon) {
+        throw new Exception('Mã giảm giá không tồn tại.');
+    }
+
+    // 2. Kiểm tra hạn sử dụng
+    if (
+        !empty($coupon['expires_at']) &&
+        strtotime($coupon['expires_at']) < time()
+    ) {
+        throw new Exception('Mã giảm giá đã hết hạn.');
+    }
+
+    // 3. Kiểm tra giá trị đơn hàng tối thiểu
+    $minOrder = (float)$coupon['min_order'];
+
+    if ($subtotal < $minOrder) {
+        throw new Exception(
+            'Đơn hàng cần đạt tối thiểu '
+            . number_format($minOrder, 0, ',', '.')
+            . 'đ để sử dụng mã này.'
+        );
+    }
+
+    // 4. Kiểm tra lượt sử dụng
+    $usageLimit = (int)$coupon['usage_limit'];
+
+    if ($usageLimit > 0) {
+        $usageStmt = $this->pdo->prepare("
+            SELECT COUNT(*)
+            FROM orders
+            WHERE coupon_id = :coupon_id
+              AND status <> 'cancelled'
+        ");
+
+        $usageStmt->execute([
+            'coupon_id' => (int)$coupon['id']
+        ]);
+
+        $usedCount = (int)$usageStmt->fetchColumn();
+
+        if ($usedCount >= $usageLimit) {
+            throw new Exception(
+                'Mã giảm giá đã hết lượt sử dụng.'
+            );
+        }
+    }
+
+    // 5. Tính số tiền được giảm
+    $discountValue = (float)$coupon['discount_value'];
+
+    if (!is_finite($discountValue) || $discountValue <= 0) {
+        throw new Exception(
+            'Giá trị mã giảm giá không hợp lệ.'
+        );
+    }
+
+    if ($coupon['discount_type'] === 'percent') {
+        if ($discountValue > 100) {
+            throw new Exception(
+                'Giá trị phần trăm giảm giá không hợp lệ.'
+            );
+        }
+
+        $discount = round(
+            $subtotal * $discountValue / 100
+        );
+    } elseif ($coupon['discount_type'] === 'amount') {
+        $discount = round($discountValue);
+    } else {
+        throw new Exception(
+            'Loại mã giảm giá không hợp lệ.'
+        );
+    }
+
+    // Không giảm quá tổng tiền hàng
+    $discount = min($discount, $subtotal);
+
+    return [
+        'coupon_id' => (int)$coupon['id'],
+        'code' => $coupon['code'],
+        'discount_type' => $coupon['discount_type'],
+        'discount_value' => $discountValue,
+        'discount' => $discount,
+        'subtotal' => $subtotal,
+        'final_total' => $subtotal - $discount
+    ];
+}
+
+
     /**
      * Tạo đơn hàng và trừ tồn kho bằng Transaction.
      *
@@ -22,8 +156,11 @@ class Order
      * @throws Exception
      */
     
-public function createOrder(array $orderData, array $items): int
-{
+public function createOrder(
+    array $orderData,
+    array $items,
+    ?string $couponCode = null
+): int{
     // =========================================
     // 1. KIỂM TRA GIỎ HÀNG
     // =========================================
@@ -268,6 +405,142 @@ public function createOrder(array $orderData, array $items): int
         }
 
         // =========================================
+        // 8.1. KIỂM TRA VÀ ÁP DỤNG MÃ GIẢM GIÁ
+        // =========================================
+        $couponId = null;
+        $discount = 0;
+
+        $couponCode = strtoupper(trim($couponCode ?? ''));
+
+        if ($couponCode !== '') {
+
+            // Khóa coupon để tránh nhiều giao dịch
+            // cùng sử dụng vượt quá giới hạn.
+            $couponStmt = $this->pdo->prepare("
+                SELECT
+                    id,
+                    code,
+                    discount_type,
+                    discount_value,
+                    min_order,
+                    expires_at,
+                    usage_limit
+                FROM coupons
+                WHERE code = :code
+                LIMIT 1
+                FOR UPDATE
+            ");
+
+            $couponStmt->execute([
+                'code' => $couponCode
+            ]);
+
+            $coupon = $couponStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$coupon) {
+                throw new Exception(
+                    'Mã giảm giá không tồn tại.'
+                );
+            }
+
+            // Kiểm tra hạn sử dụng theo thời gian database.
+            $expiryStmt = $this->pdo->prepare("
+                SELECT id
+                FROM coupons
+                WHERE id = :id
+                  AND expires_at IS NOT NULL
+                  AND expires_at <= NOW()
+                LIMIT 1
+            ");
+
+            $expiryStmt->execute([
+                'id' => (int)$coupon['id']
+            ]);
+
+            if ($expiryStmt->fetchColumn()) {
+                throw new Exception(
+                    'Mã giảm giá đã hết hạn.'
+                );
+            }
+
+            // Kiểm tra giá trị đơn hàng tối thiểu.
+            $minOrder = (float)$coupon['min_order'];
+
+            if ($total < $minOrder) {
+                throw new Exception(
+                    'Đơn hàng chưa đạt giá trị tối thiểu '
+                    . number_format($minOrder, 0, ',', '.')
+                    . 'đ để sử dụng mã này.'
+                );
+            }
+
+            // Kiểm tra số lượt sử dụng.
+            $usageLimit = (int)$coupon['usage_limit'];
+
+            if ($usageLimit > 0) {
+
+                $usageStmt = $this->pdo->prepare("
+                    SELECT COUNT(*)
+                    FROM orders
+                    WHERE coupon_id = :coupon_id
+                      AND status <> 'cancelled'
+                ");
+
+                $usageStmt->execute([
+                    'coupon_id' => (int)$coupon['id']
+                ]);
+
+                $usedCount = (int)$usageStmt->fetchColumn();
+
+                if ($usedCount >= $usageLimit) {
+                    throw new Exception(
+                        'Mã giảm giá đã hết lượt sử dụng.'
+                    );
+                }
+            }
+
+            // Tính tiền giảm.
+            $discountValue = (float)$coupon['discount_value'];
+
+            if (!is_finite($discountValue) || $discountValue <= 0) {
+                throw new Exception(
+                    'Giá trị mã giảm giá không hợp lệ.'
+                );
+            }
+
+            if ($coupon['discount_type'] === 'percent') {
+
+                if ($discountValue > 100) {
+                    throw new Exception(
+                        'Phần trăm giảm giá không hợp lệ.'
+                    );
+                }
+
+                $discount = round(
+                    $total * $discountValue / 100
+                );
+
+            } elseif ($coupon['discount_type'] === 'amount') {
+
+                $discount = round($discountValue);
+
+            } else {
+                throw new Exception(
+                    'Loại mã giảm giá không hợp lệ.'
+                );
+            }
+
+            // Không cho phép giảm vượt quá tổng tiền hàng.
+            $discount = min($discount, $total);
+
+            $couponId = (int)$coupon['id'];
+
+            // Tổng tiền cuối cùng sau khi giảm.
+            $total -= $discount;
+        }
+
+
+        // =========================================
         // 9. TẠO ĐƠN HÀNG
         // =========================================
         $orderSql = "
@@ -306,8 +579,7 @@ public function createOrder(array $orderData, array $items): int
             'payment_method' => $paymentMethod,
 
             // Chưa triển khai nghiệp vụ mã giảm giá
-            'coupon_id' => null
-        ]);
+'coupon_id' => $couponId        ]);
 
         $orderId = (int)$this->pdo->lastInsertId();
 

@@ -12,7 +12,6 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/models/Order.php';
 require_once __DIR__ . '/models/User.php';
-
 // Bắt buộc đăng nhập
 requireLogin();
 
@@ -37,16 +36,70 @@ if (empty($cart) && !$successOrderId) {
 }
 
 $orderModel = new Order($pdo);
-
+// Kiểm tra quyền truy cập thông báo đặt hàng thành công
+if (
+    $successOrderId &&
+    !$orderModel->belongsToUser(
+        $successOrderId,
+        (int)$currentUser['id']
+    )
+) {
+    setFlash('error', 'Không tìm thấy đơn hàng.');
+    redirect('my_orders.php');
+}
 // Xử lý đặt hàng
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    // 1. Kiểm tra CSRF
     if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
         setFlash('error', 'Phiên gửi biểu mẫu không hợp lệ!');
         redirect('checkout.php');
     }
 
+    // 2. Xử lý áp dụng hoặc hủy mã giảm giá
+    $action = $_POST['action'] ?? 'place_order';
+
+    if ($action === 'apply_coupon') {
+
+        $couponCode = trim($_POST['coupon_code'] ?? '');
+
+        try {
+            $couponResult = $orderModel->getCouponDiscount(
+                $couponCode,
+                (float)getCartTotal()
+            );
+
+            $_SESSION['applied_coupon'] = $couponResult['code'];
+
+            setFlash(
+                'success',
+                'Áp dụng mã giảm giá thành công! Bạn được giảm '
+                . formatPrice($couponResult['discount']) . '.'
+            );
+
+        } catch (Throwable $e) {
+
+            unset($_SESSION['applied_coupon']);
+
+            setFlash('error', $e->getMessage());
+        }
+
+        redirect('checkout.php');
+    }
+
+    if ($action === 'remove_coupon') {
+
+        unset($_SESSION['applied_coupon']);
+
+        setFlash('success', 'Đã hủy mã giảm giá.');
+
+        redirect('checkout.php');
+    }
+
+    // 3. Tiếp tục xử lý đặt hàng như code hiện tại
     $receiverName = trim($_POST['receiver_name'] ?? '');
+
     $phone = trim($_POST['phone'] ?? '');
     $address = trim($_POST['address'] ?? '');
     $paymentMethod = $_POST['payment_method'] ?? 'cod';
@@ -82,10 +135,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     try {
-        $orderId = $orderModel->createOrder($orderData, $cart);
+$appliedCouponCode = $_SESSION['applied_coupon'] ?? null;
 
-        clearCart();
+$orderId = $orderModel->createOrder(
+    $orderData,
+    $cart,
+    $appliedCouponCode
+);
+clearCart();
 
+unset($_SESSION['applied_coupon']);
         setFlash(
             'success',
             'Đặt hàng thành công! Mã đơn hàng của bạn: #' . $orderId
@@ -93,17 +152,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         redirect('checkout.php?success=' . $orderId);
 
-    } catch (Throwable $e) {
-        error_log('ORDER ERROR: ' . $e->getMessage());
+   } catch (Throwable $e) {
+    error_log('ORDER ERROR: ' . $e->getMessage());
 
-        setFlash('error', $e->getMessage());
-        redirect('checkout.php');
-    }
+    setFlash(
+        'error',
+        'Đặt hàng không thành công. Vui lòng kiểm tra lại thông tin và thử lại.'
+    );
+
+    redirect('checkout.php');
+}
 }
 
 // Tính tổng tiền
 $cartTotal = getCartTotal();
 $cartCount = getCartCount();
+
+$appliedCoupon = null;
+$discount = 0;
+$finalTotal = $cartTotal;
+
+$appliedCouponCode = $_SESSION['applied_coupon'] ?? '';
+
+if ($appliedCouponCode !== '') {
+    try {
+        $appliedCoupon = $orderModel->getCouponDiscount(
+            $appliedCouponCode,
+            (float)$cartTotal
+        );
+
+        $discount = (float)$appliedCoupon['discount'];
+        $finalTotal = (float)$appliedCoupon['final_total'];
+
+    } catch (Throwable $e) {
+        unset($_SESSION['applied_coupon']);
+
+        setFlash(
+            'error',
+            'Mã giảm giá không còn hợp lệ: ' . $e->getMessage()
+        );
+    }
+}
 
 // Lấy thông tin mặc định từ hồ sơ
 $profile = is_array($userProfile) ? $userProfile : [];
@@ -144,6 +233,75 @@ require_once __DIR__ . '/includes/header.php';
     margin: 0 0 8px;
 }
 
+.coupon-section {
+    padding: 16px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.coupon-section h3 {
+    font-size: 15px;
+    margin: 0 0 12px;
+}
+
+.coupon-input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.coupon-input-group input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    outline: none;
+}
+
+.coupon-input-group input:focus {
+    border-color: #a52a3a;
+}
+
+.coupon-input-group button {
+    padding: 10px 13px;
+    border: none;
+    border-radius: 7px;
+    background: #a52a3a;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.coupon-applied {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f0faf4;
+    border: 1px solid #ccebd8;
+    border-radius: 8px;
+}
+
+.coupon-applied strong {
+    color: #238b57;
+}
+
+.coupon-applied p {
+    margin: 5px 0 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.coupon-remove {
+    padding: 7px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: white;
+    color: #a52a3a;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
 .checkout-heading p {
     color: #777;
     margin: 0;
@@ -159,9 +317,9 @@ require_once __DIR__ . '/includes/header.php';
     padding: 12px 16px;
     margin-top: 12px;
 
-    background-color: #8D2335;
+    background-color: #a52a3a;
     color: #FFFFFF;
-    border: 1px solid #8D2335;
+    border: 1px solid #a52a3a;
     border-radius: 8px;
 
     font-size: 15px;
@@ -598,6 +756,52 @@ require_once __DIR__ . '/includes/header.php';
 
                     <h2>Đơn hàng của bạn</h2>
 
+<div class="coupon-section">
+    <h3>Mã giảm giá</h3>
+
+    <?php if ($appliedCoupon): ?>
+
+        <div class="coupon-applied">
+            <div>
+                <strong>
+                    <?= e($appliedCoupon['code']) ?>
+                </strong>
+                <p>Đã áp dụng mã giảm giá thành công.</p>
+            </div>
+
+            <button
+                type="submit"
+                name="action"
+                value="remove_coupon"
+                formnovalidate
+                class="coupon-remove">
+                Hủy mã
+            </button>
+        </div>
+
+    <?php else: ?>
+
+        <div class="coupon-input-group">
+            <input
+                type="text"
+                name="coupon_code"
+                maxlength="30"
+                placeholder="Nhập mã giảm giá"
+                autocomplete="off">
+
+            <button
+                type="submit"
+                name="action"
+                value="apply_coupon"
+                formnovalidate>
+                Áp dụng
+            </button>
+        </div>
+
+    <?php endif; ?>
+</div>
+
+
                     <?php foreach ($cart as $variantId => $item): ?>
 
                         <div class="checkout-product">
@@ -657,10 +861,19 @@ require_once __DIR__ . '/includes/header.php';
                         <span>Chưa tính</span>
                     </div>
 
-                    <div class="checkout-summary-row checkout-summary-total">
-                        <span>Tổng tiền hàng</span>
-                        <strong><?= formatPrice($cartTotal) ?></strong>
-                    </div>
+                   
+<div class="checkout-summary-row">
+    <span>Giảm giá</span>
+    <strong style="color: #238b57;">
+        -<?= formatPrice($discount) ?>
+    </strong>
+</div>
+
+<div class="checkout-summary-row checkout-summary-total">
+    <span>Tổng thanh toán</span>
+    <strong><?= formatPrice($finalTotal) ?></strong>
+</div>
+
 
                     <button type="submit" class="checkout-submit">
                         Xác nhận đặt hàng
@@ -674,9 +887,7 @@ require_once __DIR__ . '/includes/header.php';
                        class="checkout-back">
                         ← Quay lại giỏ hàng
                     </a>
-                    <a href="<?= BASE_URL ?>/my_orders.php">
-    Đơn hàng của tôi
-</a>
+                    
 
                 </aside>
 

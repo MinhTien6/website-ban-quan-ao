@@ -39,8 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         FILTER_VALIDATE_INT
     );
 
-    $returnTo = $_POST['return_to'] ?? 'list';
-
+$returnTo = ($_POST['return_to'] ?? 'list') === 'detail'
+    ? 'detail'
+    : 'list';
     if ($action === 'cancel' && $orderId !== false && $orderId > 0) {
         try {
             $result = $orderModel->cancelByUser($orderId, $userId);
@@ -54,9 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
             }
 
-        } catch (Throwable $e) {
-            setFlash('error', $e->getMessage());
-        }
+       } catch (Throwable $e) {
+    error_log('CANCEL ORDER ERROR: ' . $e->getMessage());
+
+    setFlash(
+        'error',
+        'Không thể hủy đơn hàng. Vui lòng thử lại sau.'
+    );
+}
 
     } else {
         setFlash('error', 'Thao tác không hợp lệ.');
@@ -470,7 +476,6 @@ require_once __DIR__ . '/includes/header.php';
 
                         <input type="hidden" name="action" value="cancel">
                         <input type="hidden" name="return_to" value="detail">
-                        <input type="hidden" name="return_to" value="list">
 
                         <input type="hidden"
                                name="order_id"
