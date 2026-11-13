@@ -698,7 +698,7 @@ button {
 /* Thẻ thống kê Dashboard */
 .admin-stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 20px;
     margin-bottom: 24px;
 }
@@ -1556,6 +1556,53 @@ button {
     margin-bottom: 16px;
 }
 
+.order-status-update-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 16px;
+    padding: 20px;
+}
+
+.order-status-update-card h2 {
+    margin: 0 0 6px;
+    font-size: 17px;
+}
+
+.order-status-update-card p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.order-status-update-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.order-status-update-form label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.order-status-update-form select {
+    min-width: 170px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+}
+
+@media (max-width: 767px) {
+    .order-status-update-card,
+    .order-status-update-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+
 .order-detail-grid .admin-info-card,
 .order-items-card {
     padding: 20px;
@@ -1580,6 +1627,32 @@ button {
 .order-grand-total { display: flex; justify-content: flex-end; align-items: center; gap: 20px; padding-top: 16px; color: var(--secondary); }
 .order-grand-total strong { color: var(--primary); font-size: 20px; }
 
+.order-price-summary {
+    display: grid;
+    justify-items: end;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.order-price-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    width: min(360px, 100%);
+    color: var(--secondary);
+    font-size: 14px;
+}
+
+.order-discount-row { color: #15803d; }
+
+.order-final-total {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-weight: 700;
+}
+
+.order-final-total strong { color: var(--primary); font-size: 20px; }
+
 .recent-orders-card { padding: 20px; }
 .recent-orders-heading h4 { margin: 0 0 5px; color: var(--secondary); font-size: 16px; }
 .recent-orders-heading { margin-bottom: 14px; }
@@ -1590,6 +1663,7 @@ button {
 }
 
 @media (max-width: 600px) {
+    .admin-stats-grid { grid-template-columns: 1fr; }
     .orders-page-heading { align-items: flex-start; flex-direction: column; }
     .order-filter-form { align-items: stretch; flex-direction: column; }
     .order-filter-form .form-control { width: 100%; }

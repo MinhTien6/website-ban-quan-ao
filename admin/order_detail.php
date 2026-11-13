@@ -11,6 +11,26 @@ requireAdmin();
 require_once dirname(__DIR__) . '/models/Order.php';
 
 $orderId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: 0;
+$orderModel = new Order($pdo);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken()) {
+        setFlash('error', 'Mã xác thực không hợp lệ. Vui lòng tải lại trang và thử lại.');
+        redirect('admin/order_detail.php?id=' . $orderId);
+    }
+
+    $newStatus = trim($_POST['status'] ?? '');
+    try {
+        if ($orderId > 0 && $orderModel->updateStatus($orderId, $newStatus)) {
+            setFlash('success', 'Đã cập nhật trạng thái đơn hàng.');
+        } else {
+            setFlash('error', 'Không thể cập nhật trạng thái. Hãy kiểm tra luồng trạng thái hoặc đơn hàng.');
+        }
+    } catch (Throwable $error) {
+        setFlash('error', 'Có lỗi khi cập nhật trạng thái đơn hàng. Vui lòng thử lại.');
+    }
+    redirect('admin/order_detail.php?id=' . $orderId);
+}
+
 $order = $orderId > 0 ? (new Order($pdo))->getDetails($orderId) : false;
 if (!$order) http_response_code(404);
 
@@ -24,7 +44,19 @@ $statusLabels = [
     'completed' => 'Hoàn thành',
     'cancelled' => 'Đã hủy',
 ];
+$nextStatuses = [
+    'pending' => ['confirmed', 'cancelled'],
+    'confirmed' => ['shipping', 'cancelled'],
+    'shipping' => ['completed'],
+    'completed' => [],
+    'cancelled' => [],
+];
 $paymentLabels = ['cod' => 'Thanh toán khi nhận hàng', 'bank' => 'Chuyển khoản'];
+$subtotal = 0;
+foreach ($order['items'] ?? [] as $item) {
+    $subtotal += (float)$item['price'] * (int)$item['quantity'];
+}
+$discountAmount = max(0, $subtotal - (float)($order['total'] ?? 0));
 ?>
 
 <div class="order-detail-page">
@@ -48,13 +80,30 @@ $paymentLabels = ['cod' => 'Thanh toán khi nhận hàng', 'bank' => 'Chuyển k
             </dl></section>
         </div>
 
+        <?php if (!empty($nextStatuses[$order['status']])): ?>
+            <section class="admin-info-card order-status-update-card">
+                <div><h2>Cập nhật trạng thái</h2><p>Chọn bước tiếp theo trong quá trình xử lý đơn hàng.</p></div>
+                <form method="post" class="order-status-update-form">
+                    <?= csrfField() ?>
+                    <label for="order-status">Trạng thái mới</label>
+                    <select name="status" id="order-status" required>
+                        <?php foreach ($nextStatuses[$order['status']] as $nextStatus): ?>
+                            <option value="<?= e($nextStatus) ?>"><?= e($statusLabels[$nextStatus]) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="submit" class="btn-action">Lưu trạng thái</button>
+                </form>
+            </section>
+        <?php endif; ?>
+
         <section class="admin-info-card order-items-card"><h2>Sản phẩm trong đơn</h2>
             <div class="table-responsive"><table class="admin-table"><thead><tr><th>Sản phẩm</th><th>Biến thể</th><th>Đơn giá</th><th>Số lượng</th><th>Thành tiền</th></tr></thead><tbody>
             <?php if (empty($order['items'])): ?><tr><td colspan="5" class="table-empty">Đơn hàng chưa có sản phẩm.</td></tr>
             <?php else: foreach ($order['items'] as $item): ?>
                 <tr>
                     <td><div class="order-product-cell">
-                        <?php if (!empty($item['image_path'])): ?><img src="<?= BASE_URL ?>/public/<?= e(ltrim($item['image_path'], '/')) ?>" alt="<?= e($item['product_name'] ?? 'Sản phẩm') ?>">
+                        <?php $imagePath = ltrim((string)($item['image_path'] ?? ''), '/'); ?>
+                        <?php if ($imagePath !== '' && file_exists(ROOT_PATH . '/public/' . $imagePath)): ?><img src="<?= BASE_URL ?>/public/<?= e($imagePath) ?>" alt="<?= e($item['product_name'] ?? 'Sản phẩm') ?>">
                         <?php else: ?><span class="order-product-placeholder">👕</span><?php endif; ?>
                         <span><?= e($item['product_name'] ?? 'Sản phẩm đã ẩn') ?></span>
                     </div></td>
@@ -65,7 +114,16 @@ $paymentLabels = ['cod' => 'Thanh toán khi nhận hàng', 'bank' => 'Chuyển k
                 </tr>
             <?php endforeach; endif; ?>
             </tbody></table></div>
-            <div class="order-grand-total"><span>Tổng thanh toán</span><strong><?= formatPrice($order['total']) ?></strong></div>
+            <div class="order-price-summary">
+                <div class="order-price-row"><span>Tạm tính</span><span><?= formatPrice($subtotal) ?></span></div>
+                <?php if ($discountAmount > 0): ?>
+                    <div class="order-price-row order-discount-row">
+                        <span>Giảm giá<?= !empty($order['coupon_id']) ? ' (mã #' . (int)$order['coupon_id'] . ')' : '' ?></span>
+                        <span>-<?= formatPrice($discountAmount) ?></span>
+                    </div>
+                <?php endif; ?>
+                <div class="order-price-row order-final-total"><span>Tổng thanh toán</span><strong><?= formatPrice($order['total']) ?></strong></div>
+            </div>
         </section>
     <?php endif; ?>
 </div>

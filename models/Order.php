@@ -151,14 +151,14 @@ class Order
     }
 
     /**
-     * Lấy danh sách đơn hàng cho Admin có phân trang và lọc theo trạng thái
+     * Lấy danh sách đơn hàng cho Admin có phân trang, lọc và tìm kiếm.
      *
      * @param string $status Trạng thái lọc ('all' hoặc 'pending', 'confirmed', 'shipping', 'completed', 'cancelled')
      * @param int $limit
      * @param int $offset
      * @return array
      */
-    public function getList(string $status = 'all', int $limit = 10, int $offset = 0): array
+    public function getList(string $status = 'all', int $limit = 10, int $offset = 0, string $keyword = ''): array
     {
         $limit = max(1, min($limit, 100));
         $offset = max(0, $offset);
@@ -170,12 +170,27 @@ class Order
             $params['status'] = $status;
         }
 
+        $keyword = trim($keyword);
+        if ($keyword !== '') {
+            $where .= " AND (CAST(o.id AS CHAR) LIKE :keyword_id
+                        OR o.receiver_name LIKE :keyword_receiver
+                        OR o.phone LIKE :keyword_phone
+                        OR u.full_name LIKE :keyword_name
+                        OR u.email LIKE :keyword_email)";
+            $likeKeyword = '%' . $keyword . '%';
+            $params['keyword_id'] = $likeKeyword;
+            $params['keyword_receiver'] = $likeKeyword;
+            $params['keyword_phone'] = $likeKeyword;
+            $params['keyword_name'] = $likeKeyword;
+            $params['keyword_email'] = $likeKeyword;
+        }
+
         $sql = "SELECT o.*, u.full_name AS user_name, u.email AS user_email, COUNT(oi.id) AS total_items
                 FROM orders o
                 LEFT JOIN users u ON o.user_id = u.id
                 LEFT JOIN order_items oi ON o.id = oi.order_id
                 {$where}
-                GROUP BY o.id
+                GROUP BY o.id, u.full_name, u.email
                 ORDER BY o.created_at DESC
                 LIMIT {$limit} OFFSET {$offset}";
 
@@ -185,45 +200,84 @@ class Order
     }
 
     /**
-     * Đếm tổng số đơn hàng theo trạng thái
+     * Đếm số đơn theo trạng thái và từ khóa tìm kiếm.
      *
      * @param string $status
      * @return int
      */
-    public function count(string $status = 'all'): int
+    public function count(string $status = 'all', string $keyword = ''): int
     {
         $params = [];
         $where = "WHERE 1=1";
 
         if ($status !== '' && $status !== 'all') {
-            $where .= " AND status = :status";
+            $where .= " AND o.status = :status";
             $params['status'] = $status;
         }
 
-        $sql = "SELECT COUNT(*) FROM orders {$where}";
+        $keyword = trim($keyword);
+        if ($keyword !== '') {
+            $where .= " AND (CAST(o.id AS CHAR) LIKE :keyword_id
+                        OR o.receiver_name LIKE :keyword_receiver
+                        OR o.phone LIKE :keyword_phone
+                        OR u.full_name LIKE :keyword_name
+                        OR u.email LIKE :keyword_email)";
+            $likeKeyword = '%' . $keyword . '%';
+            $params['keyword_id'] = $likeKeyword;
+            $params['keyword_receiver'] = $likeKeyword;
+            $params['keyword_phone'] = $likeKeyword;
+            $params['keyword_name'] = $likeKeyword;
+            $params['keyword_email'] = $likeKeyword;
+        }
+
+        $sql = "SELECT COUNT(DISTINCT o.id)
+                FROM orders o
+                LEFT JOIN users u ON o.user_id = u.id
+                {$where}";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();
     }
 
     /**
-     * Thống kê các số liệu chính để hiển thị trên Dashboard Admin.
-     * Doanh thu chỉ tính các đơn đã hoàn thành.
+     * Thống kê đơn hàng, doanh thu, khách hàng và sản phẩm sắp hết hàng.
      */
     public function getDashboardStats(): array
     {
         $sql = "SELECT
                     COUNT(*) AS total_orders,
                     COALESCE(SUM(status = 'pending'), 0) AS pending_orders,
+                    COALESCE(SUM(status = 'confirmed'), 0) AS confirmed_orders,
+                    COALESCE(SUM(status = 'shipping'), 0) AS shipping_orders,
                     COALESCE(SUM(status = 'completed'), 0) AS completed_orders,
+                    COALESCE(SUM(status = 'cancelled'), 0) AS cancelled_orders,
                     COALESCE(SUM(CASE WHEN status = 'completed' THEN total ELSE 0 END), 0) AS revenue
                 FROM orders";
-        return $this->pdo->query($sql)->fetch() ?: [
+        $stats = $this->pdo->query($sql)->fetch() ?: [
             'total_orders' => 0,
             'pending_orders' => 0,
+            'confirmed_orders' => 0,
+            'shipping_orders' => 0,
             'completed_orders' => 0,
+            'cancelled_orders' => 0,
             'revenue' => 0,
         ];
+
+        $stats['total_customers'] = (int)$this->pdo
+            ->query("SELECT COUNT(*) FROM users WHERE role = 'user'")
+            ->fetchColumn();
+
+        $lowStockSql = "SELECT COUNT(*) FROM (
+                            SELECT p.id
+                            FROM products p
+                            LEFT JOIN product_variants pv ON p.id = pv.product_id
+                            WHERE p.status = 1
+                            GROUP BY p.id
+                            HAVING COALESCE(SUM(pv.stock), 0) <= 10
+                        ) AS low_stock_products";
+        $stats['low_stock_products'] = (int)$this->pdo->query($lowStockSql)->fetchColumn();
+
+        return $stats;
     }
 
     /** Lấy vài đơn gần nhất để hiển thị nhanh trên Dashboard. */
@@ -233,25 +287,58 @@ class Order
         return $this->getList('all', $limit, 0);
     }
     /**
-     * Cập nhật trạng thái đơn hàng (Admin - TV6)
-     *
-     * @param int $id ID đơn hàng
-     * @param string $status Trạng thái mới
-     * @return bool
+     * Cập nhật trạng thái đơn theo luồng xử lý của Admin.
+     * Khi hủy đơn, tồn kho được hoàn lại trong cùng transaction.
      */
     public function updateStatus(int $id, string $status): bool
     {
-        $allowed = ['pending', 'confirmed', 'shipping', 'completed', 'cancelled'];
-        if (!in_array($status, $allowed, true)) {
+        $transitions = [
+            'pending' => ['confirmed', 'cancelled'],
+            'confirmed' => ['shipping', 'cancelled'],
+            'shipping' => ['completed'],
+            'completed' => [],
+            'cancelled' => [],
+        ];
+
+        if ($id < 1 || !in_array($status, ['confirmed', 'shipping', 'completed', 'cancelled'], true)) {
             return false;
         }
 
-        $sql = "UPDATE orders SET status = :status WHERE id = :id";
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([
-            'id'     => $id,
-            'status' => $status,
-        ]);
+        $this->pdo->beginTransaction();
+        try {
+            $check = $this->pdo->prepare('SELECT status FROM orders WHERE id = :id FOR UPDATE');
+            $check->execute(['id' => $id]);
+            $currentStatus = $check->fetchColumn();
+
+            if ($currentStatus === false || !in_array($status, $transitions[$currentStatus] ?? [], true)) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            if ($status === 'cancelled') {
+                $items = $this->pdo->prepare('SELECT variant_id, quantity FROM order_items WHERE order_id = :id');
+                $items->execute(['id' => $id]);
+                $restoreStock = $this->pdo->prepare('UPDATE product_variants SET stock = stock + :quantity WHERE id = :variant_id');
+                foreach ($items->fetchAll() as $item) {
+                    if (!empty($item['variant_id'])) {
+                        $restoreStock->execute([
+                            'quantity' => (int)$item['quantity'],
+                            'variant_id' => (int)$item['variant_id'],
+                        ]);
+                    }
+                }
+            }
+
+            $update = $this->pdo->prepare('UPDATE orders SET status = :status WHERE id = :id');
+            $update->execute(['status' => $status, 'id' => $id]);
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $error) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $error;
+        }
     }
 
     /**

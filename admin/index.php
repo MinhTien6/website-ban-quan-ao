@@ -1,7 +1,6 @@
 <?php
 /**
- * Dashboard quản trị - nhiệm vụ TV6 tuần 2.
- * Hiển thị thống kê đơn hàng và danh sách giao dịch gần đây.
+ * Dashboard quản trị - tổng quan trạng thái và doanh thu đơn hàng (TV6).
  */
 $pageTitle = 'Bảng điều khiển';
 require_once __DIR__ . '/includes/header.php';
@@ -36,12 +35,32 @@ $statusLabels = [
             <div class="stat-info"><span class="stat-label">Đang chờ</span><span class="stat-value"><?= (int)$stats['pending_orders'] ?></span><span class="stat-desc">Chờ xác nhận</span></div>
         </div>
         <div class="stat-card">
+            <div class="stat-icon icon-users">✔️</div>
+            <div class="stat-info"><span class="stat-label">Đã xác nhận</span><span class="stat-value"><?= (int)$stats['confirmed_orders'] ?></span><span class="stat-desc">Đang chuẩn bị hàng</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-products">🚚</div>
+            <div class="stat-info"><span class="stat-label">Đang giao</span><span class="stat-value"><?= (int)$stats['shipping_orders'] ?></span><span class="stat-desc">Đơn đã bàn giao vận chuyển</span></div>
+        </div>
+        <div class="stat-card">
             <div class="stat-icon icon-users">✅</div>
             <div class="stat-info"><span class="stat-label">Đã hoàn thành</span><span class="stat-value"><?= (int)$stats['completed_orders'] ?></span><span class="stat-desc">Đơn đã giao thành công</span></div>
         </div>
         <div class="stat-card">
+            <div class="stat-icon icon-categories">✖️</div>
+            <div class="stat-info"><span class="stat-label">Đã hủy</span><span class="stat-value"><?= (int)$stats['cancelled_orders'] ?></span><span class="stat-desc">Đơn không tiếp tục xử lý</span></div>
+        </div>
+        <div class="stat-card">
             <div class="stat-icon icon-products">💰</div>
             <div class="stat-info"><span class="stat-label">Doanh thu hoàn thành</span><span class="stat-value"><?= formatPrice($stats['revenue']) ?></span><span class="stat-desc">Chỉ tính đơn hoàn thành</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-users">👥</div>
+            <div class="stat-info"><span class="stat-label">Khách hàng</span><span class="stat-value"><?= (int)$stats['total_customers'] ?></span><span class="stat-desc">Tài khoản thành viên</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-categories">⚠️</div>
+            <div class="stat-info"><span class="stat-label">Sắp hết hàng</span><span class="stat-value"><?= (int)$stats['low_stock_products'] ?></span><span class="stat-desc"><a href="<?= BASE_URL ?>/admin/products.php">Sản phẩm còn tối đa 10 chiếc</a></span></div>
         </div>
     </div>
 

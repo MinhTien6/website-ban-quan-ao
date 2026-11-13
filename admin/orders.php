@@ -10,9 +10,10 @@ $orderModel = new Order($pdo);
 $allowedStatuses = ['pending', 'confirmed', 'shipping', 'completed', 'cancelled'];
 $status = trim((string)($_GET['status'] ?? 'all'));
 if ($status !== 'all' && !in_array($status, $allowedStatuses, true)) $status = 'all';
+$keyword = trim((string)($_GET['keyword'] ?? ''));
 $page = max(1, (int)($_GET['page'] ?? 1));
-$pagination = paginate($orderModel->count($status), $page, 10);
-$orders = $orderModel->getList($status, $pagination['limit'], $pagination['offset']);
+$pagination = paginate($orderModel->count($status, $keyword), $page, 10);
+$orders = $orderModel->getList($status, $pagination['limit'], $pagination['offset'], $keyword);
 
 $statusLabels = [
     'pending' => 'Chờ xác nhận',
@@ -22,7 +23,10 @@ $statusLabels = [
     'cancelled' => 'Đã hủy',
 ];
 $paymentLabels = ['cod' => 'Thanh toán khi nhận hàng', 'bank' => 'Chuyển khoản'];
-$baseUrl = BASE_URL . '/admin/orders.php' . ($status !== 'all' ? '?status=' . urlencode($status) : '');
+$queryParams = [];
+if ($status !== 'all') $queryParams['status'] = $status;
+if ($keyword !== '') $queryParams['keyword'] = $keyword;
+$baseUrl = BASE_URL . '/admin/orders.php' . ($queryParams ? '?' . http_build_query($queryParams) : '');
 ?>
 
 <div class="admin-orders-page">
@@ -32,15 +36,18 @@ $baseUrl = BASE_URL . '/admin/orders.php' . ($status !== 'all' ? '?status=' . ur
     </div>
 
     <form method="get" class="order-filter-form">
-        <label for="status">Lọc theo trạng thái</label>
+        <label for="keyword">Tìm kiếm</label>
+        <input type="search" id="keyword" name="keyword" class="form-control"
+               value="<?= e($keyword) ?>" placeholder="Mã đơn, tên khách, số điện thoại hoặc email">
+        <label for="status">Trạng thái</label>
         <select id="status" name="status" class="form-control">
             <option value="all" <?= $status === 'all' ? 'selected' : '' ?>>Tất cả trạng thái</option>
             <?php foreach ($statusLabels as $value => $label): ?>
                 <option value="<?= e($value) ?>" <?= $status === $value ? 'selected' : '' ?>><?= e($label) ?></option>
             <?php endforeach; ?>
         </select>
-        <button class="btn-action" type="submit">Lọc đơn</button>
-        <?php if ($status !== 'all'): ?><a class="btn-action" href="<?= BASE_URL ?>/admin/orders.php">Xóa bộ lọc</a><?php endif; ?>
+        <button class="btn-action" type="submit">Tìm / lọc đơn</button>
+        <?php if ($status !== 'all' || $keyword !== ''): ?><a class="btn-action" href="<?= BASE_URL ?>/admin/orders.php">Xóa bộ lọc</a><?php endif; ?>
     </form>
 
     <div class="table-responsive order-table-wrap">
