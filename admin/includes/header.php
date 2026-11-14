@@ -54,6 +54,9 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
             <a href="<?= BASE_URL ?>/admin/products.php" class="nav-item <?= in_array($currentScript, ['products.php', 'product_form.php'], true) ? 'active' : '' ?>">
                 👕 Quản lý sản phẩm (nhiều ảnh, biến thể)
             </a>
+            <a href="<?= BASE_URL ?>/admin/coupons.php" class="nav-item <?= $currentScript === 'coupons.php' ? 'active' : '' ?>">
+                🎟️ Quản lý mã giảm giá
+            </a>
             <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 3 - TV6">
                 📦 Quản lý đơn hàng (đổi trạng thái)
             </a>

@@ -52,8 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             FILTER_VALIDATE_INT
         );
 
-        if (!$quantity || $quantity < 1) {
-            setFlash('error', 'Số lượng phải lớn hơn 0.');
+        if ($quantity === false || $quantity < 1 || $quantity > 100) {
+            setFlash(
+                'error',
+                'Số lượng sản phẩm phải từ 1 đến 100.'
+            );
             redirect('cart.php');
         }
 

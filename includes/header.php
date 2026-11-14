@@ -1,21 +1,17 @@
 <?php
 /**
- * Header giao diện chung của hệ thống (FashionStore)
- * Đã tích hợp đầy đủ: CSS mở rộng (TV4, TV5), Giỏ hàng (TV5) và Hồ sơ cá nhân (TV2)
+ * Header giao diện người dùng FashionStore
+ * TV1 + TV4 + TV5
  */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once dirname(__DIR__) . '/config/config.php';
-require_once dirname(__DIR__) . '/config/database.php';
-require_once dirname(__DIR__) . '/includes/functions.php';
-require_once dirname(__DIR__) . '/includes/auth.php';
-
-if (file_exists(dirname(__DIR__) . '/includes/cart_functions.php')) {
-    require_once dirname(__DIR__) . '/includes/cart_functions.php';
-}
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/auth.php';
 
 // Đồng bộ thông tin mới nhất nếu người dùng đang đăng nhập
 if (isLoggedIn()) {
@@ -44,6 +40,10 @@ $flash = getFlash();
     <?php if (file_exists(ROOT_PATH . '/public/css/cart.css')): ?>
         <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/cart.css">
     <?php endif; ?>
+
+    <?php if (!empty($pageCss) && file_exists(ROOT_PATH . '/public/css/' . $pageCss) && $pageCss !== 'cart.css' && $pageCss !== 'style.css'): ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/<?= e($pageCss) ?>">
+    <?php endif; ?>
 </head>
 <body>
 
@@ -70,12 +70,12 @@ $flash = getFlash();
         <a href="<?= BASE_URL ?>/index.php">Trang chủ</a>
 
         <?php if ($user !== null): ?>
+            <a href="<?= BASE_URL ?>/my_orders.php">Đơn hàng của tôi</a>
+            <a href="<?= BASE_URL ?>/profile.php">Tài khoản của tôi</a>
             <?php if (($user['role'] ?? '') === 'admin'): ?>
                 <a href="<?= BASE_URL ?>/admin/index.php" class="nav-admin">Quản trị</a>
             <?php endif; ?>
             <span class="user-greeting">Xin chào, <?= e($user['full_name']) ?></span>
-            <a href="<?= BASE_URL ?>/profile.php">Tài khoản của tôi</a>
-            <a href="<?= BASE_URL ?>/my_orders.php">Đơn hàng của tôi</a>
             <a href="<?= BASE_URL ?>/logout.php" class="nav-logout">Đăng xuất</a>
         <?php else: ?>
             <a href="<?= BASE_URL ?>/login.php">Đăng nhập</a>

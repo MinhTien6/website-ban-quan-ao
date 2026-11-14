@@ -895,3 +895,78 @@
     font-size: 11px;
     font-weight: 700;
 }
+
+
+/* ==========================================================================
+   4. BỘ LỌC VÀ CHI TIẾT ĐƠN HÀNG MỞ RỘNG (TV5)
+   ========================================================================== */
+.order-filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 22px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.order-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    color: #475569;
+    font-size: 13.5px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.order-tab:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.order-tab.active {
+    background: #a52a3a;
+    border-color: #a52a3a;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.order-tab .tab-count {
+    display: inline-block;
+    padding: 1px 6px;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    font-size: 11.5px;
+}
+
+.order-tab.active .tab-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+.order-detail-subtotal,
+.order-detail-discount {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 0;
+}
+
+.order-detail-subtotal {
+    color: #64748b;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 14px;
+    margin-top: 10px;
+}
+
+.order-detail-discount {
+    color: #16a34a;
+}
