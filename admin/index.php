@@ -8,6 +8,7 @@ require_once dirname(__DIR__) . '/models/Order.php';
 
 $orderModel = new Order($pdo);
 $stats = $orderModel->getDashboardStats();
+$revenueChart = $orderModel->getRevenueChartData(7);
 $recentOrders = $orderModel->getRecentOrders(5);
 
 $statusLabels = [
@@ -64,6 +65,19 @@ $statusLabels = [
         </div>
     </div>
 
+    <section class="admin-info-card revenue-chart-card">
+        <div class="revenue-chart-heading">
+            <div>
+                <h4>Biểu đồ doanh thu</h4>
+                <p>Doanh thu từ đơn hoàn thành trong 7 ngày gần nhất.</p>
+            </div>
+            <span class="revenue-chart-note">Đơn vị: VNĐ</span>
+        </div>
+        <div class="revenue-chart-container">
+            <canvas id="revenue-chart" role="img" aria-label="Biểu đồ doanh thu 7 ngày gần nhất"></canvas>
+        </div>
+    </section>
+
     <section class="admin-info-card recent-orders-card">
         <div class="table-card-header recent-orders-heading">
             <div><h4>Đơn hàng mới nhất</h4><p>Theo dõi nhanh 5 đơn gần đây.</p></div>
@@ -91,5 +105,59 @@ $statusLabels = [
         </div>
     </section>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+<script>
+    const revenueCanvas = document.getElementById('revenue-chart');
+    if (revenueCanvas && typeof Chart !== 'undefined') {
+        const revenueLabels = <?= json_encode($revenueChart['labels'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+        const revenueValues = <?= json_encode($revenueChart['values'], JSON_NUMERIC_CHECK) ?>;
+        const currencyFormatter = new Intl.NumberFormat('vi-VN');
+
+        new Chart(revenueCanvas, {
+            type: 'line',
+            data: {
+                labels: revenueLabels,
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: revenueValues,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#2563eb',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return 'Doanh thu: ' + currencyFormatter.format(context.parsed.y) + 'đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                return currencyFormatter.format(value) + 'đ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

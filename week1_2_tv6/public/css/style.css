@@ -1653,6 +1653,38 @@ button {
 
 .order-final-total strong { color: var(--primary); font-size: 20px; }
 
+.revenue-chart-card {
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.revenue-chart-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.revenue-chart-heading h4 {
+    margin: 0 0 5px;
+    color: var(--secondary);
+    font-size: 16px;
+}
+
+.revenue-chart-heading p,
+.revenue-chart-note {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.revenue-chart-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+}
+
 .recent-orders-card { padding: 20px; }
 .recent-orders-heading h4 { margin: 0 0 5px; color: var(--secondary); font-size: 16px; }
 .recent-orders-heading { margin-bottom: 14px; }
@@ -1664,6 +1696,9 @@ button {
 
 @media (max-width: 600px) {
     .admin-stats-grid { grid-template-columns: 1fr; }
+    .revenue-chart-card { padding: 14px; }
+    .revenue-chart-container { height: 240px; }
+    .revenue-chart-heading { flex-direction: column; }
     .orders-page-heading { align-items: flex-start; flex-direction: column; }
     .order-filter-form { align-items: stretch; flex-direction: column; }
     .order-filter-form .form-control { width: 100%; }

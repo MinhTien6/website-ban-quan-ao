@@ -280,6 +280,47 @@ class Order
         return $stats;
     }
 
+    /**
+     * Lấy doanh thu theo ngày trong một khoảng ngày gần đây.
+     * Chỉ tính các đơn đã hoàn thành; ngày không có đơn sẽ nhận doanh thu 0.
+     */
+    public function getRevenueChartData(int $days = 7): array
+    {
+        $days = max(1, min($days, 31));
+        $today = new DateTimeImmutable('today');
+        $startDate = $today->modify('-' . ($days - 1) . ' days');
+        $endDate = $today->modify('+1 day');
+
+        $sql = "SELECT DATE(created_at) AS revenue_date, COALESCE(SUM(total), 0) AS revenue
+                FROM orders
+                WHERE status = 'completed'
+                  AND created_at >= :start_date
+                  AND created_at < :end_date
+                GROUP BY DATE(created_at)
+                ORDER BY revenue_date ASC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'start_date' => $startDate->format('Y-m-d 00:00:00'),
+            'end_date' => $endDate->format('Y-m-d 00:00:00'),
+        ]);
+
+        $revenueByDate = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $revenueByDate[$row['revenue_date']] = (float)$row['revenue'];
+        }
+
+        $labels = [];
+        $values = [];
+        for ($offset = $days - 1; $offset >= 0; $offset--) {
+            $date = $today->modify('-' . $offset . ' days');
+            $dateKey = $date->format('Y-m-d');
+            $labels[] = $date->format('d/m');
+            $values[] = $revenueByDate[$dateKey] ?? 0;
+        }
+
+        return ['labels' => $labels, 'values' => $values];
+    }
+
     /** Lấy vài đơn gần nhất để hiển thị nhanh trên Dashboard. */
     public function getRecentOrders(int $limit = 5): array
     {
