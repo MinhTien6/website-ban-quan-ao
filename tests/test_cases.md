@@ -68,3 +68,30 @@ Sau khi import tệp `database/shop_quanao.sql` vào MySQL/phpMyAdmin:
 |---|---|---|---|---|---|
 | **UI_01** | Desktop (Chrome, Edge, Firefox) | Bố cục header, navigation, banner, grid sản phẩm, bảng admin | Hiển thị rõ ràng, không vỡ layout, màu sắc đồng bộ theo `style.css` | | Chờ test |
 | **UI_02** | Mobile (Màn hình < 768px) | Mở giao diện trên thiết bị di động hoặc F12 Device Mode | Menu tự co giãn, bảng admin có thanh cuộn ngang, form đăng nhập vừa vặn màn hình | | Chờ test |
+
+---
+
+## 6. Test Case chi tiết – TV2 (Xác thực, phân quyền và quản lý người dùng)
+
+| Mã TC | Chức năng | Các bước thực hiện | Kết quả mong đợi | Kết quả thực tế | Trạng thái |
+|---|---|---|---|---|---|
+| USER_01 | Xem hồ sơ cá nhân | Đăng nhập User, truy cập trang profile.php | Hiển thị đúng thông tin tài khoản hiện tại | | Chưa test |
+| USER_02 | Cập nhật hồ sơ hợp lệ | Thay đổi họ tên, số điện thoại và địa chỉ bằng dữ liệu hợp lệ | Lưu thông tin thành công và hiển thị dữ liệu mới | | Chưa test |
+| USER_03 | Số điện thoại không hợp lệ tại hồ sơ | Nhập số điện thoại `123abc` trong trang hồ sơ | Hiển thị lỗi định dạng số điện thoại, không cập nhật dữ liệu | | Chưa test |
+| USER_04 | Admin tạo User hợp lệ | Admin vào quản lý người dùng, tạo tài khoản với thông tin hợp lệ | Tạo tài khoản thành công, mật khẩu được mã hóa | | Chưa test |
+| USER_05 | Admin tạo User với số điện thoại sai | Nhập số điện thoại `123abc` khi tạo tài khoản | Báo lỗi, không tạo tài khoản | | Chưa test |
+| USER_06 | Admin sửa User với số điện thoại sai | Chọn sửa tài khoản, nhập số `123abc` | Báo lỗi, không cập nhật dữ liệu | | Chưa test |
+| USER_07 | Admin khóa tài khoản | Admin chọn khóa một tài khoản User khác | Trạng thái chuyển thành `0`, tài khoản không thể tiếp tục sử dụng | | Chưa test |
+| USER_08 | User đang đăng nhập bị khóa | Đăng nhập User, sau đó Admin khóa tài khoản; User tải lại trang | Session bị vô hiệu hóa và User phải đăng nhập lại | | Chưa test |
+| USER_09 | Admin mở khóa tài khoản | Admin chọn mở khóa tài khoản đang bị khóa | Trạng thái chuyển thành `1`, tài khoản có thể đăng nhập lại | | Chưa test |
+| USER_10 | Admin không thể tự khóa | Admin thử khóa chính tài khoản đang đăng nhập | Hệ thống từ chối thao tác | | Chưa test |
+| USER_11 | Admin không thể tự hạ quyền | Admin thử đổi vai trò tài khoản của chính mình thành User | Hệ thống từ chối thao tác | | Chưa test |
+| USER_12 | Đổi mật khẩu hợp lệ | Nhập mật khẩu hiện tại chính xác, mật khẩu mới từ 8 ký tự và xác nhận trùng khớp | Đổi mật khẩu thành công, đăng nhập được bằng mật khẩu mới | | Chưa test |
+| USER_13 | Đổi mật khẩu sai mật khẩu hiện tại | Nhập sai mật khẩu hiện tại | Báo lỗi, mật khẩu không thay đổi | | Chưa test |
+| USER_14 | Đổi mật khẩu dưới 8 ký tự | Nhập mật khẩu mới ngắn hơn 8 ký tự | Hệ thống từ chối đổi mật khẩu | | Chưa test |
+| USER_15 | Xác nhận mật khẩu không khớp | Nhập mật khẩu mới và xác nhận khác nhau | Báo lỗi, không cập nhật mật khẩu | | Chưa test |
+| USER_16 | Đổi mật khẩu trùng mật khẩu cũ | Nhập mật khẩu mới giống mật khẩu hiện tại | Hệ thống từ chối đổi mật khẩu | | Chưa test |
+| USER_17 | Kiểm tra CSRF khi đổi mật khẩu | Gửi POST không có CSRF token hoặc token không hợp lệ | Hệ thống từ chối yêu cầu | | Chưa test |
+| USER_18 | Tìm kiếm người dùng | Admin nhập email hoặc tên vào ô tìm kiếm | Hiển thị đúng người dùng phù hợp | | Chưa test |
+| USER_19 | Phân trang người dùng | Admin chuyển qua các trang danh sách người dùng | Hiển thị đúng dữ liệu theo từng trang | | Chưa test |
+| USER_20 | Truy cập chức năng Admin bằng User | Đăng nhập User, thử truy cập trực tiếp các trang quản lý người dùng | Bị từ chối truy cập, không thể thực hiện thao tác quản trị | | Chưa test |

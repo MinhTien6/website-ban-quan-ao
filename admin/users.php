@@ -1,4 +1,3 @@
-
 <?php
 $pageTitle = 'Quản lý người dùng';
 

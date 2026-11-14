@@ -1,5 +1,4 @@
-
-<?php
+﻿<?php
 /**
  * Trang hồ sơ cá nhân
  */
@@ -34,7 +33,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Vui lòng nhập họ và tên.';
         } elseif (mb_strlen($fullName) > 100) {
             $error = 'Họ và tên không được vượt quá 100 ký tự.';
-        } elseif (strlen($phone) > 20) {
+        } elseif (
+    $phone !== '' &&
+    !preg_match('/^(0|\+84|84)[0-9]{9}$/', $phone)
+) {
+    $error = 'Số điện thoại không đúng định dạng Việt Nam (ví dụ: 0912345678).';
             $error = 'Số điện thoại không được vượt quá 20 ký tự.';
         } elseif (mb_strlen($address) > 255) {
             $error = 'Địa chỉ không được vượt quá 255 ký tự.';

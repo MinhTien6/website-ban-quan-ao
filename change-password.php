@@ -1,5 +1,4 @@
-
-<?php
+﻿<?php
 /**
  * Trang đổi mật khẩu
  */
@@ -52,6 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $newPasswordHash = password_hash($newPassword, PASSWORD_DEFAULT);
 
                     $userModel->changePassword($userId, $newPasswordHash);
+
+                    session_regenerate_id(true);
 
                     setFlash('success', 'Đổi mật khẩu thành công.');
                     redirect('profile.php');
