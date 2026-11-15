@@ -642,48 +642,51 @@ class Order
     }
 
     /**
-     * Lấy danh sách đơn hàng cho Admin quản lý (TV6)
+     * Lấy danh sách đơn hàng cho Admin có phân trang, lọc và tìm kiếm (TV6).
      *
-     * @param string $status
+     * @param string $status Trạng thái lọc ('all' hoặc 'pending', 'confirmed', 'shipping', 'completed', 'cancelled')
      * @param int $limit
      * @param int $offset
+     * @param string $keyword
      * @return array
      */
-    public function getList(string $status = 'all', int $limit = 10, int $offset = 0): array
+    public function getList(string $status = 'all', int $limit = 10, int $offset = 0, string $keyword = ''): array
     {
+        $limit = max(1, min($limit, 100));
+        $offset = max(0, $offset);
         $params = [];
-        $allowedStatuses = [
-            'pending',
-            'confirmed',
-            'shipping',
-            'completed',
-            'cancelled'
-        ];
-
-        if (
-            $status !== '' &&
-            $status !== 'all' &&
-            !in_array($status, $allowedStatuses, true)
-        ) {
-            $status = 'all';
-        }
-
         $where = "WHERE 1=1";
-        if ($status !== '' && $status !== 'all') {
+
+        $allowedStatuses = ['pending', 'confirmed', 'shipping', 'completed', 'cancelled'];
+        if ($status !== '' && $status !== 'all' && in_array($status, $allowedStatuses, true)) {
             $where .= " AND o.status = :status";
             $params['status'] = $status;
         }
 
-        $limit = max(1, min($limit, 50));
-        $offset = max(0, $offset);
+        $keyword = trim($keyword);
+        if ($keyword !== '') {
+            $where .= " AND (CAST(o.id AS CHAR) LIKE :keyword_id
+                        OR o.receiver_name LIKE :keyword_receiver
+                        OR o.phone LIKE :keyword_phone
+                        OR u.full_name LIKE :keyword_name
+                        OR u.email LIKE :keyword_email)";
+            $likeKeyword = '%' . $keyword . '%';
+            $params['keyword_id'] = $likeKeyword;
+            $params['keyword_receiver'] = $likeKeyword;
+            $params['keyword_phone'] = $likeKeyword;
+            $params['keyword_name'] = $likeKeyword;
+            $params['keyword_email'] = $likeKeyword;
+        }
 
-        $sql = "SELECT o.*, u.full_name AS user_name, u.email AS user_email, COALESCE(SUM(oi.quantity), 0) AS total_items, c.code AS coupon_code
+        $sql = "SELECT o.*, u.full_name AS user_name, u.email AS user_email,
+                       COALESCE(SUM(oi.quantity), 0) AS total_items,
+                       c.code AS coupon_code
                 FROM orders o
                 LEFT JOIN users u ON o.user_id = u.id
                 LEFT JOIN order_items oi ON o.id = oi.order_id
                 LEFT JOIN coupons c ON o.coupon_id = c.id
                 {$where}
-                GROUP BY o.id
+                GROUP BY o.id, u.full_name, u.email, c.code
                 ORDER BY o.created_at DESC
                 LIMIT {$limit} OFFSET {$offset}";
 
@@ -693,23 +696,144 @@ class Order
     }
 
     /**
-     * Đếm tổng số đơn hàng theo trạng thái cho Admin
+     * Đếm tổng số đơn hàng theo trạng thái và từ khóa cho Admin (TV6).
      *
      * @param string $status
+     * @param string $keyword
      * @return int
      */
-    public function count(string $status = 'all'): int
+    public function count(string $status = 'all', string $keyword = ''): int
     {
         $params = [];
         $where = "WHERE 1=1";
-        if ($status !== '' && $status !== 'all') {
-            $where .= " AND status = :status";
+
+        $allowedStatuses = ['pending', 'confirmed', 'shipping', 'completed', 'cancelled'];
+        if ($status !== '' && $status !== 'all' && in_array($status, $allowedStatuses, true)) {
+            $where .= " AND o.status = :status";
             $params['status'] = $status;
         }
-        $sql = "SELECT COUNT(*) FROM orders {$where}";
+
+        $keyword = trim($keyword);
+        if ($keyword !== '') {
+            $where .= " AND (CAST(o.id AS CHAR) LIKE :keyword_id
+                        OR o.receiver_name LIKE :keyword_receiver
+                        OR o.phone LIKE :keyword_phone
+                        OR u.full_name LIKE :keyword_name
+                        OR u.email LIKE :keyword_email)";
+            $likeKeyword = '%' . $keyword . '%';
+            $params['keyword_id'] = $likeKeyword;
+            $params['keyword_receiver'] = $likeKeyword;
+            $params['keyword_phone'] = $likeKeyword;
+            $params['keyword_name'] = $likeKeyword;
+            $params['keyword_email'] = $likeKeyword;
+        }
+
+        $sql = "SELECT COUNT(DISTINCT o.id)
+                FROM orders o
+                LEFT JOIN users u ON o.user_id = u.id
+                {$where}";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Thống kê đơn hàng, doanh thu, khách hàng và sản phẩm sắp hết hàng cho Dashboard (TV6).
+     *
+     * @return array
+     */
+    public function getDashboardStats(): array
+    {
+        $sql = "SELECT
+                    COUNT(*) AS total_orders,
+                    COALESCE(SUM(status = 'pending'), 0) AS pending_orders,
+                    COALESCE(SUM(status = 'confirmed'), 0) AS confirmed_orders,
+                    COALESCE(SUM(status = 'shipping'), 0) AS shipping_orders,
+                    COALESCE(SUM(status = 'completed'), 0) AS completed_orders,
+                    COALESCE(SUM(status = 'cancelled'), 0) AS cancelled_orders,
+                    COALESCE(SUM(CASE WHEN status = 'completed' THEN total ELSE 0 END), 0) AS revenue
+                FROM orders";
+        $stats = $this->pdo->query($sql)->fetch(PDO::FETCH_ASSOC) ?: [
+            'total_orders' => 0,
+            'pending_orders' => 0,
+            'confirmed_orders' => 0,
+            'shipping_orders' => 0,
+            'completed_orders' => 0,
+            'cancelled_orders' => 0,
+            'revenue' => 0,
+        ];
+
+        $stats['total_customers'] = (int)$this->pdo
+            ->query("SELECT COUNT(*) FROM users WHERE role = 'user'")
+            ->fetchColumn();
+
+        $lowStockSql = "SELECT COUNT(*) FROM (
+                            SELECT p.id
+                            FROM products p
+                            LEFT JOIN product_variants pv ON p.id = pv.product_id
+                            WHERE p.status = 1
+                            GROUP BY p.id
+                            HAVING COALESCE(SUM(pv.stock), 0) <= 10
+                        ) AS low_stock_products";
+        $stats['low_stock_products'] = (int)$this->pdo->query($lowStockSql)->fetchColumn();
+
+        return $stats;
+    }
+
+    /**
+     * Lấy doanh thu theo ngày trong một khoảng ngày gần đây (TV6).
+     * Chỉ tính các đơn đã hoàn thành; ngày không có đơn sẽ nhận doanh thu 0.
+     *
+     * @param int $days Số ngày gần nhất (mặc định 7 ngày)
+     * @return array ['labels' => [...], 'values' => [...]]
+     */
+    public function getRevenueChartData(int $days = 7): array
+    {
+        $days = max(1, min($days, 31));
+        $today = new DateTimeImmutable('today');
+        $startDate = $today->modify('-' . ($days - 1) . ' days');
+        $endDate = $today->modify('+1 day');
+
+        $sql = "SELECT DATE(created_at) AS revenue_date, COALESCE(SUM(total), 0) AS revenue
+                FROM orders
+                WHERE status = 'completed'
+                  AND created_at >= :start_date
+                  AND created_at < :end_date
+                GROUP BY DATE(created_at)
+                ORDER BY revenue_date ASC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'start_date' => $startDate->format('Y-m-d 00:00:00'),
+            'end_date' => $endDate->format('Y-m-d 00:00:00'),
+        ]);
+
+        $revenueByDate = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $revenueByDate[$row['revenue_date']] = (float)$row['revenue'];
+        }
+
+        $labels = [];
+        $values = [];
+        for ($offset = $days - 1; $offset >= 0; $offset--) {
+            $date = $today->modify('-' . $offset . ' days');
+            $dateKey = $date->format('Y-m-d');
+            $labels[] = $date->format('d/m');
+            $values[] = $revenueByDate[$dateKey] ?? 0;
+        }
+
+        return ['labels' => $labels, 'values' => $values];
+    }
+
+    /**
+     * Lấy các đơn gần nhất để hiển thị nhanh trên Dashboard (TV6).
+     *
+     * @param int $limit
+     * @return array
+     */
+    public function getRecentOrders(int $limit = 5): array
+    {
+        $limit = max(1, min($limit, 20));
+        return $this->getList('all', $limit, 0);
     }
 
     /**
@@ -742,21 +866,62 @@ class Order
     }
 
     /**
-     * Cập nhật trạng thái đơn hàng (Admin TV6)
+     * Cập nhật trạng thái đơn theo luồng xử lý của Admin (TV6).
+     * Có State Machine ràng buộc và hoàn lại tồn kho trong Transaction khi đơn bị hủy.
      *
-     * @param int $id
-     * @param string $status
+     * @param int $id Mã đơn hàng
+     * @param string $status Trạng thái mới
      * @return bool
      */
     public function updateStatus(int $id, string $status): bool
     {
-        $allowed = ['pending', 'confirmed', 'shipping', 'completed', 'cancelled'];
-        if (!in_array($status, $allowed, true)) {
+        $transitions = [
+            'pending' => ['confirmed', 'cancelled'],
+            'confirmed' => ['shipping', 'cancelled'],
+            'shipping' => ['completed'],
+            'completed' => [],
+            'cancelled' => [],
+        ];
+
+        if ($id < 1 || !in_array($status, ['confirmed', 'shipping', 'completed', 'cancelled'], true)) {
             return false;
         }
-        $sql = "UPDATE orders SET status = :status WHERE id = :id";
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute(['id' => $id, 'status' => $status]);
+
+        $this->pdo->beginTransaction();
+        try {
+            $check = $this->pdo->prepare('SELECT status FROM orders WHERE id = :id FOR UPDATE');
+            $check->execute(['id' => $id]);
+            $currentStatus = $check->fetchColumn();
+
+            if ($currentStatus === false || !in_array($status, $transitions[$currentStatus] ?? [], true)) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            if ($status === 'cancelled') {
+                $items = $this->pdo->prepare('SELECT variant_id, quantity FROM order_items WHERE order_id = :id');
+                $items->execute(['id' => $id]);
+                $restoreStock = $this->pdo->prepare('UPDATE product_variants SET stock = stock + :quantity WHERE id = :variant_id');
+                foreach ($items->fetchAll(PDO::FETCH_ASSOC) as $item) {
+                    if (!empty($item['variant_id'])) {
+                        $restoreStock->execute([
+                            'quantity' => (int)$item['quantity'],
+                            'variant_id' => (int)$item['variant_id'],
+                        ]);
+                    }
+                }
+            }
+
+            $update = $this->pdo->prepare('UPDATE orders SET status = :status WHERE id = :id');
+            $update->execute(['status' => $status, 'id' => $id]);
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $error) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $error;
+        }
     }
 
     /**
