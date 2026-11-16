@@ -76,6 +76,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Bạn không thể tự hạ quyền Admin của chính mình.';
     }
 
+    if (
+        $phone !== '' &&
+        !preg_match('/^(0|\+84|84)[0-9]{9}$/', $phone)
+    ) {
+        $errors[] = 'Số điện thoại không đúng định dạng Việt Nam (ví dụ: 0912345678).';
+    }
+
     if (empty($errors)) {
         $existingUser = $userModel->findByEmail($email);
 

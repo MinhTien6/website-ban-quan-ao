@@ -179,6 +179,12 @@ button {
     border: 1px solid #bbf7d0;
 }
 
+.alert-info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
 /* ==========================================================================
    4. BANNER TRANG CHỦ (HERO)
    ========================================================================== */
@@ -1797,4 +1803,36 @@ button {
     .recent-orders-card { padding: 14px; }
     .order-info-list div { grid-template-columns: 110px minmax(0, 1fr); }
     .admin-content { padding: 16px; }
+}
+
+
+/* ==========================================================================
+   BADGES & ADMIN USER MANAGEMENT (TV2)
+   ========================================================================== */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-admin {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.badge-user {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.badge-active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.badge-locked {
+    background: #fee2e2;
+    color: #b91c1c;
 }

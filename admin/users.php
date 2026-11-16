@@ -133,16 +133,16 @@ require_once __DIR__ . '/includes/header.php';
                             <td><?= e($user['phone'] ?? '—') ?></td>
                             <td style="text-align: center;">
                                 <?php if ($user['role'] === 'admin'): ?>
-                                    <span class="badge-count">Quản trị viên</span>
+                                    <span class="badge badge-admin">Quản trị viên</span>
                                 <?php else: ?>
-                                    <span class="badge-category">Khách hàng</span>
+                                    <span class="badge badge-user">Khách hàng</span>
                                 <?php endif; ?>
                             </td>
                             <td style="text-align: center;">
                                 <?php if ((int)$user['status'] === 1): ?>
-                                    <span class="badge-status badge-success">Hoạt động</span>
+                                    <span class="badge badge-active">Hoạt động</span>
                                 <?php else: ?>
-                                    <span class="badge-status badge-inactive">Đã khóa</span>
+                                    <span class="badge badge-locked">Đã khóa</span>
                                 <?php endif; ?>
                             </td>
                             <td><?= e($user['created_at']) ?></td>

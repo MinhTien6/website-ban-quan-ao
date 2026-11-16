@@ -123,7 +123,8 @@ require_once __DIR__ . '/includes/header.php';
         </form>
 
         <div class="auth-footer">
-            <p>Chưa có tài khoản? <a href="<?= BASE_URL ?>/register.php">Đăng ký ngay</a></p>
+            <p><a href="<?= BASE_URL ?>/forgot-password.php">Quên mật khẩu?</a></p>
+            <p style="margin-top: 8px;">Chưa có tài khoản? <a href="<?= BASE_URL ?>/register.php">Đăng ký ngay</a></p>
         </div>
     </div>
 </div>

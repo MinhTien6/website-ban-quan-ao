@@ -71,7 +71,34 @@ Sau khi import tệp `database/shop_quanao.sql` vào MySQL/phpMyAdmin:
 
 ---
 
-## 6. Kiểm thử riêng nhiệm vụ TV6 (Tuần 1 & 2)
+## 6. Test Case chi tiết – TV2 (Xác thực, phân quyền, hồ sơ & quản lý người dùng)
+
+| Mã TC | Chức năng | Các bước thực hiện | Kết quả mong đợi | Kết quả thực tế | Trạng thái |
+|---|---|---|---|---|---|
+| **USER_01** | Xem hồ sơ cá nhân | Đăng nhập User, truy cập trang `profile.php` | Hiển thị đúng thông tin tài khoản hiện tại (họ tên, email, SĐT, địa chỉ) | Hiển thị chính xác thông tin từ CSDL | PASS |
+| **USER_02** | Cập nhật hồ sơ hợp lệ | Thay đổi họ tên, số điện thoại và địa chỉ bằng dữ liệu hợp lệ | Lưu thông tin thành công, session được cập nhật và hiển thị dữ liệu mới | Cập nhật CSDL và session ngay lập tức | PASS |
+| **USER_03** | Số điện thoại không hợp lệ tại hồ sơ | Nhập số điện thoại `123abc` trong trang hồ sơ | Hiển thị lỗi định dạng số điện thoại Việt Nam, không cập nhật dữ liệu | Hiển thị thông báo lỗi định dạng SĐT | PASS |
+| **USER_04** | Admin tạo User hợp lệ | Admin vào quản lý người dùng, tạo tài khoản với thông tin hợp lệ | Tạo tài khoản thành công, mật khẩu được mã hóa an toàn | Tài khoản được tạo với password_hash | PASS |
+| **USER_05** | Admin tạo User với số điện thoại sai | Nhập số điện thoại `123abc` khi tạo tài khoản | Báo lỗi định dạng SĐT Việt Nam, không tạo tài khoản | Chặn tạo tài khoản và báo lỗi rõ ràng | PASS |
+| **USER_06** | Admin sửa User với số điện thoại sai | Chọn sửa tài khoản, nhập số `123abc` | Báo lỗi định dạng SĐT Việt Nam, không cập nhật dữ liệu | Chặn cập nhật và báo lỗi định dạng | PASS |
+| **USER_07** | Admin khóa tài khoản | Admin chọn khóa một tài khoản User khác | Trạng thái chuyển thành `0`, tài khoản không thể tiếp tục sử dụng | Status chuyển sang 0 trong CSDL | PASS |
+| **USER_08** | User đang đăng nhập bị khóa | Đăng nhập User, sau đó Admin khóa tài khoản; User tải lại trang | `refreshCurrentUser()` tự động vô hiệu hóa session và chuyển hướng đăng nhập | Session bị hủy ngay lập tức khi tải trang | PASS |
+| **USER_09** | Admin mở khóa tài khoản | Admin chọn mở khóa tài khoản đang bị khóa | Trạng thái chuyển thành `1`, tài khoản có thể đăng nhập lại | Status chuyển sang 1, đăng nhập bình thường | PASS |
+| **USER_10** | Admin không thể tự khóa | Admin thử khóa chính tài khoản đang đăng nhập | Hệ thống từ chối thao tác, báo lỗi không thể tự khóa | Chặn thao tác khóa tài khoản hiện tại | PASS |
+| **USER_11** | Admin không thể tự hạ quyền | Admin thử đổi vai trò tài khoản của chính mình thành User | Hệ thống từ chối thao tác, báo lỗi không thể tự hạ quyền | Chặn thao tác tự hạ quyền Admin | PASS |
+| **USER_12** | Đổi mật khẩu hợp lệ | Nhập mật khẩu hiện tại chính xác, mật khẩu mới $\ge$ 8 ký tự và xác nhận trùng khớp | Đổi mật khẩu thành công, session được làm mới bằng `session_regenerate_id(true)` | Đổi mật khẩu thành công, phiên an toàn | PASS |
+| **USER_13** | Đổi mật khẩu sai mật khẩu hiện tại | Nhập sai mật khẩu hiện tại | Báo lỗi mật khẩu hiện tại không chính xác, không thay đổi mật khẩu | Báo lỗi xác thực mật khẩu cũ | PASS |
+| **USER_14** | Đổi mật khẩu dưới 8 ký tự | Nhập mật khẩu mới ngắn hơn 8 ký tự | Hệ thống từ chối đổi mật khẩu, báo lỗi độ dài | Báo lỗi mật khẩu tối thiểu 8 ký tự | PASS |
+| **USER_15** | Xác nhận mật khẩu không khớp | Nhập mật khẩu mới và xác nhận khác nhau | Báo lỗi mật khẩu xác nhận không khớp, không cập nhật | Báo lỗi không trùng khớp mật khẩu | PASS |
+| **USER_16** | Đổi mật khẩu trùng mật khẩu cũ | Nhập mật khẩu mới giống mật khẩu hiện tại | Đổi thành công hoặc hệ thống xử lý an toàn theo quy định | Mật khẩu được cập nhật hash mới | PASS |
+| **USER_17** | Kiểm tra CSRF khi đổi mật khẩu | Gửi POST không có CSRF token hoặc token không hợp lệ | Hệ thống từ chối yêu cầu, phiên làm việc không bị ảnh hưởng | Bị chặn với lỗi CSRF không hợp lệ | PASS |
+| **USER_18** | Tìm kiếm người dùng | Admin nhập email hoặc tên vào ô tìm kiếm | Hiển thị đúng người dùng phù hợp | Kết quả lọc chính xác theo từ khóa | PASS |
+| **USER_19** | Phân trang người dùng | Admin chuyển qua các trang danh sách người dùng | Hiển thị đúng dữ liệu theo từng trang (10 user/trang) | Phân trang mượt mà, giữ query tìm kiếm | PASS |
+| **USER_20** | Truy cập chức năng Admin bằng User | Đăng nhập User, thử truy cập trực tiếp các trang quản lý người dùng | `requireAdmin()` chặn truy cập, chuyển hướng về trang khách | Chặn truy cập và thông báo không có quyền | PASS |
+
+---
+
+## 7. Kiểm thử riêng nhiệm vụ TV6 (Tuần 1 & 2)
 
 **Tiền điều kiện:** Import `database/shop_quanao.sql`, cấu hình kết nối trong `config/database.php`, đăng nhập bằng tài khoản Admin mẫu.
 
@@ -96,7 +123,7 @@ Sau khi import tệp `database/shop_quanao.sql` vào MySQL/phpMyAdmin:
 
 ---
 
-## 7. Kiểm thử tự động nhiệm vụ TV6 (Tuần 3 - CLI Script `tests/test_week3.php`)
+## 8. Kiểm thử tự động nhiệm vụ TV6 (Tuần 3 - CLI Script `tests/test_week3.php`)
 
 Sau khi cấu hình `config/database.php` và import dữ liệu mẫu, chạy lệnh:
 ```bash

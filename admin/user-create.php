@@ -54,6 +54,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Vai trò không hợp lệ.';
     }
 
+    if (
+        $phone !== '' &&
+        !preg_match('/^(0|\+84|84)[0-9]{9}$/', $phone)
+    ) {
+        $errors[] = 'Số điện thoại không đúng định dạng Việt Nam (ví dụ: 0912345678).';
+    }
+
     if (empty($errors)) {
         if ($userModel->findByEmail($email)) {
             $errors[] = 'Địa chỉ email này đã tồn tại trong hệ thống.';
