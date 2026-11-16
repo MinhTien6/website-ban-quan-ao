@@ -3,32 +3,115 @@ require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/models/Product.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $cart = getCart();
+$productModel = new Product($pdo);
 
-// Xử lý cập nhật và xóa sản phẩm
+// Xử lý thêm, cập nhật và xóa sản phẩm
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 1. Kiểm tra CSRF
     if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
-        setFlash('error', 'Yêu cầu không hợp lệ.');
+        setFlash('error', 'Yêu cầu không hợp lệ hoặc phiên làm việc đã hết hạn.');
         redirect('cart.php');
     }
 
-    // 2. Lấy dữ liệu gửi lên
+    $action = $_POST['action'] ?? '';
+    if (isset($_POST['add_to_cart']) && empty($action)) {
+        $action = 'add';
+    }
+
     $variantId = filter_input(
         INPUT_POST,
         'variant_id',
         FILTER_VALIDATE_INT
     );
 
-    $action = $_POST['action'] ?? '';
+    // 2. Xử lý THÊM VÀO GIỎ HÀNG (TV4 & TV5)
+    if ($action === 'add') {
+        $productId = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT)
+            ?: filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $quantity = filter_input(INPUT_POST, 'quantity', FILTER_VALIDATE_INT) ?: 1;
+        $size = trim($_POST['size'] ?? '');
+        $color = trim($_POST['color'] ?? '');
+        $isBuyNow = !empty($_POST['buy_now']);
 
-    // 3. Kiểm tra dữ liệu
+        if ($quantity < 1) {
+            $quantity = 1;
+        } elseif ($quantity > 100) {
+            $quantity = 100;
+        }
+
+        // Nếu chưa có variant_id nhưng có product_id, tìm biến thể phù hợp
+        if ((!$variantId || $variantId <= 0) && $productId) {
+            if ($size !== '' || $color !== '') {
+                $vSql = "SELECT id FROM product_variants 
+                         WHERE product_id = :pid";
+                $vParams = ['pid' => $productId];
+                if ($size !== '') {
+                    $vSql .= " AND size = :size";
+                    $vParams['size'] = $size;
+                }
+                if ($color !== '') {
+                    $vSql .= " AND color = :color";
+                    $vParams['color'] = $color;
+                }
+                $vSql .= " AND stock > 0 ORDER BY id ASC LIMIT 1";
+                $vStmt = $pdo->prepare($vSql);
+                $vStmt->execute($vParams);
+                $foundVId = $vStmt->fetchColumn();
+                if ($foundVId) {
+                    $variantId = (int)$foundVId;
+                }
+            }
+
+            // Fallback sang biến thể đầu tiên của sản phẩm
+            if (!$variantId || $variantId <= 0) {
+                $fStmt = $pdo->prepare("SELECT id FROM product_variants WHERE product_id = :pid ORDER BY id ASC LIMIT 1");
+                $fStmt->execute(['pid' => $productId]);
+                $variantId = (int)$fStmt->fetchColumn();
+            }
+        }
+
+        if (!$variantId || $variantId <= 0) {
+            setFlash('error', 'Vui lòng chọn phân loại sản phẩm (kích cỡ, màu sắc).');
+            redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
+        }
+
+        // Lấy thông tin biến thể từ DB
+        $variantData = $productModel->getVariantById($variantId);
+        if (!$variantData || (int)$variantData['status'] !== 1) {
+            setFlash('error', 'Sản phẩm hoặc phân loại không còn tồn tại trên hệ thống.');
+            redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
+        }
+
+        $stock = (int)$variantData['stock'];
+        if ($stock <= 0) {
+            setFlash('error', 'Phân loại sản phẩm này hiện đã hết hàng.');
+            redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
+        }
+
+        // Thêm vào giỏ
+        $added = addToCart($variantData, $quantity);
+        if (!$added) {
+            setFlash('error', "Không thể thêm vào giỏ. Số lượng bạn chọn vượt quá số lượng tồn kho (còn {$stock} sản phẩm).");
+            redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
+        }
+
+        if ($isBuyNow) {
+            redirect('checkout.php');
+        } else {
+            setFlash('success', 'Đã thêm sản phẩm vào giỏ hàng thành công!');
+            redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
+        }
+    }
+
+    // 3. Kiểm tra dữ liệu cho action remove và update
     if (!$variantId || !isset($cart[$variantId])) {
         setFlash('error', 'Sản phẩm không tồn tại trong giỏ hàng.');
         redirect('cart.php');
