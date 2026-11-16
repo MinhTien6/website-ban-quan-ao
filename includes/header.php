@@ -315,6 +315,9 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
                             <a href="<?= BASE_URL ?>/profile.php">
                                 <i class="fa-regular fa-id-card"></i> Tài khoản của tôi
                             </a>
+                            <a href="<?= BASE_URL ?>/change-password.php">
+                                <i class="fa-solid fa-key"></i> Đổi mật khẩu
+                            </a>
                             <a href="<?= BASE_URL ?>/my_orders.php">
                                 <i class="fa-solid fa-clock-rotate-left"></i> Đơn hàng của tôi
                             </a>

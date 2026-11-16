@@ -1,8 +1,4 @@
 <?php
-/**
- * Chỉnh sửa người dùng (admin/user-edit.php - TV2)
- * Đã di chuyển require header xuống sau khối xử lý POST/redirect, chặn tự hạ quyền Admin và đồng bộ CSS Admin
- */
 $pageTitle = 'Sửa người dùng';
 
 // Nạp các file cần thiết trước khi xử lý POST
@@ -16,7 +12,6 @@ require_once dirname(__DIR__) . '/models/User.php';
 requireAdmin();
 
 $userModel = new User($pdo);
-$currentUser = currentUser();
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
@@ -41,6 +36,7 @@ $address = $user['address'] ?? '';
 $role = $user['role'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     // Kiểm tra CSRF
     if (!verifyCsrfToken()) {
         setFlash('error', 'Yêu cầu không hợp lệ hoặc phiên làm việc đã hết hạn.');
@@ -54,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role = $_POST['role'] ?? '';
 
     if ($fullName === '') {
-        $errors[] = 'Vui lòng nhập họ và tên.';
+        $errors[] = 'Vui lòng nhập họ tên.';
     }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -65,8 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Vai trò không hợp lệ.';
     }
 
-    // Ngăn Admin tự hạ quyền của chính mình (TV2-04)
+    // Ngăn Admin tự hạ quyền của chính mình
     $currentUser = currentUser();
+
     if (
         $currentUser &&
         (int)$currentUser['id'] === (int)$id &&
@@ -87,116 +84,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $existingUser = $userModel->findByEmail($email);
 
         if ($existingUser && (int)$existingUser['id'] !== (int)$id) {
-            $errors[] = 'Địa chỉ email đã được tài khoản khác sử dụng.';
+            $errors[] = 'Email đã được tài khoản khác sử dụng.';
         } else {
             try {
                 $userModel->updateUser($id, [
                     'full_name' => $fullName,
-                    'email'     => $email,
-                    'phone'     => $phone !== '' ? $phone : null,
-                    'address'   => $address !== '' ? $address : null,
-                    'role'      => $role,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'address' => $address,
+                    'role' => $role
                 ]);
-
-                // Nếu vừa sửa chính tài khoản đang đăng nhập, đồng bộ lại session
-                if ($currentUser && (int)$currentUser['id'] === (int)$id) {
-                    refreshCurrentUser();
-                }
 
                 setFlash('success', 'Cập nhật thông tin người dùng thành công.');
                 redirect('admin/users.php');
+
             } catch (PDOException $e) {
                 error_log($e->getMessage());
-                $errors[] = 'Không thể cập nhật tài khoản. Vui lòng kiểm tra lại dữ liệu.';
+                $errors[] = 'Không thể cập nhật tài khoản.';
             }
         }
     }
 }
 
-// Chỉ nạp header sau khi đã xử lý POST và redirect
+// Chỉ nạp header sau khi xử lý POST
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="admin-page-header">
-    <div>
-        <h3>Sửa thông tin người dùng #<?= (int)$id ?></h3>
-        <p class="admin-subtitle">Cập nhật hồ sơ tài khoản và phân quyền quản trị (Nhiệm vụ TV2)</p>
-    </div>
-    <div>
-        <a href="<?= BASE_URL ?>/admin/users.php" class="button button-outline">
-            ⬅️ Quay lại danh sách
-        </a>
-    </div>
-</div>
+<div class="admin-dashboard-wrapper">
+    <h3>Sửa thông tin người dùng</h3>
 
-<?php if (!empty($errors)): ?>
-    <div class="flash-message flash-error">
-        <strong>Vui lòng kiểm tra lại thông tin:</strong>
-        <ul style="margin: 6px 0 0 18px;">
-            <?php foreach ($errors as $error): ?>
-                <li><?= e($error) ?></li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
-<?php endif; ?>
+    <?php foreach ($errors as $error): ?>
+        <p style="color:red;">
+            <?= e($error) ?>
+        </p>
+    <?php endforeach; ?>
 
-<div class="admin-card" style="max-width: 650px;">
-    <form method="POST" action="<?= BASE_URL ?>/admin/user-edit.php?id=<?= (int)$id ?>">
-        <?= csrfField() ?>
+    <form method="POST">
+        <input type="hidden" name="csrf_token"
+               value="<?= e(csrfToken()) ?>">
 
-        <div class="form-group">
-            <label for="full_name">Họ và tên <span class="required" style="color:red;">*</span></label>
-            <input type="text" id="full_name" name="full_name" class="form-control"
+        <p>
+            <label>Họ và tên</label><br>
+            <input type="text" name="full_name"
                    value="<?= e($fullName) ?>" required>
-        </div>
+        </p>
 
-        <div class="form-row-2">
-            <div class="form-group">
-                <label for="email">Địa chỉ Email <span class="required" style="color:red;">*</span></label>
-                <input type="email" id="email" name="email" class="form-control"
-                       value="<?= e($email) ?>" required>
-            </div>
+        <p>
+            <label>Email</label><br>
+            <input type="email" name="email"
+                   value="<?= e($email) ?>" required>
+        </p>
 
-            <div class="form-group">
-                <label for="phone">Số điện thoại</label>
-                <input type="text" id="phone" name="phone" class="form-control"
-                       value="<?= e($phone) ?>" placeholder="Ví dụ: 0912345678">
-            </div>
-        </div>
+        <p>
+            <label>Số điện thoại</label><br>
+            <input type="text" name="phone"
+                   value="<?= e($phone) ?>">
+        </p>
 
-        <div class="form-row-2">
-            <div class="form-group">
-                <label for="role">Vai trò người dùng</label>
-                <select id="role" name="role" class="form-control">
-                    <option value="user" <?= $role === 'user' ? 'selected' : '' ?>>
-                        Khách hàng (User)
-                    </option>
-                    <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>
-                        Quản trị viên (Admin)
-                    </option>
-                </select>
-                <?php if ($currentUser && (int)$currentUser['id'] === (int)$id): ?>
-                    <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
-                        ℹ️ Đây là tài khoản bạn đang đăng nhập (không thể tự hạ quyền).
-                    </small>
-                <?php endif; ?>
-            </div>
+        <p>
+            <label>Địa chỉ</label><br>
+            <input type="text" name="address"
+                   value="<?= e($address) ?>">
+        </p>
 
-            <div class="form-group">
-                <label for="address">Địa chỉ liên hệ</label>
-                <input type="text" id="address" name="address" class="form-control"
-                       value="<?= e($address) ?>" placeholder="Ví dụ: 123 Đường Cầu Giấy, Hà Nội">
-            </div>
-        </div>
+        <p>
+            <label>Vai trò</label><br>
+            <select name="role">
+                <option value="user"
+                    <?= $role === 'user' ? 'selected' : '' ?>>
+                    Khách hàng
+                </option>
 
-        <div class="form-actions" style="margin-top: 20px;">
-            <button type="submit" class="button">
-                💾 Lưu thay đổi
-            </button>
-            <a href="<?= BASE_URL ?>/admin/users.php" class="button button-outline">
-                Hủy bỏ
-            </a>
-        </div>
+                <option value="admin"
+                    <?= $role === 'admin' ? 'selected' : '' ?>>
+                    Quản trị viên
+                </option>
+            </select>
+        </p>
+
+        <button type="submit">Lưu thay đổi</button>
+        <a href="<?= BASE_URL ?>/admin/users.php">Quay lại</a>
     </form>
 </div>
 

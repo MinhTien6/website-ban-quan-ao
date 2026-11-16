@@ -1836,3 +1836,95 @@ button {
     background: #fee2e2;
     color: #b91c1c;
 }
+
+/* ==========================================================================
+   GIAO DIỆN QUẢN LÝ NGƯỜI DÙNG TV2 (.admin-dashboard-wrapper)
+   ========================================================================== */
+.admin-dashboard-wrapper {
+    background: #ffffff;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.admin-dashboard-wrapper h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text, #0f172a);
+}
+
+.admin-dashboard-wrapper form {
+    margin-bottom: 16px;
+}
+
+.admin-dashboard-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 14px;
+}
+
+.admin-dashboard-wrapper th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.admin-dashboard-wrapper td {
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.admin-dashboard-wrapper tr:hover td {
+    background: #f8fafc;
+}
+
+.admin-dashboard-wrapper input[type="text"],
+.admin-dashboard-wrapper input[type="email"],
+.admin-dashboard-wrapper input[type="password"],
+.admin-dashboard-wrapper select {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 260px;
+    box-sizing: border-box;
+}
+
+.admin-dashboard-wrapper button[type="submit"] {
+    display: inline-block;
+    padding: 7px 14px;
+    background: #0f172a;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+
+.admin-dashboard-wrapper button[type="submit"]:hover {
+    background: #1e293b;
+}
+
+.admin-dashboard-wrapper a {
+    color: #2563eb;
+    text-decoration: none;
+    margin: 0 4px;
+}
+
+.admin-dashboard-wrapper a:hover {
+    text-decoration: underline;
+}
+
