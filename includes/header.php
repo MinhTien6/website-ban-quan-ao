@@ -142,19 +142,21 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
             align-items: flex-start !important;
         }
         .site-header .mega-col h5 {
-            font-size: 14px !important;
-            font-weight: 700 !important;
+            font-size: 13.5px !important;
+            font-weight: 800 !important;
             text-transform: uppercase !important;
             color: #111111 !important;
-            margin: 0 0 14px 0 !important;
+            margin: 0 0 16px 0 !important;
             padding: 0 !important;
+            letter-spacing: 0.3px !important;
         }
         .site-header .mega-col h5 a {
             color: #111111 !important;
             text-decoration: none !important;
             text-transform: uppercase !important;
-            font-weight: 700 !important;
-            font-size: 14px !important;
+            font-weight: 800 !important;
+            font-size: 13.5px !important;
+            letter-spacing: 0.3px !important;
         }
         .site-header .mega-col h5 a:hover {
             color: #e60023 !important;
@@ -163,7 +165,7 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
             display: flex !important;
             flex-direction: column !important;
             align-items: flex-start !important;
-            gap: 10px !important;
+            gap: 12px !important;
             list-style: none !important;
             padding: 0 !important;
             margin: 0 !important;
@@ -172,8 +174,11 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
         .site-header .mega-col ul li a {
             display: block !important;
             text-decoration: none !important;
-            color: #333333 !important;
+            color: #111111 !important;
             font-size: 13.5px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.2px !important;
             transition: color 0.15s ease !important;
         }
         .site-header .mega-col ul li a:hover {
@@ -261,26 +266,26 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
                             <div class="mega-col">
                                 <h5><a href="<?= BASE_URL ?>/products.php">TẤT CẢ SẢN PHẨM</a></h5>
                                 <ul>
-                                    <li><a href="<?= BASE_URL ?>/products.php">Tất Cả Sản Phẩm</a></li>
-                                    <li><a href="<?= BASE_URL ?>/products.php?sort=newest">Hàng Mới Về</a></li>
-                                    <li><a href="<?= BASE_URL ?>/products.php?sort=bestseller">Hàng Bán Chạy</a></li>
+                                    <li><a href="<?= BASE_URL ?>/products.php">TẤT CẢ SẢN PHẨM</a></li>
+                                    <li><a href="<?= BASE_URL ?>/products.php?tab=new">HÀNG MỚI VỀ</a></li>
+                                    <li><a href="<?= BASE_URL ?>/products.php?tab=bestseller">HÀNG BÁN CHẠY</a></li>
                                 </ul>
                             </div>
 
                             <div class="mega-col">
                                 <h5><a href="<?= BASE_URL ?>/products.php?category=1">ÁO UNISEX & KIỂU</a></h5>
                                 <ul>
-                                    <li><a href="<?= BASE_URL ?>/products.php?category=1">Áo Thun Streetwear</a></li>
-                                    <li><a href="<?= BASE_URL ?>/products.php?category=2">Áo Sơ Mi & Polo</a></li>
-                                    <li><a href="<?= BASE_URL ?>/products.php?category=3">Áo Khoác & Hoodie</a></li>
+                                    <li><a href="<?= BASE_URL ?>/products.php?category=1">ÁO THUN STREETWEAR</a></li>
+                                    <li><a href="<?= BASE_URL ?>/products.php?category=2">ÁO SƠ MI & POLO</a></li>
+                                    <li><a href="<?= BASE_URL ?>/products.php?category=5">ÁO KHOÁC & HOODIE</a></li>
                                 </ul>
                             </div>
 
                             <div class="mega-col">
-                                <h5><a href="<?= BASE_URL ?>/products.php?category=4">QUẦN & VÁY ĐẦM</a></h5>
+                                <h5><a href="<?= BASE_URL ?>/products.php?category=3">QUẦN & VÁY ĐẦM</a></h5>
                                 <ul>
-                                    <li><a href="<?= BASE_URL ?>/products.php?category=4">Quần Jeans & Short</a></li>
-                                    <li><a href="<?= BASE_URL ?>/products.php?category=5">Váy, Đầm & Chân Váy</a></li>
+                                    <li><a href="<?= BASE_URL ?>/products.php?category=3">QUẦN JEANS & SHORT</a></li>
+                                    <li><a href="<?= BASE_URL ?>/products.php?category=4">VÁY, ĐẦM & CHÂN VÁY</a></li>
                                 </ul>
                             </div>
                         </div>

@@ -57,14 +57,16 @@ if ($currentTab === 'bestseller') {
     $where[] = "p.sale_price IS NOT NULL AND p.sale_price > 0";
 }
 
-// 2. Lọc theo danh mục (hỗ trợ ID hoặc slug)
+// 2. Lọc theo danh mục (hỗ trợ ID hoặc slug, tự động bao gồm cả danh mục con)
 if ($categoryFilter !== '') {
     if (is_numeric($categoryFilter)) {
-        $where[] = "p.category_id = :cat_id";
+        $where[] = "(p.category_id = :cat_id OR p.category_id IN (SELECT id FROM categories WHERE parent_id = :cat_id_sub))";
         $params['cat_id'] = (int)$categoryFilter;
+        $params['cat_id_sub'] = (int)$categoryFilter;
     } else {
-        $where[] = "c.slug = :cat_slug";
+        $where[] = "(c.slug = :cat_slug OR p.category_id IN (SELECT id FROM categories WHERE parent_id = (SELECT id FROM categories WHERE slug = :cat_slug_sub LIMIT 1)))";
         $params['cat_slug'] = $categoryFilter;
+        $params['cat_slug_sub'] = $categoryFilter;
     }
 }
 
@@ -171,11 +173,108 @@ $pageTitle = $pageHeading . ' | VIBEZ.CLUB';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
+<style>
+    .catalog-layout {
+        display: flex;
+        align-items: flex-start;
+        gap: 32px;
+        position: relative;
+    }
+
+    .filter-sidebar-wrap {
+        width: 280px;
+        flex-shrink: 0;
+        position: relative;
+        transition: width 0.25s ease, margin 0.25s ease;
+    }
+
+    .filter-sidebar-wrap.collapsed {
+        width: 0 !important;
+        margin-right: -10px !important;
+    }
+
+    .filter-sidebar {
+        background: #ffffff;
+        border: 1px solid #eeeeee;
+        border-radius: 16px;
+        padding: 22px 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        transition: opacity 0.22s ease, transform 0.25s ease;
+    }
+
+    .filter-sidebar-wrap.collapsed .filter-sidebar {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transform: translateX(-20px) !important;
+    }
+
+    .filter-collapse-handle {
+        position: absolute;
+        top: 50%;
+        right: -18px;
+        transform: translateY(-50%);
+        width: 22px;
+        height: 48px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-left: none;
+        border-radius: 0 8px 8px 0;
+        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #9ca3af;
+        z-index: 10;
+        font-size: 13px;
+        transition: color 0.2s ease, background 0.2s ease;
+    }
+
+    .filter-collapse-handle:hover {
+        color: #e60023;
+        background: #fff1f2;
+    }
+
+    /* Khi màn hình thu nhỏ / mobile view: Bộ lọc nhảy lên TRÊN danh sách sản phẩm */
+    @media (max-width: 992px) {
+        .catalog-layout {
+            flex-direction: column !important;
+            gap: 20px !important;
+        }
+        .filter-sidebar-wrap {
+            width: 100% !important;
+            margin-right: 0 !important;
+            margin-bottom: 24px !important;
+        }
+        .filter-sidebar-wrap.collapsed {
+            width: 100% !important;
+            margin-right: 0 !important;
+        }
+        .filter-sidebar-wrap.collapsed .filter-sidebar {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            transform: none !important;
+        }
+        .filter-collapse-handle {
+            display: none !important;
+        }
+        .product-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .product-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+
 <div class="catalog-wrap" style="max-width:1220px; margin:36px auto 70px; padding:0 20px; font-family:'Inter', sans-serif;">
-    <div class="catalog-layout" style="display:flex; align-items:flex-start; gap:32px; position:relative;">
+    <div class="catalog-layout">
         
         <!-- THANH BỘ LỌC BÊN TRÁI -->
-        <div id="filterSidebarWrap" class="filter-sidebar-wrap" style="position:relative; width:280px; flex-shrink:0;">
+        <div id="filterSidebarWrap" class="filter-sidebar-wrap">
             <aside class="filter-sidebar" style="background:#ffffff; border:1px solid #eeeeee; border-radius:16px; padding:22px 20px; box-shadow:0 4px 20px rgba(0,0,0,0.04);">
                 <div class="filter-top-header" style="display:flex; align-items:center; justify-content:space-between; padding-bottom:14px; margin-bottom:18px; border-bottom:2px solid #111111;">
                     <div class="filter-top-title" style="display:flex; align-items:center; gap:8px; font-size:16px; font-weight:900; color:#111; text-transform:uppercase;">
@@ -294,6 +393,9 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 </div>
             </aside>
+            <button type="button" id="filterCollapseBtn" class="filter-collapse-handle" onclick="toggleSidebarCollapse()" title="Thu gọn / Mở bộ lọc">
+                &#10094;
+            </button>
         </div>
 
         <!-- DANH SÁCH SẢN PHẨM -->
@@ -411,6 +513,18 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <script>
+    function toggleSidebarCollapse() {
+        var wrap = document.getElementById('filterSidebarWrap');
+        var btn  = document.getElementById('filterCollapseBtn');
+        if (!wrap) return;
+        wrap.classList.toggle('collapsed');
+        if (wrap.classList.contains('collapsed')) {
+            if (btn) btn.innerHTML = '&#10095;';
+        } else {
+            if (btn) btn.innerHTML = '&#10094;';
+        }
+    }
+
     function toggleFilterSection(headEl) {
         var section = headEl.closest('.filter-section');
         if (section) {

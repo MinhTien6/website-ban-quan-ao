@@ -132,21 +132,25 @@ $defaultSize = $availableSizes[0];
 $defaultVariant = !empty($variants[0]['id']) ? (int)$variants[0]['id'] : 0;
 
 $colorHexMap = [
-    'Đen'       => '#111111',
-    'Trắng'     => '#ffffff',
-    'Hồng'      => '#f4b6c2',
-    'Kem'       => '#e6d5b8',
-    'Be'        => '#e6dcc8',
-    'Xám'       => '#808080',
-    'Xanh'      => '#3b6998',
-    'Xanh đen'  => '#1b263b',
-    'Xanh navy' => '#1e3a8a',
-    'Xanh đậm'  => '#1d4ed8',
-    'Xanh nhạt' => '#bfdbfe',
-    'Xanh rêu'  => '#4d7c0f',
-    'Đỏ'        => '#e60023',
-    'Vàng'      => '#facc15',
-    'Nâu'       => '#78350f',
+    'Đen'        => '#111111',
+    'Trắng'      => '#ffffff',
+    'Hồng'       => '#f4b6c2',
+    'Kem'        => '#fef08a',
+    'Be'         => '#e6dcc8',
+    'Xám'        => '#808080',
+    'Xanh'       => '#3b6998',
+    'Xanh đen'   => '#1b263b',
+    'Xanh navy'  => '#1e3a8a',
+    'Xanh đậm'   => '#1d4ed8',
+    'Xanh nhạt'  => '#93c5fd',
+    'Xanh rêu'   => '#4d7c0f',
+    'Rêu'        => '#365314',
+    'Đỏ'         => '#e60023',
+    'Đỏ đô'      => '#881337',
+    'Vàng'       => '#facc15',
+    'Nâu'        => '#78350f',
+    'Tím'        => '#8b5cf6',
+    'Cam'        => '#f97316',
 ];
 
 // Lấy danh sách đánh giá từ database
@@ -188,7 +192,178 @@ $pageTitle = $product['name'] . ' | VIBEZ.CLUB';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="wf-detail-wrap" style="max-width:1180px; margin:36px auto 70px; padding:0 20px; font-family:'Inter', sans-serif;">
+<style>
+    .wf-detail-wrap,
+    .wf-detail-wrap button,
+    .wf-detail-wrap input,
+    .wf-detail-wrap a,
+    .sg-modal-box,
+    .sg-modal-box button {
+        font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
+    }
+    .wf-color-list {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .wf-color-swatch {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid #d1d5db;
+        padding: 3px;
+        background-clip: content-box;
+        transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        display: inline-block;
+        box-sizing: border-box;
+        outline: none;
+    }
+    .wf-color-swatch:hover {
+        transform: scale(1.08);
+    }
+    .wf-color-swatch.active {
+        border: 2.5px solid #e60023 !important;
+        transform: scale(1.08);
+        box-shadow: 0 0 0 2px rgba(230, 0, 35, 0.25);
+    }
+    .wf-size-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .wf-size-list {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .wf-size-btn {
+        min-width: 48px;
+        height: 42px;
+        padding: 0 14px;
+        border-radius: 8px;
+        border: 1.5px solid #e5e7eb;
+        background: #ffffff;
+        color: #111111;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.18s ease;
+    }
+    .wf-size-btn:hover {
+        border-color: #111111;
+    }
+    .wf-size-btn.active {
+        border-color: #e60023 !important;
+        color: #e60023 !important;
+        background: #fff0f2 !important;
+    }
+    .wf-size-guide-btn {
+        background: #fff0f2;
+        color: #e60023;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .wf-size-guide-btn:hover {
+        background: #e60023;
+        color: #ffffff;
+    }
+    .wf-cart-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 26px;
+        margin-bottom: 14px;
+    }
+    .wf-qty-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 125px;
+        height: 48px;
+        border: 1.5px solid #111111;
+        border-radius: 999px;
+        padding: 0 8px;
+        background: #ffffff;
+        flex-shrink: 0;
+    }
+    .wf-qty-pill button {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: #f3f4f6;
+        color: #111111;
+        font-size: 16px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+    .wf-qty-pill button:hover {
+        background: #e60023;
+        color: #ffffff;
+    }
+    .wf-qty-pill input {
+        width: 42px;
+        border: none;
+        text-align: center;
+        font-size: 15px;
+        font-weight: 800;
+        outline: none;
+        background: transparent;
+    }
+    .wf-btn-addcart {
+        flex: 1;
+        max-width: 260px;
+        height: 48px;
+        border-radius: 999px;
+        border: 1.5px solid #111111;
+        background: #ffffff;
+        color: #111111;
+        font-size: 14px;
+        font-weight: 800;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .wf-btn-addcart:hover {
+        background: #111111;
+        color: #ffffff;
+    }
+    .wf-btn-buynow {
+        width: 100%;
+        max-width: 399px;
+        height: 50px;
+        border-radius: 999px;
+        border: none;
+        background: #e60023;
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 800;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+    .wf-btn-buynow:hover {
+        background: #c8001e;
+    }
+    @media (max-width: 900px) {
+        .wf-top-grid {
+            grid-template-columns: 1fr !important;
+            gap: 28px !important;
+            padding: 20px !important;
+        }
+    }
+</style>
+
+<div class="wf-detail-wrap" style="max-width:1180px; margin:36px auto 70px; padding:0 20px;">
     <div class="wf-top-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:44px; background:#ffffff; border:1px solid #eeeeee; border-radius:20px; padding:32px; box-shadow:0 8px 30px rgba(0, 0, 0, 0.04);">
         <!-- CỘT ẢNH SẢN PHẨM -->
         <div>
@@ -506,8 +681,10 @@ require_once __DIR__ . '/includes/header.php';
 
     function selectColorOption(btn, colorName) {
         document.querySelectorAll('.wf-color-swatch').forEach(function(el) {
+            el.classList.remove('active');
             el.style.borderColor = '#d1d5db';
         });
+        btn.classList.add('active');
         btn.style.borderColor = '#e60023';
         document.getElementById('selectedColorInput').value = colorName;
         document.getElementById('colorNameLabel').textContent = colorName.toUpperCase();
@@ -516,10 +693,12 @@ require_once __DIR__ . '/includes/header.php';
 
     function selectSizeOption(btn, sizeName) {
         document.querySelectorAll('.wf-size-btn').forEach(function(el) {
+            el.classList.remove('active');
             el.style.borderColor = '#e5e7eb';
             el.style.backgroundColor = '#ffffff';
             el.style.color = '#111111';
         });
+        btn.classList.add('active');
         btn.style.borderColor = '#e60023';
         btn.style.backgroundColor = '#fff0f2';
         btn.style.color = '#e60023';
