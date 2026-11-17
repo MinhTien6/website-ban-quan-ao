@@ -1,8 +1,5 @@
 <?php
-/**
- * Trang xem chi tiết một đơn hàng - TV6 tuần 2.
- * Kiểm tra quyền và lấy dữ liệu trước khi bắt đầu xuất HTML để trả đúng mã 404.
- */
+
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/config/database.php';
 require_once dirname(__DIR__) . '/includes/functions.php';

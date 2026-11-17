@@ -1,14 +1,12 @@
 <?php
 $pageTitle = 'Thêm người dùng';
 
-// Nạp các file cần thiết trước khi xử lý POST
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/config/database.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/models/User.php';
 
-// Kiểm tra quyền Admin
 requireAdmin();
 
 $userModel = new User($pdo);
@@ -22,7 +20,7 @@ $role = 'user';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // Kiểm tra CSRF
+    
     if (!verifyCsrfToken()) {
         setFlash('error', 'Yêu cầu không hợp lệ hoặc phiên làm việc đã hết hạn.');
         redirect('admin/user-create.php');
@@ -84,7 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Chỉ nạp header sau khi xử lý POST
 require_once __DIR__ . '/includes/header.php';
 ?>
 

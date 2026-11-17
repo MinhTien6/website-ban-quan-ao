@@ -1,8 +1,5 @@
 <?php
-/**
- * Footer giao diện chung FashionStore / VIBEZ.CLUB
- * TV1 + TV4 + TV5
- */
+
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/functions.php';
 ?>

@@ -1,22 +1,19 @@
 <?php
 $pageTitle = 'Quản lý người dùng';
 
-// Nạp các file cần thiết trước khi xử lý POST
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/config/database.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/models/User.php';
 
-// Kiểm tra quyền Admin
 requireAdmin();
 
 $userModel = new User($pdo);
 
-// Xử lý khóa / mở khóa / xóa tài khoản
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // Kiểm tra CSRF
+    
     if (!verifyCsrfToken()) {
         setFlash('error', 'Yêu cầu không hợp lệ hoặc phiên làm việc đã hết hạn.');
         redirect('admin/users.php');
@@ -64,10 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('admin/users.php');
 }
 
-// Tìm kiếm
 $keyword = trim($_GET['keyword'] ?? '');
 
-// Phân trang bằng hàm dùng chung
 $limit = 10;
 $totalUsers = $userModel->count($keyword);
 $page = max(1, (int)($_GET['page'] ?? 1));
@@ -78,17 +73,14 @@ $page = $pagination['current_page'];
 $offset = $pagination['offset'];
 $totalPages = $pagination['total_pages'];
 
-// Lấy danh sách người dùng
 $users = $userModel->getList($keyword, $limit, $offset);
 
-// Tạo URL phân trang và giữ lại từ khóa tìm kiếm
 $paginationUrl = BASE_URL . '/admin/users.php';
 
 if ($keyword !== '') {
     $paginationUrl .= '?keyword=' . urlencode($keyword);
 }
 
-// Chỉ nạp header sau khi xử lý POST và dữ liệu
 require_once __DIR__ . '/includes/header.php';
 ?>
 

@@ -1,16 +1,9 @@
 <?php
-/**
- * Các hàm nghiệp vụ Giỏ hàng bằng Session (Phụ trách: TV5)
- * File này được nạp tự động qua includes/functions.php
- */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-/**
- * Lấy danh sách sản phẩm trong giỏ hàng từ Session
- */
 function getCart(): array
 {
     if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
@@ -19,9 +12,6 @@ function getCart(): array
     return $_SESSION['cart'];
 }
 
-/**
- * Đếm tổng số lượng sản phẩm đang có trong giỏ hàng
- */
 function getCartCount(): int
 {
     $cart = getCart();
@@ -32,9 +22,6 @@ function getCartCount(): int
     return $count;
 }
 
-/**
- * Tính tổng tiền tạm tính của giỏ hàng
- */
 function getCartTotal(): float
 {
     $cart = getCart();
@@ -47,9 +34,6 @@ function getCartTotal(): float
     return $total;
 }
 
-/**
- * Xóa toàn bộ giỏ hàng trong Session
- */
 function clearCart(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
@@ -58,9 +42,6 @@ function clearCart(): void
     $_SESSION['cart'] = [];
 }
 
-/**
- * Thêm sản phẩm biến thể vào giỏ hàng Session (TV5)
- */
 function addToCart(array $variant, int $quantity = 1): bool
 {
     if (session_status() === PHP_SESSION_NONE) {

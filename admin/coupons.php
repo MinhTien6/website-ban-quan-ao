@@ -1,7 +1,4 @@
 <?php
-/**
- * Quản lý mã giảm giá Admin (Admin Coupons - TV5 làm thêm)
- */
 
 $pageTitle = 'Quản lý mã giảm giá';
 
@@ -27,11 +24,10 @@ if ($action === 'edit' && $editId > 0) {
     }
 }
 
-// Xử lý gửi biểu mẫu POST (Thêm mới, Cập nhật, Xóa)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $postAction = $_POST['action'] ?? '';
 
-    // Kiểm tra bảo mật CSRF
+    
     if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
         setFlash('error', 'Mã xác thực CSRF không hợp lệ hoặc đã hết hạn.');
         redirect('admin/coupons.php');
@@ -114,7 +110,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Tìm kiếm và phân trang
 $search = trim($_GET['search'] ?? '');
 $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1;
 $page = max(1, $page);
@@ -129,13 +124,13 @@ require_once __DIR__ . '/includes/header.php';
 
 <div class="admin-page-header">
     <div class="page-title-group">
-        <h3>🎟️ Quản lý mã giảm giá (Coupons)</h3>
+        <h3>🎟️ Quản lý mã giảm giá</h3>
         <p class="text-muted">Tạo, cập nhật và quản lý các chương trình ưu đãi, khuyến mãi giảm giá cho khách hàng.</p>
     </div>
 </div>
 
 <div class="admin-grid-layout">
-    <!-- Cột trái: Form Thêm / Sửa mã giảm giá -->
+
     <div class="admin-form-col">
         <div class="admin-card">
             <h4><?= $editCoupon ? '✏️ Chỉnh sửa mã giảm giá' : '➕ Thêm mã giảm giá mới' ?></h4>
@@ -216,7 +211,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 
-    <!-- Cột phải: Danh sách mã giảm giá -->
+    
     <div class="admin-table-col">
         <div class="admin-card">
             <div class="table-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px;">
@@ -332,7 +327,7 @@ require_once __DIR__ . '/includes/header.php';
                 </table>
             </div>
 
-            <!-- Phân trang -->
+            
             <?php if ($pagination['total_pages'] > 1): ?>
                 <div style="margin-top: 20px; display: flex; justify-content: center;">
                     <?php

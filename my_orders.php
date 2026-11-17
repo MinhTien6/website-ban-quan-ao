@@ -1,8 +1,4 @@
 <?php
-/**
- * Lịch sử đơn hàng của khách hàng
- * TV5 - Xem danh sách, chi tiết, bộ lọc trạng thái, phân trang và hủy đơn hàng
- */
 
 $pageTitle = 'Lịch sử đơn hàng';
 
@@ -16,17 +12,13 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Bắt buộc đăng nhập
 requireLogin();
 
-// Lấy thông tin người dùng từ Session
 $user = currentUser();
 $userId = (int)$user['id'];
 
-// Khởi tạo Order Model
 $orderModel = new Order($pdo);
 
-// Ánh xạ nhãn trạng thái đơn hàng
 $statusLabels = [
     'pending'   => 'Chờ xác nhận',
     'confirmed' => 'Đã xác nhận',
@@ -35,7 +27,6 @@ $statusLabels = [
     'cancelled' => 'Đã hủy'
 ];
 
-// Xử lý yêu cầu hủy đơn hàng (chỉ cho phép khi status = 'pending')
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
@@ -93,7 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('my_orders.php');
 }
 
-// Xem chi tiết đơn hàng nếu có tham số id trên URL
 $selectedOrder = null;
 if (isset($_GET['id'])) {
     $orderId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -111,7 +101,6 @@ if (isset($_GET['id'])) {
     }
 }
 
-// Bộ lọc trạng thái và phân trang (khi không xem chi tiết)
 $statusFilter = null;
 $totalFiltered = 0;
 $totalAll = 0;
@@ -155,9 +144,9 @@ require_once __DIR__ . '/includes/header.php';
 
     <?php if ($selectedOrder): ?>
 
-        <!-- ============================================================== -->
-        <!-- GIAO DIỆN XEM CHI TIẾT ĐƠN HÀNG                               -->
-        <!-- ============================================================== -->
+        
+        
+        
         <a href="<?= BASE_URL ?>/my_orders.php" class="btn-back">
             &larr; Quay lại danh sách đơn hàng
         </a>
@@ -241,7 +230,7 @@ require_once __DIR__ . '/includes/header.php';
                     $orderDiscount = max(0, $itemsSubtotal - (float)$selectedOrder['total']);
                 ?>
 
-                <!-- Hiển thị phân rã Tạm tính và Giảm giá -->
+                
                 <?php if ($orderDiscount > 0): ?>
                     <div class="order-detail-subtotal">
                         <span>Tạm tính</span>
@@ -261,7 +250,7 @@ require_once __DIR__ . '/includes/header.php';
                     <strong><?= formatPrice($selectedOrder['total']) ?></strong>
                 </div>
 
-                <!-- Nút hủy đơn hàng khi trạng thái là pending -->
+                
                 <?php if ($selectedOrder['status'] === 'pending'): ?>
                     <form method="POST"
                           action="<?= BASE_URL ?>/my_orders.php"
@@ -282,11 +271,11 @@ require_once __DIR__ . '/includes/header.php';
 
     <?php else: ?>
 
-        <!-- ============================================================== -->
-        <!-- GIAO DIỆN DANH SÁCH ĐƠN HÀNG KÈM BỘ LỌC VÀ PHÂN TRANG         -->
-        <!-- ============================================================== -->
+        
+        
+        
 
-        <!-- Thanh tab lọc trạng thái -->
+        
         <div class="order-filter-tabs">
             <a href="<?= BASE_URL ?>/my_orders.php"
                class="order-tab <?= $statusFilter === null ? 'active' : '' ?>">
@@ -401,7 +390,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             <?php endforeach; ?>
 
-            <!-- Phân trang danh sách đơn hàng -->
+            
             <?php if ($pagination && $pagination['total_pages'] > 1): ?>
                 <div style="margin-top: 25px; display: flex; justify-content: center;">
                     <?php

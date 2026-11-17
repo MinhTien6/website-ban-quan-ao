@@ -1,8 +1,4 @@
 <?php
-/**
- * Trang chủ FashionStore / VIBEZ.CLUB
- * Phụ trách: TV4 (Thư) + Tích hợp giỏ hàng TV5 (Đức)
- */
 
 $pageTitle = 'Trang chủ | VIBEZ.CLUB Streetwear GenZ';
 
@@ -16,13 +12,10 @@ require_once __DIR__ . '/models/Category.php';
 $productModel = new Product($pdo);
 $categoryModel = new Category($pdo);
 
-// Lấy danh mục nổi bật kèm số lượng sản phẩm
 $categories = $categoryModel->getAllActive();
 
-// Lấy 4 sản phẩm mới nhất
 $latestProducts = $productModel->getLatest(4);
 
-// Lấy 4 sản phẩm giảm giá hot nhất
 $saleStmt = $pdo->prepare("
     SELECT p.*, c.name AS category_name, pi.image_path AS main_image
     FROM products p
@@ -35,7 +28,6 @@ $saleStmt = $pdo->prepare("
 $saleStmt->execute();
 $saleProducts = $saleStmt->fetchAll();
 
-// Thu thập biến thể mặc định cho các sản phẩm hiển thị trên card
 $allDisplayedIds = array_unique(array_filter(array_merge(
     array_column($latestProducts, 'id'),
     array_column($saleProducts, 'id')
@@ -58,7 +50,6 @@ if (!empty($allDisplayedIds)) {
     }
 }
 
-// Đường dẫn ảnh banner
 $bannerPath = 'public/images/banner.jpg';
 if (!file_exists(ROOT_PATH . '/' . $bannerPath)) {
     $bannerUrl = 'https://placehold.co/1200x480/111111/ffffff?text=VIBEZ.CLUB+STREETWEAR';
@@ -70,7 +61,7 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="home-main-wrap">
-    <!-- HERO BANNER -->
+    
     <section class="hero-banner-img-wrap" style="position:relative; max-width:1200px; margin:0 auto 40px; padding:0 15px; border-radius:12px; overflow:hidden;">
         <div class="hero-banner-box" style="position:relative; width:100%; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);">
             <img src="<?= e($bannerUrl) ?>" alt="VIBEZ.CLUB - Định hình chất riêng Gen Z" class="hero-banner-img" style="width:100%; height:auto; display:block; object-fit:cover; max-height:460px;">
@@ -80,7 +71,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </section>
 
-    <!-- STORE PERKS -->
+    
     <section class="container" style="max-width:1200px; margin:0 auto 45px; padding:0 15px;">
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:20px; background:#fafafa; border:1px solid #eeeeee; border-radius:10px; padding:22px 20px;">
             <div style="display:flex; align-items:center; gap:14px;">
@@ -122,7 +113,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </section>
 
-    <!-- FEATURED CATEGORIES -->
+    
     <section class="container" style="max-width:1200px; margin:0 auto 55px; padding:0 15px;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
             <div>
@@ -161,7 +152,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </section>
 
-    <!-- NEW ARRIVALS (SẢN PHẨM MỚI NHẤT) -->
+    
     <section class="container" style="max-width:1200px; margin:0 auto 60px; padding:0 15px;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
             <div>
@@ -248,7 +239,7 @@ require_once __DIR__ . '/includes/header.php';
         <?php endif; ?>
     </section>
 
-    <!-- SALE PRODUCTS (SẢN PHẨM GIẢM GIÁ HOT) -->
+    
     <?php if (!empty($saleProducts)): ?>
         <section class="container" style="max-width:1200px; margin:0 auto 60px; padding:0 15px;">
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">

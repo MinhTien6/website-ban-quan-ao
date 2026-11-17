@@ -12,10 +12,9 @@ if (session_status() === PHP_SESSION_NONE) {
 $cart = getCart();
 $productModel = new Product($pdo);
 
-// Xử lý thêm, cập nhật và xóa sản phẩm
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // 1. Kiểm tra CSRF
+    
     if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
         setFlash('error', 'Yêu cầu không hợp lệ hoặc phiên làm việc đã hết hạn.');
         redirect('cart.php');
@@ -32,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         FILTER_VALIDATE_INT
     );
 
-    // 2. Xử lý THÊM VÀO GIỎ HÀNG (TV4 & TV5)
+    
     if ($action === 'add') {
         $productId = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT)
             ?: filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
@@ -47,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $quantity = 100;
         }
 
-        // Nếu chưa có variant_id nhưng có product_id, tìm biến thể phù hợp
+        
         if ((!$variantId || $variantId <= 0) && $productId) {
             if ($size !== '' || $color !== '') {
                 $vSql = "SELECT id FROM product_variants 
@@ -70,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // Fallback sang biến thể đầu tiên của sản phẩm
+            
             if (!$variantId || $variantId <= 0) {
                 $fStmt = $pdo->prepare("SELECT id FROM product_variants WHERE product_id = :pid ORDER BY id ASC LIMIT 1");
                 $fStmt->execute(['pid' => $productId]);
@@ -83,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
         }
 
-        // Lấy thông tin biến thể từ DB
+        
         $variantData = $productModel->getVariantById($variantId);
         if (!$variantData || (int)$variantData['status'] !== 1) {
             setFlash('error', 'Sản phẩm hoặc phân loại không còn tồn tại trên hệ thống.');
@@ -96,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
         }
 
-        // Thêm vào giỏ
+        
         $added = addToCart($variantData, $quantity);
         if (!$added) {
             setFlash('error', "Không thể thêm vào giỏ. Số lượng bạn chọn vượt quá số lượng tồn kho (còn {$stock} sản phẩm).");
@@ -111,13 +110,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // 3. Kiểm tra dữ liệu cho action remove và update
+    
     if (!$variantId || !isset($cart[$variantId])) {
         setFlash('error', 'Sản phẩm không tồn tại trong giỏ hàng.');
         redirect('cart.php');
     }
 
-    // 4. Xử lý xóa sản phẩm
+    
     if ($action === 'remove') {
 
         unset($_SESSION['cart'][$variantId]);
@@ -126,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('cart.php');
     }
 
-    // 5. Xử lý cập nhật số lượng
+    
     if ($action === 'update') {
 
         $quantity = filter_input(
@@ -143,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('cart.php');
         }
 
-        // Kiểm tra biến thể và sản phẩm còn hoạt động
+        
         $stmt = $pdo->prepare("
             SELECT
                 pv.id,
@@ -195,14 +194,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('cart.php');
         }
 
-        // Cập nhật số lượng
+        
         $_SESSION['cart'][$variantId]['quantity'] = $quantity;
 
         setFlash('success', 'Đã cập nhật giỏ hàng.');
         redirect('cart.php');
     }
 
-    // 6. Action không hợp lệ
+    
     setFlash('error', 'Thao tác không hợp lệ.');
     redirect('cart.php');
 }
@@ -221,7 +220,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <?php if (empty($cart)): ?>
 
-    <!-- GIAO DIỆN KHI GIỎ HÀNG TRỐNG -->
+    
     <div class="cart-empty">
         <div class="cart-empty-icon">
             <svg width="60" height="60" viewBox="0 0 24 24"
@@ -244,7 +243,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <?php else: ?>
 
-    <!-- GIAO DIỆN KHI CÓ SẢN PHẨM -->
+    
     <div class="cart-layout">
 
         <div class="cart-list">
@@ -257,7 +256,7 @@ require_once __DIR__ . '/includes/header.php';
 
                 <div class="cart-item">
 
-                    <!-- Ảnh sản phẩm -->
+                    
                     <?php if (!empty($item['image'])): ?>
                         <img
                             class="cart-item-image"
@@ -269,7 +268,7 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     <?php endif; ?>
 
-                    <!-- Thông tin sản phẩm -->
+                    
                     <div>
                         <h3 class="cart-item-name">
                             <?= e($item['name']) ?>
@@ -289,7 +288,7 @@ require_once __DIR__ . '/includes/header.php';
                             <?= formatPrice($item['price']) ?>
                         </div>
 
-                        <!-- Cập nhật số lượng -->
+                        
                         <form method="POST" action="cart.php"
                               class="cart-quantity">
 
@@ -308,7 +307,7 @@ require_once __DIR__ . '/includes/header.php';
                             <button type="submit">Cập nhật</button>
                         </form>
 
-                        <!-- Xóa sản phẩm -->
+                        
                         <form method="POST" action="cart.php"
                               onsubmit="return confirm('Bạn muốn xóa sản phẩm này khỏi giỏ hàng?');">
 
@@ -326,7 +325,7 @@ require_once __DIR__ . '/includes/header.php';
                         </form>
                     </div>
 
-                    <!-- Thành tiền -->
+                    
                     <div class="cart-item-subtotal">
                         <?= formatPrice(
                             $item['price'] * $item['quantity']
@@ -339,7 +338,7 @@ require_once __DIR__ . '/includes/header.php';
 
         </div>
 
-        <!-- TỔNG KẾT ĐƠN HÀNG -->
+        
         <aside class="cart-summary">
 
             <h2>Đơn hàng của bạn</h2>

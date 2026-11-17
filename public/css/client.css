@@ -1,6 +1,4 @@
-/* ==========================================================================
-   1. BẢNG MÀU ĐỎ - TRẮNG - ĐEN (Clean Streetwear / Đỏ Đen Năng Động)
-   ========================================================================== */
+
 :root {
     --primary-color: #111111;
     --primary-hover: #dc2626;
@@ -12,15 +10,12 @@
     --white: #ffffff;
     --border-color: #e2e8f0;
 
-    --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     --container-width: 1200px;
     --radius: 6px;
     --transition: all 0.25s ease;
 }
 
-/* ==========================================================================
-   2. CƠ BẢN & TIỆN ÍCH GIAO DIỆN KHÁCH HÀNG
-   ========================================================================== */
 * {
     box-sizing: border-box;
 }
@@ -58,9 +53,6 @@ body {
 .mb-20 { margin-bottom: 20px; }
 .mb-40 { margin-bottom: 40px; }
 
-/* ==========================================================================
-   3. UI COMPONENTS (Nút bấm, Form dùng chung)
-   ========================================================================== */
 .btn {
     display: inline-block;
     padding: 12px 26px;
@@ -112,9 +104,6 @@ body {
     border-color: var(--accent-red);
 }
 
-/* ==========================================================================
-   4. HEADER (Điểm nhấn màu đỏ)
-   ========================================================================== */
 .site-header {
     background-color: var(--white);
     border-bottom: 1px solid var(--border-color);
@@ -219,9 +208,6 @@ body {
     justify-content: center;
 }
 
-/* ==========================================================================
-   5. BANNER TRANG CHỦ
-   ========================================================================== */
 .hero-banner {
     background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
     padding: 85px 0;
@@ -260,9 +246,6 @@ body {
     color: #475569;
 }
 
-/* ==========================================================================
-   6. LƯỚI SẢN PHẨM & NÚT XEM TẤT CẢ
-   ========================================================================== */
 .section-title {
     font-size: 26px;
     font-weight: 900;
@@ -399,9 +382,6 @@ body {
     color: var(--white);
 }
 
-/* ==========================================================================
-   7. TRANG DANH SÁCH SẢN PHẨM & BỘ LỌC (products.php)
-   ========================================================================== */
 .filter-bar {
     background: var(--white);
     border: 1px solid var(--border-color);
@@ -435,9 +415,6 @@ body {
     margin: 30px 0;
 }
 
-/* ==========================================================================
-   8. TRANG CHI TIẾT SẢN PHẨM (product_detail.php)
-   ========================================================================== */
 .product-detail-wrap {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -540,9 +517,6 @@ body {
     text-align: center;
 }
 
-/* ==========================================================================
-   9. FOOTER CHUẨN LOCAL BRAND
-   ========================================================================== */
 .site-footer {
     background-color: #121212;
     color: #a1a1aa;
@@ -675,9 +649,6 @@ body {
     color: #71717a;
 }
 
-/* ==========================================================================
-   10. RESPONSIVE MEDIA QUERIES (Tối ưu toàn diện Tablet & Điện thoại TV4-04)
-   ========================================================================== */
 @media (max-width: 1024px) {
     html body .site-header .header-inner {
         height: auto !important;
@@ -706,7 +677,7 @@ body {
 }
 
 @media (max-width: 767px) {
-    /* 1. Topbar & Header tự động xuống dòng gọn gàng trên điện thoại */
+    
     html body .topbar {
         font-size: 10.5px !important;
         padding: 6px 10px !important;
@@ -747,7 +718,7 @@ body {
         width: 100% !important;
     }
 
-    /* 2. Banner & Nút KHÁM PHÁ NGAY co nhỏ vừa màn hình điện thoại */
+    
     html body .home-main-wrap .hero-banner-img-wrap {
         margin-bottom: 28px !important;
     }
@@ -765,7 +736,7 @@ body {
         margin-bottom: 20px !important;
     }
 
-    /* 3. Thẻ sản phẩm 2 cột trên điện thoại: Xếp dọc cụm Số lượng & Thêm giỏ hàng */
+    
     .product-grid,
     html body .home-main-wrap .product-grid,
     html body .catalog-wrap .product-grid {
@@ -805,7 +776,7 @@ body {
         font-size: 11px !important;
     }
 
-    /* 4. Trang Chi tiết sản phẩm trên điện thoại */
+    
     html body .wf-detail-wrap {
         margin: 20px auto 40px !important;
         padding: 0 12px !important;
@@ -842,7 +813,7 @@ body {
         align-items: flex-start !important;
     }
 
-    /* 5. Footer 1 cột trên điện thoại */
+    
     .footer-grid {
         grid-template-columns: 1fr;
     }

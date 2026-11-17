@@ -1,8 +1,4 @@
 <?php
-/**
- * Script nạp trực tiếp 30 sản phẩm thời trang vào CSDL MySQL local
- * Chạy bằng lệnh: D:\xampp\php\php.exe database/seed_30_products.php
- */
 
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/config/database.php';
@@ -15,10 +11,10 @@ echo "========================================================\n";
 try {
     $pdo->beginTransaction();
 
-    // Tắt kiểm tra khóa ngoại để cập nhật an toàn
+    
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
 
-    // 1. Cập nhật danh mục
+    
     $pdo->exec("TRUNCATE TABLE categories;");
     $catStmt = $pdo->prepare("INSERT INTO categories (id, name, slug, description, parent_id, status) VALUES (?, ?, ?, ?, ?, ?)");
     foreach ($categories as $cat) {
@@ -26,49 +22,55 @@ try {
     }
     echo "1. [OK] Đã cập nhật " . count($categories) . " danh mục (5 nhóm chính chuẩn theo hình).\n";
 
-    // 2. Cập nhật 30 sản phẩm
+    
     $pdo->exec("TRUNCATE TABLE products;");
-    $prodStmt = $pdo->prepare("INSERT INTO products (id, name, slug, price, sale_price, description, category_id, status, views, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $prodStmt = $pdo->prepare("INSERT INTO products (id, name, slug, price, sale_price, description, category_id, status, views, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
     foreach ($products as $p) {
         $prodStmt->execute($p);
     }
     echo "2. [OK] Đã cập nhật " . count($products) . " sản phẩm thời trang (6 sản phẩm mỗi nhóm).\n";
 
-    // 3. Cập nhật ảnh sản phẩm (có cả mặt trước và mặt sau)
+    
     $pdo->exec("TRUNCATE TABLE product_images;");
     $imgStmt = $pdo->prepare("INSERT INTO product_images (id, product_id, image_path, is_main, sort_order) VALUES (?, ?, ?, ?, ?)");
-    foreach ($images as $img) {
+    foreach ($product_images as $img) {
         $imgStmt->execute($img);
     }
-    echo "3. [OK] Đã cập nhật " . count($images) . " ảnh sản phẩm (đủ ảnh mặt trước và mặt sau thực tế).\n";
+    echo "3. [OK] Đã cập nhật " . count($product_images) . " ảnh sản phẩm (đủ ảnh mặt trước và mặt sau thực tế).\n";
 
-    // 4. Cập nhật biến thể sản phẩm (2-3 màu khác nhau cho mỗi sản phẩm)
+    
     $pdo->exec("TRUNCATE TABLE product_variants;");
     $varStmt = $pdo->prepare("INSERT INTO product_variants (id, product_id, size, color, stock) VALUES (?, ?, ?, ?, ?)");
-    $vId = 1;
-    foreach ($productConfig as $productId => $cfg) {
-        foreach ($cfg['colors'] as $cIdx => $color) {
-            foreach ($cfg['sizes'] as $sIdx => $size) {
-                $stock = ($productId === 14 && $cIdx === 0 && $sIdx === 0) ? 2 : (($productId === 5 && $cIdx === 0 && $sIdx === 0) ? 0 : (10 + (($vId * 7) % 25)));
-                $varStmt->execute([$vId, $productId, $size, $color, $stock]);
-                $vId++;
-            }
-        }
+    foreach ($product_variants as $variant) {
+        $varStmt->execute($variant);
     }
-    echo "4. [OK] Đã cập nhật " . ($vId - 1) . " biến thể (đảm bảo 2-3 màu khác nhau + các size cho mỗi sản phẩm).\n";
+    echo "4. [OK] Đã cập nhật " . count($product_variants) . " biến thể (đảm bảo 2-3 màu khác nhau + các size cho mỗi sản phẩm).\n";
 
-    // 5. Cập nhật lại các bảng liên quan để toàn vẹn dữ liệu
+    
+    $variantsByProduct = [];
+    foreach ($product_variants as $variant) {
+        $variantsByProduct[$variant[1]][] = $variant[0];
+    }
+
     $pdo->exec("TRUNCATE TABLE order_items;");
-    $pdo->exec("INSERT INTO order_items (id, order_id, product_id, variant_id, quantity, price) VALUES
-        (1, 1, 1, 2, 2, 149000),
-        (2, 1, 12, 40, 1, 399000),
-        (3, 2, 17, 65, 1, 449000),
-        (4, 2, 21, 85, 1, 579000),
-        (5, 3, 25, 105, 1, 459000),
-        (6, 3, 5, 14, 1, 129000),
-        (7, 4, 7, 25, 1, 259000),
-        (8, 5, 23, 95, 1, 349000),
-        (9, 5, 1, 4, 2, 149000);");
+    $orderItems = [
+        [1, 1, 1, 2, 149000],
+        [2, 1, 12, 1, 399000],
+        [3, 2, 17, 1, 449000],
+        [4, 2, 21, 1, 579000],
+        [5, 3, 25, 1, 459000],
+        [6, 3, 5, 1, 129000],
+        [7, 4, 7, 1, 259000],
+        [8, 5, 23, 1, 349000],
+        [9, 5, 1, 2, 149000],
+    ];
+    $orderItemStmt = $pdo->prepare("INSERT INTO order_items (id, order_id, product_id, variant_id, quantity, price) VALUES (?, ?, ?, ?, ?, ?)");
+    foreach ($orderItems as $item) {
+        if (empty($variantsByProduct[$item[2]])) {
+            throw new RuntimeException("Không tìm thấy biến thể cho sản phẩm ID " . $item[2]);
+        }
+        $orderItemStmt->execute([$item[0], $item[1], $item[2], $variantsByProduct[$item[2]][0], $item[3], $item[4]]);
+    }
 
     $pdo->exec("TRUNCATE TABLE wishlists;");
     $pdo->exec("INSERT INTO wishlists (id, user_id, product_id) VALUES

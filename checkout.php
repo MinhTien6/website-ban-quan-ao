@@ -1,8 +1,4 @@
 <?php
-/**
- * Trang thanh toán - FashionStore
- * TV5 - Xử lý thông tin người nhận, phương thức thanh toán, mã giảm giá và tạo đơn hàng
- */
 
 $pageTitle = 'Thanh toán';
 $pageCss = 'checkout.css';
@@ -14,12 +10,10 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/models/Order.php';
 require_once __DIR__ . '/models/User.php';
 
-// Bắt buộc đăng nhập
 requireLogin();
 
 $currentUser = currentUser();
 
-// Lấy hồ sơ người dùng
 $userModel = new User($pdo);
 $userProfile = $userModel->findById($currentUser['id']);
 
@@ -31,7 +25,6 @@ $successOrderId = filter_input(
 
 $cart = getCart();
 
-// Giỏ hàng trống và không phải trang thông báo thành công
 if (empty($cart) && !$successOrderId) {
     setFlash('error', 'Giỏ hàng của bạn đang trống!');
     redirect('cart.php');
@@ -39,7 +32,6 @@ if (empty($cart) && !$successOrderId) {
 
 $orderModel = new Order($pdo);
 
-// Kiểm tra quyền truy cập thông báo đặt hàng thành công (chống IDOR)
 if (
     $successOrderId &&
     !$orderModel->belongsToUser(
@@ -51,10 +43,9 @@ if (
     redirect('my_orders.php');
 }
 
-// Xử lý gửi biểu mẫu (Áp dụng / Hủy mã giảm giá / Đặt hàng)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // 1. Kiểm tra CSRF
+    
     if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
         setFlash('error', 'Phiên gửi biểu mẫu không hợp lệ!');
         redirect('checkout.php');
@@ -62,11 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $action = $_POST['action'] ?? 'place_order';
 
-    // 2. Xử lý áp dụng mã giảm giá
+    
     if ($action === 'apply_coupon') {
         $cartTotal = (float)getCartTotal();
 
-        // Lưu tạm thông tin người nhận để không bị mất khi reload
+        
         $_SESSION['checkout_draft'] = [
             'receiver_name'  => trim($_POST['receiver_name'] ?? ''),
             'phone'          => trim($_POST['phone'] ?? ''),
@@ -103,9 +94,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('checkout.php');
     }
 
-    // 3. Xử lý hủy mã giảm giá
+    
     if ($action === 'remove_coupon') {
-        // Lưu tạm thông tin người nhận để không bị mất khi reload
+        
         $_SESSION['checkout_draft'] = [
             'receiver_name'  => trim($_POST['receiver_name'] ?? ''),
             'phone'          => trim($_POST['phone'] ?? ''),
@@ -118,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('checkout.php');
     }
 
-    // 4. Xử lý đặt hàng (place_order)
+    
     $receiverName  = trim($_POST['receiver_name'] ?? '');
     $phone         = trim($_POST['phone'] ?? '');
     $address       = trim($_POST['address'] ?? '');
@@ -157,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $appliedCouponCode
         );
 
-        // Xóa giỏ hàng và dữ liệu nháp sau khi đặt hàng thành công
+        
         clearCart();
         unset($_SESSION['applied_coupon']);
         unset($_SESSION['checkout_draft']);
@@ -171,7 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Tính toán giảm giá từ Session nếu có mã được áp dụng
 $cartTotal = getCartTotal();
 $cartCount = getCartCount();
 $discount = 0;
@@ -196,7 +186,6 @@ if (!empty($_SESSION['applied_coupon'])) {
     }
 }
 
-// Lấy thông tin mặc định từ hồ sơ người dùng hoặc nháp đã lưu
 $profile = is_array($userProfile) ? $userProfile : [];
 $draft   = $_SESSION['checkout_draft'] ?? [];
 
@@ -226,7 +215,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <?php if ($successOrderId): ?>
 
-        <!-- ĐẶT HÀNG THÀNH CÔNG -->
+        
         <div class="checkout-success">
             <div class="checkout-success-icon">✓</div>
 
@@ -274,7 +263,7 @@ require_once __DIR__ . '/includes/header.php';
 
             <div class="checkout-layout">
 
-                <!-- THÔNG TIN THANH TOÁN -->
+                
                 <div>
                     <div class="checkout-card">
                         <h2>Thông tin người nhận</h2>
@@ -348,7 +337,7 @@ require_once __DIR__ . '/includes/header.php';
                             </span>
                         </label>
 
-                        <!-- Khung thông tin chuyển khoản ngân hàng (Yêu cầu đề bài Mục 1.2) -->
+                        
                         <div id="bank-info-box" style="display: <?= ($defaultPayment === 'bank') ? 'block' : 'none' ?>;">
                             <strong class="bank-title">Thông tin tài khoản nhận thanh toán:</strong>
                             <p>• Ngân hàng: <strong>Vietcombank - CN TP.HCM</strong></p>
@@ -362,11 +351,11 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 </div>
 
-                <!-- TÓM TẮT ĐƠN HÀNG -->
+                
                 <aside class="checkout-summary">
                     <h2>Đơn hàng của bạn</h2>
 
-                    <!-- Mục nhập mã giảm giá -->
+                    
                     <div class="coupon-section">
                         <h3>Mã giảm giá</h3>
 
@@ -408,7 +397,7 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endif; ?>
                     </div>
 
-                    <!-- Danh sách sản phẩm trong đơn -->
+                    
                     <div class="checkout-product-list">
                         <?php foreach ($cart as $variantId => $item): ?>
                             <div class="checkout-product">
@@ -437,7 +426,7 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endforeach; ?>
                     </div>
 
-                    <!-- Tổng kết giá tiền -->
+                    
                     <div class="checkout-summary-row">
                         <span>Số lượng sản phẩm</span>
                         <strong><?= (int)$cartCount ?></strong>

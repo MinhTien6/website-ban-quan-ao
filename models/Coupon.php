@@ -1,8 +1,4 @@
 <?php
-/**
- * Coupon Model - FashionStore
- * Quản lý mã giảm giá (CRUD Admin - Phân hệ TV5 làm thêm)
- */
 
 class Coupon
 {
@@ -13,14 +9,8 @@ class Coupon
         $this->pdo = $pdo;
     }
 
-    /**
-     * Lấy danh sách mã giảm giá kèm số lượt đã sử dụng thực tế
-     *
-     * @param string|null $search Tìm theo mã code
-     * @param int $limit
-     * @param int $offset
-     * @return array
-     */
+    
+
     public function getAll(?string $search = null, int $limit = 20, int $offset = 0): array
     {
         $params = [];
@@ -56,12 +46,8 @@ class Coupon
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Đếm tổng số mã giảm giá
-     *
-     * @param string|null $search
-     * @return int
-     */
+    
+
     public function count(?string $search = null): int
     {
         $params = [];
@@ -78,12 +64,8 @@ class Coupon
         return (int)$stmt->fetchColumn();
     }
 
-    /**
-     * Lấy chi tiết một mã giảm giá theo ID
-     *
-     * @param int $id
-     * @return array|false
-     */
+    
+
     public function findById(int $id): array|false
     {
         $sql = "
@@ -106,12 +88,8 @@ class Coupon
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Lấy mã giảm giá theo mã code
-     *
-     * @param string $code
-     * @return array|false
-     */
+    
+
     public function findByCode(string $code): array|false
     {
         $stmt = $this->pdo->prepare("SELECT * FROM coupons WHERE code = :code LIMIT 1");
@@ -119,13 +97,8 @@ class Coupon
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Thêm mới mã giảm giá
-     *
-     * @param array $data
-     * @return int ID mã vừa tạo
-     * @throws Exception
-     */
+    
+
     public function create(array $data): int
     {
         $code = strtoupper(trim($data['code'] ?? ''));
@@ -185,14 +158,8 @@ class Coupon
         return (int)$this->pdo->lastInsertId();
     }
 
-    /**
-     * Cập nhật thông tin mã giảm giá
-     *
-     * @param int $id
-     * @param array $data
-     * @return bool
-     * @throws Exception
-     */
+    
+
     public function update(int $id, array $data): bool
     {
         $code = strtoupper(trim($data['code'] ?? ''));
@@ -218,7 +185,7 @@ class Coupon
             throw new InvalidArgumentException('Phần trăm giảm giá không được vượt quá 100%.');
         }
 
-        // Kiểm tra trùng code với bản ghi khác
+        
         $checkStmt = $this->pdo->prepare("SELECT id FROM coupons WHERE code = :code AND id <> :id LIMIT 1");
         $checkStmt->execute(['code' => $code, 'id' => $id]);
         if ($checkStmt->fetch()) {
@@ -247,16 +214,11 @@ class Coupon
         ]);
     }
 
-    /**
-     * Xóa mã giảm giá (kiểm tra an toàn nếu đã có đơn hàng áp dụng)
-     *
-     * @param int $id
-     * @return bool
-     * @throws Exception
-     */
+    
+
     public function delete(int $id): bool
     {
-        // Kiểm tra xem mã có đơn hàng nào tham chiếu không
+        
         $checkOrders = $this->pdo->prepare("SELECT COUNT(*) FROM orders WHERE coupon_id = :id");
         $checkOrders->execute(['id' => $id]);
         $usedCount = (int)$checkOrders->fetchColumn();
@@ -269,12 +231,8 @@ class Coupon
         return $stmt->execute(['id' => $id]);
     }
 
-    /**
-     * Lấy số lượt đơn hàng đã áp dụng mã
-     *
-     * @param int $couponId
-     * @return int
-     */
+    
+
     public function getUsedCount(int $couponId): int
     {
         $stmt = $this->pdo->prepare("

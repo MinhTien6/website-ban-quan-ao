@@ -1,7 +1,4 @@
 <?php
-/**
- * Trang hồ sơ cá nhân
- */
 
 $pageTitle = 'Tài khoản của tôi';
 
@@ -11,7 +8,6 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/models/User.php';
 
-// Chỉ người đã đăng nhập mới được truy cập
 requireLogin();
 
 $userModel = new User($pdo);
@@ -20,7 +16,6 @@ $userId = (int) currentUser()['id'];
 $error = '';
 $success = '';
 
-// Xử lý cập nhật hồ sơ
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCsrfToken()) {
         $error = 'Yêu cầu không hợp lệ. Vui lòng thử lại.';
@@ -49,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
 
                 if ($updated) {
-                    // Cập nhật tên trong session
+                    
                     refreshCurrentUser();
 
                     setFlash('success', 'Cập nhật hồ sơ thành công.');
@@ -65,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Lấy thông tin người dùng
 $user = $userModel->findById($userId);
 
 if (!$user) {

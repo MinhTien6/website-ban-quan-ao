@@ -1,7 +1,5 @@
 <?php
-/**
- * Dashboard quản trị - tổng quan trạng thái và doanh thu đơn hàng (TV6).
- */
+
 $pageTitle = 'Bảng điều khiển';
 require_once __DIR__ . '/includes/header.php';
 require_once dirname(__DIR__) . '/models/Order.php';

@@ -1,6 +1,4 @@
-/* ==========================================================================
-   1. BIẾN MÀU & THIẾT LẬP CHUNG
-   ========================================================================== */
+
 :root {
     --primary: #e85d75;
     --primary-hover: #d94460;
@@ -12,7 +10,7 @@
     --text-muted: #666666;
     --border: #e5e7eb;
     --border-radius: 8px;
-    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --success: #15803d;
     --success-bg: #dcfce7;
     --error: #b91c1c;
@@ -64,9 +62,6 @@ button {
     flex: 1 0 auto;
 }
 
-/* ==========================================================================
-   2. THANH ĐIỀU HƯỚNG (HEADER NGƯỜI DÙNG)
-   ========================================================================== */
 .header {
     display: flex;
     justify-content: space-between;
@@ -136,9 +131,6 @@ button {
     color: var(--error);
 }
 
-/* ==========================================================================
-   3. THÔNG BÁO FLASH & ALERTS
-   ========================================================================== */
 .flash-message {
     padding: 12px 7%;
     text-align: center;
@@ -185,9 +177,6 @@ button {
     border: 1px solid #bae6fd;
 }
 
-/* ==========================================================================
-   4. BANNER TRANG CHỦ (HERO)
-   ========================================================================== */
 .hero {
     min-height: 380px;
     padding: 60px 7%;
@@ -224,9 +213,6 @@ button {
     margin-bottom: 24px;
 }
 
-/* ==========================================================================
-   5. NÚT BẤM (BUTTONS)
-   ========================================================================== */
 .button {
     display: inline-block;
     padding: 11px 22px;
@@ -263,9 +249,6 @@ button {
     box-shadow: none !important;
 }
 
-/* ==========================================================================
-   6. DANH SÁCH SẢN PHẨM (GRID & CARD)
-   ========================================================================== */
 .section {
     padding: 50px 7%;
 }
@@ -389,9 +372,6 @@ button {
     border-radius: var(--border-radius);
 }
 
-/* ==========================================================================
-   7. FORM ĐĂNG NHẬP / ĐĂNG KÝ (AUTH)
-   ========================================================================== */
 .auth-wrapper {
     padding: 50px 20px;
     display: flex;
@@ -468,9 +448,6 @@ button {
     font-weight: 600;
 }
 
-/* ==========================================================================
-   8. THANH PHÂN TRANG (PAGINATION)
-   ========================================================================== */
 .pagination {
     display: flex;
     justify-content: center;
@@ -523,9 +500,6 @@ button {
     font-weight: bold;
 }
 
-/* ==========================================================================
-   9. GIAO DIỆN QUẢN TRỊ VIÊN (ADMIN LAYOUT & DASHBOARD)
-   ========================================================================== */
 .admin-body {
     background: #f8fafc;
 }
@@ -535,7 +509,6 @@ button {
     min-height: 100vh;
 }
 
-/* Sidebar Admin */
 .admin-sidebar {
     width: 260px;
     background: var(--sidebar-bg);
@@ -649,7 +622,6 @@ button {
     color: #ffffff;
 }
 
-/* Vùng nội dung chính Admin */
 .admin-main {
     flex: 1 1 auto;
     display: flex;
@@ -701,7 +673,6 @@ button {
     font-size: 14px;
 }
 
-/* Thẻ thống kê Dashboard */
 .admin-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -803,9 +774,6 @@ button {
     color: #94a3b8;
 }
 
-/* ==========================================================================
-   10. CHÂN TRANG NGƯỜI DÙNG (FOOTER)
-   ========================================================================== */
 .footer {
     padding: 30px 7%;
     background: var(--secondary);
@@ -819,10 +787,6 @@ button {
     font-size: 13px;
 }
 
-/* ==========================================================================
-   11. RESPONSIVE DESIGN (TABLET & MOBILE)
-   ========================================================================== */
-/* Tablet */
 @media (min-width: 768px) and (max-width: 1024px) {
     .header {
         padding: 16px 5%;
@@ -842,7 +806,6 @@ button {
     }
 }
 
-/* Mobile */
 @media (max-width: 767px) {
     .header {
         flex-direction: column;
@@ -923,10 +886,6 @@ button {
     }
 }
 
-
-/* ==========================================================================
-   12. GIAO DIỆN QUẢN TRỊ CHI TIẾT (ADMIN CRUD - TV3)
-   ========================================================================== */
 .admin-page-header {
     display: flex;
     justify-content: space-between;
@@ -975,7 +934,6 @@ button {
     margin-bottom: 0;
 }
 
-/* Bố cục Grid 2 cột cho Danh mục */
 .admin-grid-layout {
     display: grid;
     grid-template-columns: 360px 1fr;
@@ -983,7 +941,6 @@ button {
     align-items: start;
 }
 
-/* Bố cục Grid cho Form Sản phẩm */
 .product-form-grid {
     display: grid;
     grid-template-columns: 1fr 340px;
@@ -997,7 +954,6 @@ button {
     gap: 16px;
 }
 
-/* Form Controls */
 .form-group {
     margin-bottom: 16px;
 }
@@ -1044,7 +1000,6 @@ button {
     align-items: center;
 }
 
-/* Bảng dữ liệu quản trị */
 .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -1088,7 +1043,6 @@ button {
     margin-bottom: 14px;
 }
 
-/* Huy hiệu (Badges) */
 .badge-status {
     display: inline-block;
     padding: 3px 8px;
@@ -1134,7 +1088,6 @@ button {
     color: #475569;
 }
 
-/* Thao tác nút bấm trong bảng */
 .action-buttons {
     display: inline-flex;
     align-items: center;
@@ -1184,7 +1137,6 @@ button {
     background: var(--error-bg);
 }
 
-/* Nút bổ sung */
 .button-sm {
     padding: 6px 14px;
     font-size: 12px;
@@ -1202,7 +1154,6 @@ button {
     box-shadow: none;
 }
 
-/* Thumbnail Sản phẩm trong bảng */
 .product-thumb-wrap {
     width: 48px;
     height: 48px;
@@ -1255,7 +1206,6 @@ button {
     color: #475569;
 }
 
-/* Giá bán trong bảng */
 .price-cell {
     display: flex;
     flex-direction: column;
@@ -1278,7 +1228,6 @@ button {
     font-size: 13.5px;
 }
 
-/* Huy hiệu tồn kho */
 .badge-stock {
     display: inline-block;
     padding: 3px 8px;
@@ -1303,7 +1252,6 @@ button {
     color: #dc2626;
 }
 
-/* Cảnh báo tồn kho thấp (Tuần 3) */
 .admin-alert-banner {
     display: flex;
     align-items: center;
@@ -1321,7 +1269,6 @@ button {
     font-size: 22px;
 }
 
-/* Khung tìm kiếm & Lọc */
 .filter-card {
     padding: 14px 18px;
     margin-bottom: 20px;
@@ -1339,7 +1286,6 @@ button {
     min-width: 250px;
 }
 
-/* Xem trước nhiều ảnh */
 .image-preview-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1373,7 +1319,6 @@ button {
     border-radius: 3px;
 }
 
-/* Quản lý Gallery ảnh trong trang Edit */
 .gallery-edit-list {
     display: flex;
     flex-direction: column;
@@ -1454,7 +1399,6 @@ button {
     border-color: var(--error);
 }
 
-/* Responsive cho trang Admin TV3 */
 @media (max-width: 1024px) {
     .admin-grid-layout,
     .product-form-grid {
@@ -1462,8 +1406,6 @@ button {
     }
 }
 
-
-/* Trang chủ: Chọn biến thể & Thêm vào giỏ hàng (TV5) */
 .home-add-cart-form {
     display: flex;
     flex-direction: column;
@@ -1510,9 +1452,6 @@ button {
     font-style: italic;
 }
 
-/* ==========================================================================
-   NAVIGATION CART BUTTON (TV5)
-   ========================================================================== */
 .nav-cart {
     display: inline-flex;
     align-items: center;
@@ -1547,10 +1486,6 @@ button {
     font-weight: 700;
 }
 
-
-/* ==========================================================================
-   TV6 - QUẢN LÝ ĐƠN HÀNG, DASHBOARD & BIỂU ĐỒ REVENUE CHART
-   ========================================================================== */
 .admin-orders-page,
 .order-detail-page {
     max-width: 1320px;
@@ -1776,7 +1711,6 @@ button {
 .recent-orders-heading h4 { margin: 0 0 5px; color: var(--secondary); font-size: 16px; }
 .recent-orders-heading { margin-bottom: 14px; }
 
-/* Responsive quy củ theo thứ tự giảm dần: 900px -> 767px -> 600px */
 @media (max-width: 900px) {
     .admin-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .order-detail-grid { grid-template-columns: 1fr; }
@@ -1805,10 +1739,6 @@ button {
     .admin-content { padding: 16px; }
 }
 
-
-/* ==========================================================================
-   BADGES & ADMIN USER MANAGEMENT (TV2)
-   ========================================================================== */
 .badge {
     display: inline-block;
     padding: 4px 10px;
@@ -1837,9 +1767,6 @@ button {
     color: #b91c1c;
 }
 
-/* ==========================================================================
-   GIAO DIỆN QUẢN LÝ NGƯỜI DÙNG TV2 (.admin-dashboard-wrapper)
-   ========================================================================== */
 .admin-dashboard-wrapper {
     background: #ffffff;
     border: 1px solid var(--border, #e2e8f0);

@@ -1,8 +1,4 @@
 <?php
-/**
- * Form Thêm mới & Cập nhật sản phẩm (Admin Product Form - TV3)
- * Tích hợp Rich Text Editor (CKEditor 5), upload nhiều ảnh và quản lý biến thể size/màu/tồn kho
- */
 
 $isEdit = isset($_GET['id']) && (int)$_GET['id'] > 0;
 $productId = $isEdit ? (int)$_GET['id'] : 0;
@@ -44,14 +40,13 @@ $salePrice = $product['sale_price'] ?? '';
 $description = $product['description'] ?? '';
 $status = $product['status'] ?? 1;
 
-// Xử lý gửi biểu mẫu POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCsrfToken()) {
         setFlash('error', 'Mã xác thực CSRF không hợp lệ hoặc đã hết hạn.');
         redirect($isEdit ? "admin/product_form.php?id={$productId}" : 'admin/product_form.php');
     }
 
-    // Xử lý xóa 1 ảnh hiện có trong CSDL (Chế độ Edit - TV3)
+    
     if (isset($_POST['action']) && $_POST['action'] === 'delete_image') {
         $delImgId = (int)($_POST['image_id'] ?? 0);
         if ($isEdit && $delImgId > 0) {
@@ -70,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = trim($_POST['description'] ?? '');
     $status = isset($_POST['status']) ? (int)$_POST['status'] : 1;
 
-    // Validate dữ liệu cơ bản
+    
     if ($name === '') {
         $errors[] = 'Vui lòng nhập tên sản phẩm.';
     }
@@ -90,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $slug = createSlug($slug);
     }
 
-    // Kiểm tra trùng slug (kể cả sản phẩm đang ẩn status = 0)
+    
     $checkSlugSql = "SELECT id FROM products WHERE slug = :slug" . ($isEdit ? " AND id != :id" : "") . " LIMIT 1";
     $checkSlugStmt = $pdo->prepare($checkSlugSql);
     $checkSlugParams = ['slug' => $slug];
@@ -102,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $slug .= '-' . time();
     }
 
-    // Xử lý danh sách biến thể gửi lên
+    
     $vSizes = $_POST['variant_size'] ?? [];
     $vColors = $_POST['variant_color'] ?? [];
     $vStocks = $_POST['variant_stock'] ?? [];
@@ -123,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Xử lý tải lên nhiều ảnh (uploadMultipleImages)
+    
     $uploadedImagePaths = [];
     if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
         $uploadResult = uploadMultipleImages($_FILES['images'], 'products', 5, ['jpg', 'jpeg', 'png', 'webp'], $slug);
@@ -136,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Khi thêm mới: bắt buộc có ít nhất 1 ảnh tải lên
+    
     if (!$isEdit && empty($uploadedImagePaths)) {
         $errors[] = 'Vui lòng tải lên ít nhất 1 hình ảnh cho sản phẩm.';
     }
@@ -176,7 +171,7 @@ require_once __DIR__ . '/includes/header.php';
 <div class="admin-page-header">
     <div>
         <h3><?= $isEdit ? 'Chỉnh sửa sản phẩm #' . e($productId) : 'Thêm sản phẩm mới' ?></h3>
-        <p class="admin-subtitle">Tích hợp Rich Text Editor, tải lên nhiều ảnh và quản lý biến thể (Nhiệm vụ TV3)</p>
+        <p class="admin-subtitle">Tích hợp Rich Text Editor, tải lên nhiều ảnh và quản lý biến thể</p>
     </div>
     <div>
         <a href="<?= BASE_URL ?>/admin/products.php" class="button button-outline">
@@ -201,7 +196,7 @@ require_once __DIR__ . '/includes/header.php';
     <?= csrfField() ?>
 
     <div class="product-form-grid">
-        <!-- Cột trái: Thông tin chính, Editor mô tả, Biến thể -->
+        
         <div class="product-main-col">
             <div class="admin-card">
                 <h4>Thông tin cơ bản</h4>
@@ -219,14 +214,14 @@ require_once __DIR__ . '/includes/header.php';
                     <small class="form-hint">Ví dụ: ao-thun-basic-cotton-co-tron</small>
                 </div>
 
-                <!-- Rich Text Editor (CKEditor 5) cho mô tả HTML theo yêu cầu Giảng viên -->
+                
                 <div class="form-group">
                     <label for="description">Mô tả chi tiết sản phẩm (Rich Text Editor)</label>
                     <textarea id="description" name="description" rows="8"><?= e($description) ?></textarea>
                 </div>
             </div>
 
-            <!-- Bảng quản lý biến thể Size / Màu / Tồn kho -->
+            
             <div class="admin-card">
                 <div class="card-header-flex">
                     <h4>Biến thể sản phẩm & Tồn kho</h4>
@@ -280,7 +275,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- Cột phải: Giá, Danh mục, Trạng thái, Upload ảnh -->
+        
         <div class="product-side-col">
             <div class="admin-card">
                 <h4>Giá bán & Phân loại</h4>
@@ -320,7 +315,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <!-- Upload nhiều ảnh & Quản lý Gallery -->
+            
             <div class="admin-card">
                 <h4>Hình ảnh sản phẩm (Nhiều ảnh)</h4>
                 
@@ -369,7 +364,7 @@ require_once __DIR__ . '/includes/header.php';
 </form>
 
 <?php if ($isEdit): ?>
-<!-- Form ẩn xử lý xóa ảnh an toàn qua POST CSRF (TV3) -->
+
 <form id="delete-image-form" action="<?= BASE_URL ?>/admin/product_form.php?id=<?= $productId ?>" method="POST" style="display:none;">
     <?= csrfField() ?>
     <input type="hidden" name="action" value="delete_image">
@@ -385,7 +380,6 @@ function deleteExistingPhoto(id) {
 </script>
 <?php endif; ?>
 
-<!-- Tích hợp CKEditor 5 theo yêu cầu Giảng viên (Không cần API key, CDN ổn định 100%) -->
 <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 <script>
 ClassicEditor

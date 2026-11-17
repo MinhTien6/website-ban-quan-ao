@@ -1,6 +1,4 @@
-/* ==========================================================================
-   FASHIONSTORE - CHECKOUT STYLES (TV5)
-   ========================================================================== */
+
 
 .checkout-page {
     max-width: 1180px;
@@ -239,7 +237,6 @@
     font-size: 12px;
 }
 
-/* Khung hiển thị thông tin chuyển khoản ngân hàng */
 #bank-info-box {
     background: #f8fafc;
     border: 1px dashed #cbd5e1;

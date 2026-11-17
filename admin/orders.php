@@ -1,7 +1,5 @@
 <?php
-/**
- * Danh sách đơn hàng dành cho Admin - TV6 tuần 2.
- */
+
 $pageTitle = 'Quản lý đơn hàng';
 require_once __DIR__ . '/includes/header.php';
 require_once dirname(__DIR__) . '/models/Order.php';

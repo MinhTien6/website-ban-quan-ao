@@ -1,7 +1,4 @@
 <?php
-/**
- * Trang yêu cầu đặt lại mật khẩu - chế độ demo localhost (TV2)
- */
 
 $pageTitle = 'Quên mật khẩu';
 
@@ -25,22 +22,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Email không hợp lệ.';
         } else {
             try {
-                // Tìm tài khoản theo email
+                
                 $stmt = $pdo->prepare(
                     "SELECT email, status FROM users WHERE email = :email LIMIT 1"
                 );
                 $stmt->execute(['email' => $email]);
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-                // Chỉ tạo mã cho tài khoản đang hoạt động
+                
                 if ($user && (int)$user['status'] === 1) {
-                    // Xóa các mã cũ của email này
+                    
                     $deleteStmt = $pdo->prepare(
                         "DELETE FROM password_resets WHERE email = :email"
                     );
                     $deleteStmt->execute(['email' => $email]);
 
-                    // Tạo token ngẫu nhiên và chỉ lưu bản băm
+                    
                     $token = bin2hex(random_bytes(32));
                     $tokenHash = hash('sha256', $token);
 
@@ -56,11 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'expires_at' => $expiresAt,
                     ]);
 
-                    // Demo localhost: hiển thị liên kết thay vì gửi email
+                    
                     $demoLink = BASE_URL . '/reset-password.php?token=' . urlencode($token);
                 }
 
-                // Thông báo chung, không tiết lộ email có tồn tại hay không
+                
                 $success = 'Nếu email thuộc tài khoản đang hoạt động, liên kết đặt lại mật khẩu sẽ được tạo.';
 
             } catch (PDOException $e) {

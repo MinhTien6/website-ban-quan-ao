@@ -1,8 +1,4 @@
 <?php
-/**
- * Trang Danh mục Sản phẩm & Tìm kiếm / Lọc (products.php)
- * Phụ trách: TV4 (Thư) + Tích hợp Giỏ hàng TV5 (Đức)
- */
 
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/database.php';
@@ -14,10 +10,8 @@ require_once __DIR__ . '/models/Category.php';
 $productModel = new Product($pdo);
 $categoryModel = new Category($pdo);
 
-// Lấy danh sách danh mục hoạt động từ DB
 $activeCategories = $categoryModel->getAllActive();
 
-// Tham số lọc và phân loại
 $rawTab   = trim($_GET['tab'] ?? '');
 $rawSort  = trim($_GET['sort'] ?? '');
 $mode     = $rawTab !== '' ? $rawTab : $rawSort;
@@ -46,18 +40,22 @@ $keyword        = trim($_GET['keyword'] ?? ($_GET['q'] ?? ''));
 
 if ($keyword !== '') {
     $pageHeading = 'KẾT QUẢ TÌM KIẾM: "' . mb_strtoupper($keyword, 'UTF-8') . '"';
+} elseif ($categoryFilter !== '' && $currentTab === 'all') {
+    foreach ($activeCategories as $ac) {
+        if ((string)$ac['id'] === (string)$categoryFilter || $ac['slug'] === $categoryFilter) {
+            $pageHeading = mb_strtoupper($ac['name'], 'UTF-8');
+            break;
+        }
+    }
 }
 
-// Xây dựng câu lệnh truy vấn lọc an toàn bằng Prepared Statement
 $where = ["p.status = 1"];
 $params = [];
 
-// 1. Lọc theo tab
 if ($currentTab === 'bestseller') {
     $where[] = "p.sale_price IS NOT NULL AND p.sale_price > 0";
 }
 
-// 2. Lọc theo danh mục (hỗ trợ ID hoặc slug, tự động bao gồm cả danh mục con)
 if ($categoryFilter !== '') {
     if (is_numeric($categoryFilter)) {
         $where[] = "(p.category_id = :cat_id OR p.category_id IN (SELECT id FROM categories WHERE parent_id = :cat_id_sub))";
@@ -70,7 +68,6 @@ if ($categoryFilter !== '') {
     }
 }
 
-// 3. Lọc theo từ khóa tìm kiếm (hỗ trợ tiếng Việt không dấu)
 if ($keyword !== '') {
     $vnAccents = [
         'à'=>'a','á'=>'a','ạ'=>'a','ả'=>'a','ã'=>'a','â'=>'a','ầ'=>'a','ấ'=>'a','ậ'=>'a','ẩ'=>'a','ẫ'=>'a','ă'=>'a','ằ'=>'a','ắ'=>'a','ặ'=>'a','ẳ'=>'a','ẵ'=>'a',
@@ -94,7 +91,6 @@ if ($keyword !== '') {
     $params['kw_cat']  = '%' . $keyword . '%';
 }
 
-// 4. Lọc theo khoảng giá
 if ($priceRange === 'under200') {
     $where[] = "COALESCE(NULLIF(p.sale_price, 0), p.price) < 200000";
 } elseif ($priceRange === '200to350' || $priceRange === '200to400') {
@@ -105,7 +101,6 @@ if ($priceRange === 'under200') {
 
 $whereSql = implode(' AND ', $where);
 
-// Sắp xếp
 $orderBySql = "p.id DESC";
 if ($sortOrder === 'price_asc') {
     $orderBySql = "COALESCE(NULLIF(p.sale_price, 0), p.price) ASC, p.id DESC";
@@ -115,12 +110,10 @@ if ($sortOrder === 'price_asc') {
     $orderBySql = "p.sale_price DESC, p.id DESC";
 }
 
-// Phân trang
 $page   = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$limit  = 9;
+$limit  = 12;
 $offset = ($page - 1) * $limit;
 
-// Đếm tổng số sản phẩm thỏa điều kiện
 $countStmt = $pdo->prepare("
     SELECT COUNT(*) 
     FROM products p 
@@ -131,7 +124,6 @@ $countStmt->execute($params);
 $totalItems = (int)$countStmt->fetchColumn();
 $totalPages = max(1, (int)ceil($totalItems / $limit));
 
-// Lấy danh sách sản phẩm kèm biến thể mặc định
 $extraSubqueries = "
     (SELECT pv.id FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 ORDER BY pv.id ASC LIMIT 1) AS default_variant_id,
     (SELECT pv.size FROM product_variants pv WHERE pv.product_id = p.id AND pv.stock > 0 ORDER BY pv.id ASC LIMIT 1) AS default_size,
@@ -152,9 +144,6 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $products = $stmt->fetchAll();
 
-/**
- * Hàm hỗ trợ tạo URL kèm bộ lọc hiện tại
- */
 function buildFilterUrl(array $overrides = []): string {
     $params = $_GET;
     unset($params['page']);
@@ -179,18 +168,53 @@ require_once __DIR__ . '/includes/header.php';
         align-items: flex-start;
         gap: 32px;
         position: relative;
+        transition: gap 0.35s ease, padding 0.35s ease;
     }
 
     .filter-sidebar-wrap {
         width: 280px;
         flex-shrink: 0;
-        position: relative;
-        transition: width 0.25s ease, margin 0.25s ease;
+        position: sticky !important;
+        top: 90px !important;
+        align-self: flex-start !important;
+        z-index: 100;
+        transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                    margin 0.35s ease, 
+                    transform 0.35s ease,
+                    opacity 0.25s ease;
     }
 
-    .filter-sidebar-wrap.collapsed {
-        width: 0 !important;
-        margin-right: -10px !important;
+    .filter-sidebar,
+    .filter-sidebar span,
+    .filter-sidebar a,
+    .filter-sidebar p,
+    .catalog-wrap,
+    .catalog-wrap p {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    }
+
+    
+    i[class*="fa-"], .fa, .fa-solid, .fa-regular {
+        font-family: "Font Awesome 6 Free", "FontAwesome" !important;
+    }
+
+    .prod-title {
+        font-family: 'Montserrat', 'Be Vietnam Pro', sans-serif !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.1px !important;
+        color: #1a1a1a !important;
+        line-height: 1.45 !important;
+        transition: color 0.18s ease;
+    }
+    .prod-title:hover {
+        color: #e60023 !important;
+    }
+
+    .catalog-heading {
+        font-family: 'Montserrat', 'Be Vietnam Pro', sans-serif !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.2px !important;
     }
 
     .filter-sidebar {
@@ -199,35 +223,41 @@ require_once __DIR__ . '/includes/header.php';
         border-radius: 16px;
         padding: 22px 20px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-        transition: opacity 0.22s ease, transform 0.25s ease;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .filter-sidebar-wrap.collapsed {
+        width: 0 !important;
+        margin-right: 0 !important;
     }
 
     .filter-sidebar-wrap.collapsed .filter-sidebar {
         opacity: 0 !important;
         pointer-events: none !important;
-        transform: translateX(-20px) !important;
+        transform: translateX(-30px) !important;
     }
 
+    
     .filter-collapse-handle {
         position: absolute;
-        top: 50%;
-        right: -18px;
-        transform: translateY(-50%);
+        top: 140px;
+        right: -20px;
         width: 22px;
         height: 48px;
         background: #ffffff;
         border: 1px solid #e5e7eb;
         border-left: none;
         border-radius: 0 8px 8px 0;
-        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.06);
+        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.08);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        color: #9ca3af;
-        z-index: 10;
-        font-size: 13px;
-        transition: color 0.2s ease, background 0.2s ease;
+        color: #555555;
+        z-index: 110;
+        transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     }
 
     .filter-collapse-handle:hover {
@@ -235,37 +265,233 @@ require_once __DIR__ . '/includes/header.php';
         background: #fff1f2;
     }
 
-    /* Khi màn hình thu nhỏ / mobile view: Bộ lọc nhảy lên TRÊN danh sách sản phẩm */
+    .filter-sidebar-wrap.collapsed .filter-collapse-handle {
+        position: fixed !important;
+        left: 0 !important;
+        top: 45vh !important;
+        right: auto !important;
+        border-left: none !important;
+        border-radius: 0 8px 8px 0 !important;
+        box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.18) !important;
+        background: #111111 !important;
+        color: #ffffff !important;
+        width: 26px !important;
+        height: 52px !important;
+    }
+
+    .filter-sidebar-wrap.collapsed .filter-collapse-handle:hover {
+        background: #e60023 !important;
+        color: #ffffff !important;
+    }
+
+    .filter-option-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        color: #222222;
+        transition: all 0.18s ease;
+        line-height: 1.4;
+    }
+
+    .filter-option-link:hover {
+        background: #f8f8f8;
+        color: #e60023;
+    }
+
+    .filter-option-link.active {
+        background: #fff0f2 !important;
+        color: #e60023 !important;
+        font-weight: 700 !important;
+    }
+
+    .filter-top-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 14px;
+        margin-bottom: 18px;
+        border-bottom: 2px solid #111111;
+        transition: border-color 0.25s ease, padding 0.25s ease;
+    }
+
+    .filter-top-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'Montserrat', 'Be Vietnam Pro', sans-serif !important;
+        font-size: 14.5px !important;
+        font-weight: 600 !important;
+        color: #111;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+
+    .filter-sec-title {
+        font-family: 'Montserrat', 'Be Vietnam Pro', sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: #222 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .filter-top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .filter-reset-link {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: #e60023;
+        text-decoration: none;
+        transition: opacity 0.2s;
+    }
+    .filter-reset-link:hover {
+        text-decoration: underline;
+        opacity: 0.85;
+    }
+
+    .filter-mobile-toggle-btn {
+        display: none !important;
+    }
+
+    .filter-sections-wrap {
+        display: block;
+    }
+
+    
     @media (max-width: 992px) {
         .catalog-layout {
             flex-direction: column !important;
-            gap: 20px !important;
+            gap: 16px !important;
         }
+
         .filter-sidebar-wrap {
             width: 100% !important;
+            max-width: 100% !important;
+            position: relative !important; 
+            top: 0 !important;
+            align-self: stretch !important;
             margin-right: 0 !important;
-            margin-bottom: 24px !important;
+            margin-bottom: 14px !important;
+            z-index: 10 !important;
         }
-        .filter-sidebar-wrap.collapsed {
-            width: 100% !important;
-            margin-right: 0 !important;
+
+        .filter-sidebar {
+            max-height: none !important; 
+            overflow-y: visible !important; 
+            padding: 14px 18px !important;
+            border-radius: 14px !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
         }
-        .filter-sidebar-wrap.collapsed .filter-sidebar {
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            transform: none !important;
-        }
+
         .filter-collapse-handle {
             display: none !important;
         }
+
+        .filter-mobile-toggle-btn {
+            display: inline-flex !important;
+            align-items: center;
+            gap: 6px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #111111;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-mobile-toggle-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .filter-top-header {
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+            border-bottom: none !important;
+            cursor: pointer;
+        }
+
+        .filter-sidebar-wrap:not(.mobile-collapsed) .filter-top-header {
+            padding-bottom: 12px !important;
+            border-bottom: 1.5px solid #eeeeee !important;
+        }
+
+        .filter-sections-wrap {
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease, margin 0.28s ease;
+        }
+
+        .filter-sidebar-wrap.mobile-collapsed .filter-sections-wrap {
+            max-height: 0 !important;
+            opacity: 0 !important;
+            overflow: hidden !important;
+            pointer-events: none !important;
+            margin-top: 0 !important;
+        }
+
+        .filter-sidebar-wrap:not(.mobile-collapsed) .filter-sections-wrap {
+            max-height: 1800px !important;
+            opacity: 1 !important;
+            overflow: visible !important;
+            pointer-events: auto !important;
+            margin-top: 14px !important;
+        }
+
+        .catalog-main {
+            width: 100% !important;
+            position: relative !important;
+        }
+
         .product-grid {
             grid-template-columns: repeat(2, 1fr) !important;
+            gap: 16px !important;
+        }
+    }
+
+    
+    @media (min-width: 641px) and (max-width: 992px) {
+        .filter-sidebar-wrap:not(.mobile-collapsed) .filter-sections-wrap {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 18px !important;
+        }
+        .filter-section {
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
+            border-right: 1px solid #f1f1f1;
+            padding-right: 14px;
+        }
+        .filter-section:last-child {
+            border-right: none;
+            padding-right: 0;
         }
     }
 
     @media (max-width: 576px) {
+        .catalog-wrap {
+            padding: 0 12px !important;
+            margin: 20px auto 50px !important;
+        }
         .product-grid {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+        }
+        .prod-body {
+            padding: 10px !important;
+        }
+        .prod-title {
+            font-size: 13.5px !important;
+            min-height: 38px !important;
         }
     }
 </style>
@@ -273,49 +499,71 @@ require_once __DIR__ . '/includes/header.php';
 <div class="catalog-wrap" style="max-width:1220px; margin:36px auto 70px; padding:0 20px; font-family:'Inter', sans-serif;">
     <div class="catalog-layout">
         
-        <!-- THANH BỘ LỌC BÊN TRÁI -->
-        <div id="filterSidebarWrap" class="filter-sidebar-wrap">
-            <aside class="filter-sidebar" style="background:#ffffff; border:1px solid #eeeeee; border-radius:16px; padding:22px 20px; box-shadow:0 4px 20px rgba(0,0,0,0.04);">
-                <div class="filter-top-header" style="display:flex; align-items:center; justify-content:space-between; padding-bottom:14px; margin-bottom:18px; border-bottom:2px solid #111111;">
-                    <div class="filter-top-title" style="display:flex; align-items:center; gap:8px; font-size:16px; font-weight:900; color:#111; text-transform:uppercase;">
-                        <i class="fa-solid fa-filter" style="color:#e60023;"></i>
+        
+        <?php
+        $svgFilter = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e60023" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>';
+        $svgChevron = '<svg class="filter-sec-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#555555" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.22s ease; flex-shrink:0;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+        $svgCheck = '<svg class="filter-check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e60023" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        $svgLeft = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
+
+        
+        $activeFilterCount = 0;
+        if ($sortOrder !== 'new') $activeFilterCount++;
+        if ($categoryFilter !== '') $activeFilterCount++;
+        if ($priceRange !== '') $activeFilterCount++;
+        $hasActiveFilter = ($activeFilterCount > 0);
+        ?>
+        <div id="filterSidebarWrap" class="filter-sidebar-wrap mobile-collapsed">
+            <aside class="filter-sidebar">
+                <div class="filter-top-header" onclick="toggleMobileFilter()">
+                    <div class="filter-top-title">
+                        <?= $svgFilter ?>
                         <span>BỘ LỌC</span>
                     </div>
-                    <a href="<?= BASE_URL ?>/products.php" class="filter-reset-link" style="font-size:13.5px; font-weight:600; color:#e60023; text-decoration:none;">
-                        Xóa lọc
-                    </a>
+                    <div class="filter-top-actions">
+                        <?php if ($hasActiveFilter): ?>
+                            <a href="<?= BASE_URL ?>/products.php" class="filter-reset-link" onclick="event.stopPropagation()">
+                                Xóa lọc
+                            </a>
+                        <?php endif; ?>
+                        <button type="button" id="filterMobileToggleBtn" class="filter-mobile-toggle-btn" aria-label="Đóng/Mở bộ lọc">
+                            <span id="filterMobileToggleText">Xem bộ lọc</span>
+                            <span id="filterMobileToggleIcon">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- SẮP XẾP THEO -->
+                <div id="filterSectionsWrap" class="filter-sections-wrap">
+
+                
                 <div class="filter-section" style="padding-bottom:16px; margin-bottom:18px; border-bottom:1px solid #f1f1f1;">
                     <div class="filter-sec-head" onclick="toggleFilterSection(this)" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:4px 0; margin-bottom:10px;">
                         <span class="filter-sec-title" style="font-size:13.5px; font-weight:800; color:#111; text-transform:uppercase;">SẮP XẾP THEO</span>
-                        <i class="fa-solid fa-chevron-down filter-sec-arrow" style="font-size:12px; color:#555;"></i>
+                        <?= $svgChevron ?>
                     </div>
                     <div class="filter-sec-body">
                         <ul class="filter-options" style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:4px;">
                             <li>
                                 <a href="<?= htmlspecialchars(buildFilterUrl(['tab' => 'new', 'sort' => null])) ?>"
-                                   class="filter-option-link <?= $sortOrder === 'new' ? 'active' : '' ?>"
-                                   style="display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:<?= $sortOrder === 'new' ? '700' : '500' ?>; color:<?= $sortOrder === 'new' ? '#e60023' : '#222' ?>; background:<?= $sortOrder === 'new' ? '#fff0f2' : 'transparent' ?>;">
+                                   class="filter-option-link <?= $sortOrder === 'new' ? 'active' : '' ?>">
                                     <span>Mới nhất</span>
-                                    <?php if ($sortOrder === 'new'): ?><i class="fa-solid fa-check" style="color:#e60023;"></i><?php endif; ?>
+                                    <?php if ($sortOrder === 'new'): ?><?= $svgCheck ?><?php endif; ?>
                                 </a>
                             </li>
                             <li>
                                 <a href="<?= htmlspecialchars(buildFilterUrl(['tab' => 'bestseller', 'sort' => null])) ?>"
-                                   class="filter-option-link <?= $sortOrder === 'bestseller' ? 'active' : '' ?>"
-                                   style="display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:<?= $sortOrder === 'bestseller' ? '700' : '500' ?>; color:<?= $sortOrder === 'bestseller' ? '#e60023' : '#222' ?>; background:<?= $sortOrder === 'bestseller' ? '#fff0f2' : 'transparent' ?>;">
+                                   class="filter-option-link <?= $sortOrder === 'bestseller' ? 'active' : '' ?>">
                                     <span>Bán chạy nhất</span>
-                                    <?php if ($sortOrder === 'bestseller'): ?><i class="fa-solid fa-check" style="color:#e60023;"></i><?php endif; ?>
+                                    <?php if ($sortOrder === 'bestseller'): ?><?= $svgCheck ?><?php endif; ?>
                                 </a>
                             </li>
                             <li>
                                 <a href="<?= htmlspecialchars(buildFilterUrl(['sort' => 'price_asc', 'tab' => null])) ?>"
-                                   class="filter-option-link <?= $sortOrder === 'price_asc' ? 'active' : '' ?>"
-                                   style="display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:<?= $sortOrder === 'price_asc' ? '700' : '500' ?>; color:<?= $sortOrder === 'price_asc' ? '#e60023' : '#222' ?>; background:<?= $sortOrder === 'price_asc' ? '#fff0f2' : 'transparent' ?>;">
+                                   class="filter-option-link <?= $sortOrder === 'price_asc' ? 'active' : '' ?>">
                                     <span>Giá: Thấp đến Cao</span>
-                                    <?php if ($sortOrder === 'price_asc'): ?><i class="fa-solid fa-check" style="color:#e60023;"></i><?php endif; ?>
+                                    <?php if ($sortOrder === 'price_asc'): ?><?= $svgCheck ?><?php endif; ?>
                                 </a>
                             </li>
                             <li>
@@ -323,39 +571,78 @@ require_once __DIR__ . '/includes/header.php';
                                    class="filter-option-link <?= $sortOrder === 'price_desc' ? 'active' : '' ?>"
                                    style="display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:<?= $sortOrder === 'price_desc' ? '700' : '500' ?>; color:<?= $sortOrder === 'price_desc' ? '#e60023' : '#222' ?>; background:<?= $sortOrder === 'price_desc' ? '#fff0f2' : 'transparent' ?>;">
                                     <span>Giá: Cao đến Thấp</span>
-                                    <?php if ($sortOrder === 'price_desc'): ?><i class="fa-solid fa-check" style="color:#e60023;"></i><?php endif; ?>
+                                    <?php if ($sortOrder === 'price_desc'): ?><?= $svgCheck ?><?php endif; ?>
                                 </a>
                             </li>
                         </ul>
                     </div>
                 </div>
 
-                <!-- DANH MỤC SẢN PHẨM -->
+                
                 <div class="filter-section" style="padding-bottom:16px; margin-bottom:18px; border-bottom:1px solid #f1f1f1;">
                     <div class="filter-sec-head" onclick="toggleFilterSection(this)" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:4px 0; margin-bottom:10px;">
                         <span class="filter-sec-title" style="font-size:13.5px; font-weight:800; color:#111; text-transform:uppercase;">DANH MỤC SẢN PHẨM</span>
-                        <i class="fa-solid fa-chevron-down filter-sec-arrow" style="font-size:12px; color:#555;"></i>
+                        <?= $svgChevron ?>
                     </div>
                     <div class="filter-sec-body">
                         <ul class="filter-options" style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:4px;">
                             <li>
                                 <a href="<?= htmlspecialchars(buildFilterUrl(['category' => null])) ?>"
-                                   class="filter-option-link <?= $categoryFilter === '' ? 'active' : '' ?>"
-                                   style="display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:<?= $categoryFilter === '' ? '700' : '500' ?>; color:<?= $categoryFilter === '' ? '#e60023' : '#222' ?>; background:<?= $categoryFilter === '' ? '#fff0f2' : 'transparent' ?>;">
+                                   class="filter-option-link <?= $categoryFilter === '' ? 'active' : '' ?>">
                                     <span>Tất cả danh mục</span>
-                                    <?php if ($categoryFilter === ''): ?><i class="fa-solid fa-check" style="color:#e60023;"></i><?php endif; ?>
+                                    <?php if ($categoryFilter === ''): ?><?= $svgCheck ?><?php endif; ?>
                                 </a>
                             </li>
-                            <?php foreach ($activeCategories as $cat): ?>
-                                <?php 
-                                $isCatActive = ($categoryFilter == $cat['id'] || $categoryFilter === $cat['slug']);
-                                ?>
-                                <li>
-                                    <a href="<?= htmlspecialchars(buildFilterUrl(['category' => $cat['id']])) ?>"
-                                       class="filter-option-link <?= $isCatActive ? 'active' : '' ?>"
-                                       style="display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:<?= $isCatActive ? '700' : '500' ?>; color:<?= $isCatActive ? '#e60023' : '#222' ?>; background:<?= $isCatActive ? '#fff0f2' : 'transparent' ?>;">
-                                        <span><?= e($cat['name']) ?></span>
-                                        <?php if ($isCatActive): ?><i class="fa-solid fa-check" style="color:#e60023;"></i><?php endif; ?>
+
+                            
+                            <li style="margin-top:10px; padding:6px 6px 2px; border-top:1px dashed #eee;">
+                                <a href="<?= htmlspecialchars(buildFilterUrl(['category' => 10])) ?>"
+                                   class="filter-option-link <?= ($categoryFilter == '10' || $categoryFilter === 'ao-unisex-kieu') ? 'active' : '' ?>"
+                                   style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; padding:6px 8px; color:<?= ($categoryFilter == '10' || $categoryFilter === 'ao-unisex-kieu') ? '#e60023' : '#666' ?>;">
+                                    <span>ÁO UNISEX & KIỂU</span>
+                                    <?php if ($categoryFilter == '10' || $categoryFilter === 'ao-unisex-kieu'): ?><?= $svgCheck ?><?php endif; ?>
+                                </a>
+                            </li>
+                            <?php
+                            $groupUnisex = [
+                                ['id' => 1, 'slug' => 'ao-thun-streetwear', 'name' => 'Áo thun Streetwear'],
+                                ['id' => 2, 'slug' => 'ao-so-mi-polo',       'name' => 'Áo sơ mi & Polo'],
+                                ['id' => 5, 'slug' => 'ao-khoac-hoodie',     'name' => 'Áo khoác & Hoodie'],
+                            ];
+                            foreach ($groupUnisex as $c):
+                                $isCatActive = ($categoryFilter == $c['id'] || $categoryFilter === $c['slug']);
+                            ?>
+                                <li style="padding-left:8px;">
+                                    <a href="<?= htmlspecialchars(buildFilterUrl(['category' => $c['id']])) ?>"
+                                       class="filter-option-link <?= $isCatActive ? 'active' : '' ?>">
+                                        <span><?= e($c['name']) ?></span>
+                                        <?php if ($isCatActive): ?><?= $svgCheck ?><?php endif; ?>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+
+                            
+                            <li style="margin-top:10px; padding:6px 6px 2px; border-top:1px dashed #eee;">
+                                <a href="<?= htmlspecialchars(buildFilterUrl(['category' => 20])) ?>"
+                                   class="filter-option-link <?= ($categoryFilter == '20' || $categoryFilter === 'quan-vay-dam') ? 'active' : '' ?>"
+                                   style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; padding:6px 8px; color:<?= ($categoryFilter == '20' || $categoryFilter === 'quan-vay-dam') ? '#e60023' : '#666' ?>;">
+                                    <span>QUẦN & VÁY ĐẦM</span>
+                                    <?php if ($categoryFilter == '20' || $categoryFilter === 'quan-vay-dam'): ?><?= $svgCheck ?><?php endif; ?>
+                                </a>
+                            </li>
+                            <?php
+                            $groupBottom = [
+                                ['id' => 3, 'slug' => 'quan-jeans-short', 'name' => 'Quần Jeans & Short'],
+                                ['id' => 4, 'slug' => 'vay-dam-chan-vay', 'name' => 'Váy, Đầm & Chân váy'],
+                            ];
+                            foreach ($groupBottom as $c):
+                                $isCatActive = ($categoryFilter == $c['id'] || $categoryFilter === $c['slug']);
+                            ?>
+                                <li style="padding-left:8px;">
+                                    <a href="<?= htmlspecialchars(buildFilterUrl(['category' => $c['id']])) ?>"
+                                       class="filter-option-link <?= $isCatActive ? 'active' : '' ?>">
+                                        <span><?= e($c['name']) ?></span>
+                                        <?php if ($isCatActive): ?><?= $svgCheck ?><?php endif; ?>
                                     </a>
                                 </li>
                             <?php endforeach; ?>
@@ -363,11 +650,11 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 </div>
 
-                <!-- KHOẢNG GIÁ -->
+                
                 <div class="filter-section" style="padding-bottom:0; margin-bottom:0; border-bottom:none;">
                     <div class="filter-sec-head" onclick="toggleFilterSection(this)" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:4px 0; margin-bottom:10px;">
                         <span class="filter-sec-title" style="font-size:13.5px; font-weight:800; color:#111; text-transform:uppercase;">KHOẢNG GIÁ</span>
-                        <i class="fa-solid fa-chevron-down filter-sec-arrow" style="font-size:12px; color:#555;"></i>
+                        <?= $svgChevron ?>
                     </div>
                     <div class="filter-sec-body">
                         <?php
@@ -382,23 +669,23 @@ require_once __DIR__ . '/includes/header.php';
                             <?php foreach ($priceList as $pKey => $pLabel): ?>
                                 <li>
                                     <a href="<?= htmlspecialchars(buildFilterUrl(['price' => $pKey !== '' ? $pKey : null])) ?>"
-                                       class="filter-option-link <?= $priceRange === $pKey ? 'active' : '' ?>"
-                                       style="display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:<?= $priceRange === $pKey ? '700' : '500' ?>; color:<?= $priceRange === $pKey ? '#e60023' : '#222' ?>; background:<?= $priceRange === $pKey ? '#fff0f2' : 'transparent' ?>;">
+                                       class="filter-option-link <?= $priceRange === $pKey ? 'active' : '' ?>">
                                         <span><?= htmlspecialchars($pLabel) ?></span>
-                                        <?php if ($priceRange === $pKey): ?><i class="fa-solid fa-check" style="color:#e60023;"></i><?php endif; ?>
+                                        <?php if ($priceRange === $pKey): ?><?= $svgCheck ?><?php endif; ?>
                                     </a>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
                     </div>
                 </div>
-            </aside>
+            </div> 
+        </aside>
             <button type="button" id="filterCollapseBtn" class="filter-collapse-handle" onclick="toggleSidebarCollapse()" title="Thu gọn / Mở bộ lọc">
-                &#10094;
+                <?= $svgLeft ?>
             </button>
         </div>
 
-        <!-- DANH SÁCH SẢN PHẨM -->
+        
         <main class="catalog-main" style="flex:1; min-width:0;">
             <div class="catalog-header" style="margin-bottom:22px; padding-bottom:12px; border-bottom:1.5px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between;">
                 <h1 class="catalog-heading" style="font-size:22px; font-weight:800; text-transform:uppercase; margin:0;">
@@ -439,7 +726,7 @@ require_once __DIR__ . '/includes/header.php';
                             </div>
                             <div class="prod-body" style="padding:14px; display:flex; flex-direction:column; flex:1; justify-content:space-between;">
                                 <div>
-                                    <a href="<?= BASE_URL ?>/product_detail.php?id=<?= $pid ?>" class="prod-title" style="font-size:15px; font-weight:700; color:#111; text-decoration:none; margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:42px;">
+                                    <a href="<?= BASE_URL ?>/product_detail.php?id=<?= $pid ?>" class="prod-title" style="font-size:14px; color:#111; text-decoration:none; margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:40px;">
                                         <?= e($prodName) ?>
                                     </a>
                                     <div class="prod-price-row" style="display:flex; align-items:baseline; gap:8px; margin-bottom:12px;">
@@ -492,7 +779,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             <?php endif; ?>
 
-            <!-- PHÂN TRANG TRÒN HIỆN ĐẠI -->
+            
             <?php if ($totalPages > 1): ?>
                 <div class="round-pagination" style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:40px;">
                     <?php for ($i = 1; $i <= $totalPages; $i++): ?>
@@ -513,15 +800,51 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <script>
+    function toggleMobileFilter() {
+        var wrap = document.getElementById('filterSidebarWrap');
+        if (!wrap) return;
+        wrap.classList.toggle('mobile-collapsed');
+        var isCol = wrap.classList.contains('mobile-collapsed');
+        var txt = document.getElementById('filterMobileToggleText');
+        var icn = document.getElementById('filterMobileToggleIcon');
+        if (txt) {
+            txt.textContent = isCol ? 'Xem bộ lọc' : 'Thu gọn';
+        }
+        if (icn) {
+            icn.innerHTML = isCol
+                ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'
+                : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+        }
+    }
+
+    
+    (function initFilterResponsive() {
+        var wrap = document.getElementById('filterSidebarWrap');
+        if (!wrap) return;
+        if (window.innerWidth <= 992) {
+            wrap.classList.add('mobile-collapsed');
+        } else {
+            wrap.classList.remove('mobile-collapsed');
+        }
+    })();
+
+    window.addEventListener('resize', function() {
+        var wrap = document.getElementById('filterSidebarWrap');
+        if (!wrap) return;
+        if (window.innerWidth > 992) {
+            wrap.classList.remove('mobile-collapsed');
+        }
+    });
+
     function toggleSidebarCollapse() {
         var wrap = document.getElementById('filterSidebarWrap');
         var btn  = document.getElementById('filterCollapseBtn');
         if (!wrap) return;
         wrap.classList.toggle('collapsed');
         if (wrap.classList.contains('collapsed')) {
-            if (btn) btn.innerHTML = '&#10095;';
+            if (btn) btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
         } else {
-            if (btn) btn.innerHTML = '&#10094;';
+            if (btn) btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
         }
     }
 

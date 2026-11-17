@@ -1,7 +1,4 @@
 <?php
-/**
- * Trang đặt lại mật khẩu bằng token (TV2)
- */
 
 $pageTitle = 'Đặt lại mật khẩu';
 
@@ -16,7 +13,6 @@ $success = '';
 $token = trim($_GET['token'] ?? $_POST['token'] ?? '');
 $userModel = new User($pdo);
 
-// Kiểm tra token
 if ($token === '' || !preg_match('/^[a-f0-9]{64}$/', $token)) {
     $error = 'Liên kết đặt lại mật khẩu không hợp lệ.';
 } else {
@@ -42,7 +38,6 @@ if ($token === '' || !preg_match('/^[a-f0-9]{64}$/', $token)) {
     }
 }
 
-// Xử lý đặt mật khẩu mới
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
     if (!verifyCsrfToken()) {
         $error = 'Yêu cầu không hợp lệ. Vui lòng thử lại.';
@@ -58,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
             $error = 'Mật khẩu xác nhận không khớp.';
         } else {
             try {
-                // Kiểm tra lại token trước khi cập nhật
+                
                 $pdo->beginTransaction();
 
                 $checkStmt = $pdo->prepare(
@@ -106,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                             'id' => (int)$user['id']
                         ]);
 
-                        // Xóa token sau khi sử dụng thành công
+                        
                         $deleteStmt = $pdo->prepare(
                             "DELETE FROM password_resets WHERE email = :email"
                         );

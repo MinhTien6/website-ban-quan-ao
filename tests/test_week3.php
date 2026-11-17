@@ -1,9 +1,5 @@
 <?php
-/**
- * Kiểm thử tự động nhiệm vụ TV6 tuần 3.
- * Chạy bằng: php tests/test_week3.php
- * Cần cấu hình config/database.php và import database/shop_quanao.sql trước.
- */
+
 
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/includes/functions.php';

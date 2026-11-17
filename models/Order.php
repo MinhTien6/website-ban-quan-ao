@@ -1,8 +1,5 @@
 <?php
-/**
- * Order Model - FashionStore
- * Quản lý đơn hàng, giỏ hàng, mã giảm giá và quy trình đặt hàng
- */
+
 class Order
 {
     private PDO $pdo;
@@ -12,14 +9,8 @@ class Order
         $this->pdo = $pdo;
     }
 
-    /**
-     * Kiểm tra mã giảm giá và tính số tiền được giảm.
-     *
-     * @param string $code Mã giảm giá
-     * @param float $subtotal Tổng tiền hàng trước khi giảm
-     * @return array
-     * @throws Exception
-     */
+    
+
     public function getCouponDiscount(
         string $code,
         float $subtotal
@@ -38,7 +29,7 @@ class Order
             );
         }
 
-        // 1. Tìm mã giảm giá
+        
         $stmt = $this->pdo->prepare("
             SELECT
                 id,
@@ -61,7 +52,7 @@ class Order
             throw new Exception('Mã giảm giá không tồn tại.');
         }
 
-        // 2. Kiểm tra hạn sử dụng
+        
         if (
             !empty($coupon['expires_at']) &&
             strtotime($coupon['expires_at']) < time()
@@ -69,7 +60,7 @@ class Order
             throw new Exception('Mã giảm giá đã hết hạn.');
         }
 
-        // 3. Kiểm tra giá trị đơn hàng tối thiểu
+        
         $minOrder = (float)$coupon['min_order'];
 
         if ($subtotal < $minOrder) {
@@ -80,7 +71,7 @@ class Order
             );
         }
 
-        // 4. Kiểm tra lượt sử dụng
+        
         $usageLimit = (int)$coupon['usage_limit'];
 
         if ($usageLimit > 0) {
@@ -104,7 +95,7 @@ class Order
             }
         }
 
-        // 5. Tính số tiền được giảm
+        
         $discountValue = (float)$coupon['discount_value'];
 
         if (!is_finite($discountValue) || $discountValue <= 0) {
@@ -131,7 +122,7 @@ class Order
             );
         }
 
-        // Không giảm quá tổng tiền hàng
+        
         $discount = min($discount, $subtotal);
 
         return [
@@ -145,28 +136,19 @@ class Order
         ];
     }
 
-    /**
-     * Tạo đơn hàng và trừ tồn kho bằng Transaction.
-     * Khóa SELECT ... FOR UPDATE để chống race condition.
-     * Tính lại giá trực tiếp từ database (không tin giá Session).
-     *
-     * @param array $orderData Thông tin người nhận
-     * @param array $items Danh sách sản phẩm
-     * @param string|null $couponCode Mã giảm giá (nếu có)
-     * @return int ID đơn hàng vừa tạo
-     * @throws Exception
-     */
+    
+
     public function createOrder(
         array $orderData,
         array $items,
         ?string $couponCode = null
     ): int {
-        // 1. Kiểm tra giỏ hàng
+        
         if (empty($items)) {
             throw new Exception('Giỏ hàng không có sản phẩm.');
         }
 
-        // 2. Kiểm tra thông tin nhận hàng
+        
         $requiredFields = ['receiver_name', 'phone', 'address'];
         foreach ($requiredFields as $field) {
             if (!isset($orderData[$field]) || !is_string($orderData[$field])) {
@@ -204,7 +186,7 @@ class Order
             throw new Exception('Bạn cần đăng nhập để đặt hàng.');
         }
 
-        // 3. Khởi tạo Transaction
+        
         if ($this->pdo->inTransaction()) {
             throw new Exception('Kết nối cơ sở dữ liệu đang có một Transaction khác.');
         }
@@ -215,7 +197,7 @@ class Order
             $total = 0;
             $orderItems = [];
 
-            // 4. Chuẩn bị truy vấn khóa biến thể sản phẩm FOR UPDATE
+            
             $variantStmt = $this->pdo->prepare("
                 SELECT
                     pv.id,
@@ -234,7 +216,7 @@ class Order
                 FOR UPDATE
             ");
 
-            // 5. Kiểm tra tồn kho và tính lại giá từ Database
+            
             foreach ($items as $item) {
                 $variantId = (int)($item['variant_id'] ?? 0);
                 $quantity  = (int)($item['quantity'] ?? 0);
@@ -261,7 +243,7 @@ class Order
                     );
                 }
 
-                // Xác định giá bán từ CSDL
+                
                 $price = (float)$variant['price'];
                 $salePrice = (float)($variant['sale_price'] ?? 0);
                 if ($salePrice > 0 && $salePrice < $price) {
@@ -279,7 +261,7 @@ class Order
                 ];
             }
 
-            // 6. Xử lý mã giảm giá (nếu có)
+            
             $couponId = null;
             $discount = 0;
             $couponCode = strtoupper(trim($couponCode ?? ''));
@@ -307,7 +289,7 @@ class Order
                     throw new Exception('Mã giảm giá không tồn tại.');
                 }
 
-                // Kiểm tra hạn sử dụng
+                
                 $expiryStmt = $this->pdo->prepare("
                     SELECT id
                     FROM coupons
@@ -321,7 +303,7 @@ class Order
                     throw new Exception('Mã giảm giá đã hết hạn.');
                 }
 
-                // Kiểm tra đơn tối thiểu
+                
                 $minOrder = (float)$coupon['min_order'];
                 if ($total < $minOrder) {
                     throw new Exception(
@@ -331,7 +313,7 @@ class Order
                     );
                 }
 
-                // Kiểm tra số lượt sử dụng
+                
                 $usageLimit = (int)$coupon['usage_limit'];
                 if ($usageLimit > 0) {
                     $usageStmt = $this->pdo->prepare("
@@ -348,7 +330,7 @@ class Order
                     }
                 }
 
-                // Tính tiền giảm
+                
                 $discountValue = (float)$coupon['discount_value'];
                 if (!is_finite($discountValue) || $discountValue <= 0) {
                     throw new Exception('Giá trị mã giảm giá không hợp lệ.');
@@ -370,7 +352,7 @@ class Order
                 $total -= $discount;
             }
 
-            // 7. Tạo bản ghi đơn hàng
+            
             $orderStmt = $this->pdo->prepare("
                 INSERT INTO orders (
                     user_id,
@@ -411,7 +393,7 @@ class Order
                 throw new Exception('Không thể tạo đơn hàng.');
             }
 
-            // 8. Thêm chi tiết đơn hàng & trừ tồn kho
+            
             $itemStmt = $this->pdo->prepare("
                 INSERT INTO order_items (
                     order_id,
@@ -455,7 +437,7 @@ class Order
                 }
             }
 
-            // 9. Xác nhận Transaction thành công
+            
             $this->pdo->commit();
 
             return $orderId;
@@ -468,15 +450,8 @@ class Order
         }
     }
 
-    /**
-     * Lấy danh sách đơn hàng của người dùng có hỗ trợ lọc trạng thái và phân trang.
-     *
-     * @param int $userId
-     * @param string|null $status
-     * @param int $limit
-     * @param int $offset
-     * @return array
-     */
+    
+
     public function getByUserId(
         int $userId,
         ?string $status = null,
@@ -528,13 +503,8 @@ class Order
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Đếm tổng số đơn hàng của người dùng theo trạng thái.
-     *
-     * @param int $userId
-     * @param string|null $status
-     * @return int
-     */
+    
+
     public function countByUserId(
         int $userId,
         ?string $status = null
@@ -570,13 +540,8 @@ class Order
         return (int)$stmt->fetchColumn();
     }
 
-    /**
-     * Lấy chi tiết đơn hàng (kèm danh sách sản phẩm và thông tin mã giảm giá).
-     *
-     * @param int $orderId
-     * @param int|null $userId Nếu truyền thì kiểm tra đúng người dùng
-     * @return array|false
-     */
+    
+
     public function getDetails(
         int $orderId,
         ?int $userId = null
@@ -641,15 +606,8 @@ class Order
         return $order;
     }
 
-    /**
-     * Lấy danh sách đơn hàng cho Admin có phân trang, lọc và tìm kiếm (TV6).
-     *
-     * @param string $status Trạng thái lọc ('all' hoặc 'pending', 'confirmed', 'shipping', 'completed', 'cancelled')
-     * @param int $limit
-     * @param int $offset
-     * @param string $keyword
-     * @return array
-     */
+    
+
     public function getList(string $status = 'all', int $limit = 10, int $offset = 0, string $keyword = ''): array
     {
         $limit = max(1, min($limit, 100));
@@ -695,13 +653,8 @@ class Order
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Đếm tổng số đơn hàng theo trạng thái và từ khóa cho Admin (TV6).
-     *
-     * @param string $status
-     * @param string $keyword
-     * @return int
-     */
+    
+
     public function count(string $status = 'all', string $keyword = ''): int
     {
         $params = [];
@@ -737,11 +690,8 @@ class Order
         return (int)$stmt->fetchColumn();
     }
 
-    /**
-     * Thống kê đơn hàng, doanh thu, khách hàng và sản phẩm sắp hết hàng cho Dashboard (TV6).
-     *
-     * @return array
-     */
+    
+
     public function getDashboardStats(): array
     {
         $sql = "SELECT
@@ -780,13 +730,8 @@ class Order
         return $stats;
     }
 
-    /**
-     * Lấy doanh thu theo ngày trong một khoảng ngày gần đây (TV6).
-     * Chỉ tính các đơn đã hoàn thành; ngày không có đơn sẽ nhận doanh thu 0.
-     *
-     * @param int $days Số ngày gần nhất (mặc định 7 ngày)
-     * @return array ['labels' => [...], 'values' => [...]]
-     */
+    
+
     public function getRevenueChartData(int $days = 7): array
     {
         $days = max(1, min($days, 31));
@@ -824,25 +769,16 @@ class Order
         return ['labels' => $labels, 'values' => $values];
     }
 
-    /**
-     * Lấy các đơn gần nhất để hiển thị nhanh trên Dashboard (TV6).
-     *
-     * @param int $limit
-     * @return array
-     */
+    
+
     public function getRecentOrders(int $limit = 5): array
     {
         $limit = max(1, min($limit, 20));
         return $this->getList('all', $limit, 0);
     }
 
-    /**
-     * Kiểm tra quyền sở hữu đơn hàng của người dùng (chống IDOR).
-     *
-     * @param int $orderId
-     * @param int $userId
-     * @return bool
-     */
+    
+
     public function belongsToUser(int $orderId, int $userId): bool
     {
         if ($orderId <= 0 || $userId <= 0) {
@@ -865,14 +801,8 @@ class Order
         return (bool)$stmt->fetchColumn();
     }
 
-    /**
-     * Cập nhật trạng thái đơn theo luồng xử lý của Admin (TV6).
-     * Có State Machine ràng buộc và hoàn lại tồn kho trong Transaction khi đơn bị hủy.
-     *
-     * @param int $id Mã đơn hàng
-     * @param string $status Trạng thái mới
-     * @return bool
-     */
+    
+
     public function updateStatus(int $id, string $status): bool
     {
         $transitions = [
@@ -924,15 +854,8 @@ class Order
         }
     }
 
-    /**
-     * Hủy đơn hàng đang chờ xác nhận (pending) bởi người dùng.
-     * Sử dụng Transaction và SELECT ... FOR UPDATE để hoàn lại đúng tồn kho.
-     *
-     * @param int $orderId
-     * @param int $userId
-     * @return bool
-     * @throws Exception
-     */
+    
+
     public function cancelByUser(int $orderId, int $userId): bool
     {
         if ($orderId <= 0 || $userId <= 0) {
@@ -946,7 +869,7 @@ class Order
         $this->pdo->beginTransaction();
 
         try {
-            // 1. Khóa đơn hàng và kiểm tra quyền sở hữu
+            
             $checkStmt = $this->pdo->prepare("
                 SELECT status
                 FROM orders
@@ -967,12 +890,12 @@ class Order
                 throw new Exception('Không tìm thấy đơn hàng hoặc bạn không có quyền thực hiện.');
             }
 
-            // 2. Chỉ cho phép hủy đơn pending
+            
             if ($status !== 'pending') {
                 throw new Exception('Chỉ có thể hủy đơn hàng đang chờ xác nhận.');
             }
 
-            // 3. Lấy danh sách sản phẩm trong đơn
+            
             $itemsStmt = $this->pdo->prepare("
                 SELECT variant_id, quantity
                 FROM order_items
@@ -986,7 +909,7 @@ class Order
                 throw new Exception('Đơn hàng không có sản phẩm để hoàn kho.');
             }
 
-            // 4. Chuẩn bị câu lệnh khóa biến thể
+            
             $variantStmt = $this->pdo->prepare("
                 SELECT id
                 FROM product_variants
@@ -994,7 +917,7 @@ class Order
                 FOR UPDATE
             ");
 
-            // 5. Chuẩn bị câu lệnh hoàn kho
+            
             $restoreStmt = $this->pdo->prepare("
                 UPDATE product_variants
                 SET stock = stock + :quantity
@@ -1024,7 +947,7 @@ class Order
                 }
             }
 
-            // 6. Cập nhật trạng thái đơn hàng sang cancelled
+            
             $updateStmt = $this->pdo->prepare("
                 UPDATE orders
                 SET status = 'cancelled'
@@ -1042,7 +965,7 @@ class Order
                 throw new Exception('Không thể hủy đơn hàng. Vui lòng thử lại.');
             }
 
-            // 7. Hoàn tất Transaction
+            
             $this->pdo->commit();
             return true;
 

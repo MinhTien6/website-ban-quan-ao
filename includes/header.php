@@ -1,7 +1,4 @@
 <?php
-/**
- * Header giao diện người dùng Streetwear FashionStore (TV1 + TV4 + TV5)
- */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -12,7 +9,6 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/auth.php';
 
-// Đồng bộ thông tin mới nhất nếu người dùng đang đăng nhập
 if (isLoggedIn()) {
     refreshCurrentUser();
 }
@@ -36,7 +32,7 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/style.css">
@@ -88,9 +84,10 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
             align-items: center !important;
         }
         .site-header .nav-link {
+            font-family: 'Montserrat', 'Be Vietnam Pro', sans-serif !important;
             text-decoration: none !important;
-            font-weight: 600 !important;
-            font-size: 15px !important;
+            font-weight: 500 !important;
+            font-size: 14.5px !important;
             text-transform: none !important;
             color: #111111 !important;
             display: inline-flex !important;
@@ -142,21 +139,23 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
             align-items: flex-start !important;
         }
         .site-header .mega-col h5 {
+            font-family: 'Montserrat', 'Be Vietnam Pro', sans-serif !important;
             font-size: 13.5px !important;
-            font-weight: 800 !important;
+            font-weight: 600 !important;
             text-transform: uppercase !important;
             color: #111111 !important;
             margin: 0 0 16px 0 !important;
             padding: 0 !important;
-            letter-spacing: 0.3px !important;
+            letter-spacing: 0.6px !important;
         }
         .site-header .mega-col h5 a {
+            font-family: 'Montserrat', 'Be Vietnam Pro', sans-serif !important;
             color: #111111 !important;
             text-decoration: none !important;
             text-transform: uppercase !important;
-            font-weight: 800 !important;
+            font-weight: 600 !important;
             font-size: 13.5px !important;
-            letter-spacing: 0.3px !important;
+            letter-spacing: 0.6px !important;
         }
         .site-header .mega-col h5 a:hover {
             color: #e60023 !important;
@@ -174,15 +173,17 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
         .site-header .mega-col ul li a {
             display: block !important;
             text-decoration: none !important;
-            color: #111111 !important;
+            font-family: 'Montserrat', 'Be Vietnam Pro', sans-serif !important;
+            color: #4b5563 !important;
             font-size: 13.5px !important;
-            font-weight: 700 !important;
+            font-weight: 400 !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.2px !important;
-            transition: color 0.15s ease !important;
+            letter-spacing: 0.4px !important;
+            transition: color 0.15s ease, transform 0.15s ease !important;
         }
         .site-header .mega-col ul li a:hover {
             color: #e60023 !important;
+            transform: translateX(4px) !important;
         }
         .user-menu-wrap {
             position: relative;
@@ -273,7 +274,7 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
                             </div>
 
                             <div class="mega-col">
-                                <h5><a href="<?= BASE_URL ?>/products.php?category=1">ÁO UNISEX & KIỂU</a></h5>
+                                <h5><a href="<?= BASE_URL ?>/products.php?category=10">ÁO UNISEX & KIỂU</a></h5>
                                 <ul>
                                     <li><a href="<?= BASE_URL ?>/products.php?category=1">ÁO THUN STREETWEAR</a></li>
                                     <li><a href="<?= BASE_URL ?>/products.php?category=2">ÁO SƠ MI & POLO</a></li>
@@ -282,7 +283,7 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
                             </div>
 
                             <div class="mega-col">
-                                <h5><a href="<?= BASE_URL ?>/products.php?category=3">QUẦN & VÁY ĐẦM</a></h5>
+                                <h5><a href="<?= BASE_URL ?>/products.php?category=20">QUẦN & VÁY ĐẦM</a></h5>
                                 <ul>
                                     <li><a href="<?= BASE_URL ?>/products.php?category=3">QUẦN JEANS & SHORT</a></li>
                                     <li><a href="<?= BASE_URL ?>/products.php?category=4">VÁY, ĐẦM & CHÂN VÁY</a></li>

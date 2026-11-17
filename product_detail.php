@@ -1,8 +1,4 @@
 <?php
-/**
- * Trang Chi tiết Sản phẩm & Đánh giá (product_detail.php)
- * Phụ trách: TV4 (Thư) + Tích hợp Giỏ hàng TV5 (Đức)
- */
 
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/database.php';
@@ -18,7 +14,6 @@ if ($productId <= 0) {
     $productId = 1;
 }
 
-// Lấy thông tin sản phẩm từ DB
 $product = $productModel->getById($productId);
 if (!$product) {
     $firstStmt = $pdo->query("SELECT id FROM products WHERE status = 1 ORDER BY id ASC LIMIT 1");
@@ -38,7 +33,6 @@ if (!$product) {
     exit;
 }
 
-// Xử lý gửi đánh giá mới (Review submission)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
     if (!isLoggedIn()) {
         setFlash('error', 'Vui lòng đăng nhập để gửi đánh giá sản phẩm.');
@@ -81,7 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
     redirect("product_detail.php?id={$productId}");
 }
 
-// Lấy danh sách ảnh gallery
 $rawImages = $productModel->getImages($productId);
 $galleryImgs = [];
 foreach ($rawImages as $img) {
@@ -106,17 +99,20 @@ if (empty($galleryImgs)) {
 
 $displayMainImage = $galleryImgs[0];
 
-// Lấy danh sách biến thể (size, color, stock)
 $variants = $productModel->getVariants($productId);
 
 $availableColors = [];
 $availableSizes = [];
+$colorImageMap = [];
 foreach ($variants as $v) {
     if (!empty($v['color']) && !in_array($v['color'], $availableColors, true)) {
         $availableColors[] = $v['color'];
     }
     if (!empty($v['size']) && !in_array($v['size'], $availableSizes, true)) {
         $availableSizes[] = $v['size'];
+    }
+    if (!empty($v['color']) && !empty($v['image_path']) && !isset($colorImageMap[$v['color']])) {
+        $colorImageMap[$v['color']] = BASE_URL . '/public/' . ltrim($v['image_path'], '/');
     }
 }
 
@@ -131,18 +127,27 @@ $defaultColor = $availableColors[0];
 $defaultSize = $availableSizes[0];
 $defaultVariant = !empty($variants[0]['id']) ? (int)$variants[0]['id'] : 0;
 
+if (!empty($colorImageMap[$defaultColor])) {
+    $displayMainImage = $colorImageMap[$defaultColor];
+}
+
 $colorHexMap = [
     'Đen'        => '#111111',
     'Trắng'      => '#ffffff',
     'Hồng'       => '#f4b6c2',
+    'Hồng pastel'=> '#fbcfe8',
     'Kem'        => '#fef08a',
     'Be'         => '#e6dcc8',
     'Xám'        => '#808080',
+    'Xám đen'    => '#374151',
     'Xanh'       => '#3b6998',
     'Xanh đen'   => '#1b263b',
     'Xanh navy'  => '#1e3a8a',
     'Xanh đậm'   => '#1d4ed8',
     'Xanh nhạt'  => '#93c5fd',
+    'Xanh jean'  => '#4b6584',
+    'Xanh sáng'  => '#60a5fa',
+    'Xanh mint'  => '#6ee7b7',
     'Xanh rêu'   => '#4d7c0f',
     'Rêu'        => '#365314',
     'Đỏ'         => '#e60023',
@@ -151,9 +156,15 @@ $colorHexMap = [
     'Nâu'        => '#78350f',
     'Tím'        => '#8b5cf6',
     'Cam'        => '#f97316',
+    'Sọc đen'    => '#27272a',
+    'Sọc đỏ'     => '#dc2626',
+    'Sọc xanh'   => '#2563eb',
+    'Caro xanh'  => '#1d4ed8',
+    'Đen hoa'    => '#18181b',
+    'Hoa hồng'   => '#fda4af',
+    'Hoa vàng'   => '#fef08a',
 ];
 
-// Lấy danh sách đánh giá từ database
 $rStmt = $pdo->prepare("
     SELECT r.*, u.full_name 
     FROM reviews r 
@@ -175,7 +186,6 @@ if ($totalReviews > 0) {
     $avgRating = round($sumRating / $totalReviews, 1);
 }
 
-// Làm sạch mô tả chống Stored XSS
 $rawDesc = (string)($product['description'] ?? '');
 $cleanDesc = strip_tags($rawDesc, '<p><br><ul><ol><li><strong><b><em><i><h3><h4>');
 if (trim($cleanDesc) === '') {
@@ -185,7 +195,6 @@ if (trim($cleanDesc) === '') {
 $currPrice = (!empty($product['sale_price']) && $product['sale_price'] > 0) ? (float)$product['sale_price'] : (float)$product['price'];
 $oldPrice  = (!empty($product['sale_price']) && $product['sale_price'] > 0) ? (float)$product['price'] : null;
 
-// Lấy 4 sản phẩm liên quan cùng danh mục
 $relatedProducts = $productModel->getRelated($productId, (int)$product['category_id'], 4);
 
 $pageTitle = $product['name'] . ' | VIBEZ.CLUB';
@@ -197,9 +206,19 @@ require_once __DIR__ . '/includes/header.php';
     .wf-detail-wrap button,
     .wf-detail-wrap input,
     .wf-detail-wrap a,
-    .sg-modal-box,
-    .sg-modal-box button {
-        font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
+    .sg-modal-box {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
+    }
+    .wf-product-title {
+        font-family: 'Montserrat', 'Be Vietnam Pro', sans-serif !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.01em;
+    }
+    .wf-detail-wrap i[class*="fa-"],
+    .wf-detail-wrap .fa,
+    .wf-detail-wrap .fa-solid,
+    .wf-detail-wrap .fa-regular {
+        font-family: "Font Awesome 6 Free", "FontAwesome" !important;
     }
     .wf-color-list {
         display: flex;
@@ -365,7 +384,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <div class="wf-detail-wrap" style="max-width:1180px; margin:36px auto 70px; padding:0 20px;">
     <div class="wf-top-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:44px; background:#ffffff; border:1px solid #eeeeee; border-radius:20px; padding:32px; box-shadow:0 8px 30px rgba(0, 0, 0, 0.04);">
-        <!-- CỘT ẢNH SẢN PHẨM -->
+        
         <div>
             <div class="wf-main-img-box" style="width:100%; aspect-ratio:1/1; background:#ffffff; border:1px solid #ececec; border-radius:14px; overflow:hidden; margin-bottom:14px; display:flex; align-items:center; justify-content:center; padding:14px; box-sizing:border-box;">
                 <img id="mainProductImg" src="<?= htmlspecialchars($displayMainImage) ?>" alt="<?= htmlspecialchars($product['name']) ?>" style="width:100%; height:100%; object-fit:contain; display:block;" onerror="this.onerror=null; this.src='https://placehold.co/600x600/ebeef5/646c79?text=VibezClub';">
@@ -379,12 +398,12 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- CỘT THÔNG TIN VÀ FORM MUA HÀNG -->
+        
         <div>
             <div style="font-size:13px; font-weight:700; color:#888; text-transform:uppercase; margin-bottom:6px;">
                 <?= e($product['category_name'] ?? 'Thời trang Unisex') ?>
             </div>
-            <h1 class="wf-product-title" style="font-size:26px; font-weight:800; color:#111111; margin:0 0 14px 0; line-height:1.35;">
+            <h1 class="wf-product-title" style="font-size:24px; font-weight:600; color:#111111; margin:0 0 14px 0; line-height:1.35;">
                 <?= htmlspecialchars($product['name']) ?>
             </h1>
 
@@ -410,25 +429,30 @@ require_once __DIR__ . '/includes/header.php';
                 <input type="hidden" name="color" id="selectedColorInput" value="<?= htmlspecialchars($defaultColor) ?>">
                 <input type="hidden" name="size" id="selectedSizeInput" value="<?= htmlspecialchars($defaultSize) ?>">
 
-                <!-- CHỌN MÀU SẮC -->
+                
                 <div class="wf-option-block" style="margin-bottom:22px;">
                     <div class="wf-option-label" style="font-size:13px; font-weight:800; text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
                         MÀU SẮC: <span id="colorNameLabel" style="color:#e60023;"><?= htmlspecialchars(mb_strtoupper($defaultColor, 'UTF-8')) ?></span>
                     </div>
                     <div class="wf-color-list" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                         <?php foreach ($availableColors as $cIndex => $colorName): ?>
-                            <?php $hexCode = $colorHexMap[$colorName] ?? '#111111'; ?>
+                            <?php
+                            $hexCode = $colorHexMap[$colorName] ?? '#111111';
+                            $colorImgUrl = $colorImageMap[$colorName] ?? ($galleryImgs[$cIndex] ?? $displayMainImage);
+                            ?>
                             <button type="button"
                                     class="wf-color-swatch <?= $cIndex === 0 ? 'active' : '' ?>"
+                                    data-color="<?= htmlspecialchars($colorName, ENT_QUOTES) ?>"
+                                    data-image="<?= htmlspecialchars($colorImgUrl, ENT_QUOTES) ?>"
                                     style="width:36px; height:36px; border-radius:50%; cursor:pointer; border:2.5px solid <?= $cIndex === 0 ? '#e60023' : '#d1d5db' ?>; padding:3px; background-clip:content-box; background-color:<?= htmlspecialchars($hexCode) ?>;"
                                     title="<?= htmlspecialchars($colorName) ?>"
-                                    onclick="selectColorOption(this, '<?= htmlspecialchars($colorName, ENT_QUOTES) ?>')">
+                                    onclick="selectColorOption(this, '<?= htmlspecialchars($colorName, ENT_QUOTES) ?>', '<?= htmlspecialchars($colorImgUrl, ENT_QUOTES) ?>')">
                             </button>
                         <?php endforeach; ?>
                     </div>
                 </div>
 
-                <!-- CHỌN KÍCH CỠ -->
+                
                 <div class="wf-option-block" style="margin-bottom:22px;">
                     <div class="wf-size-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:12px; flex-wrap:wrap;">
                         <div class="wf-option-label" style="margin-bottom:0; font-size:13px; font-weight:800; text-transform:uppercase;">
@@ -450,7 +474,7 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 </div>
 
-                <!-- SỐ LƯỢNG VÀ NÚT BẤM -->
+                
                 <div class="wf-cart-row" style="display:flex; align-items:center; gap:14px; margin-top:26px; margin-bottom:14px;">
                     <div class="wf-qty-pill" style="display:inline-flex; align-items:center; justify-content:space-between; width:125px; height:48px; border:1.5px solid #111111; border-radius:999px; padding:0 8px; background:#ffffff; flex-shrink:0;">
                         <button type="button" onclick="changeDetailQty(-1)" style="width:32px; height:32px; border-radius:50%; border:none; background:#f3f4f6; color:#111; font-size:16px; font-weight:800; cursor:pointer;">-</button>
@@ -469,9 +493,9 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 
-    <!-- KHỐI MÔ TẢ VÀ ĐÁNH GIÁ -->
+    
     <div class="wf-bottom-blocks" style="margin-top:36px; display:flex; flex-direction:column; gap:28px;">
-        <!-- MÔ TẢ -->
+        
         <div class="wf-full-box" style="background:#ffffff; border:1px solid #eeeeee; border-radius:16px; padding:26px 30px; box-shadow:0 4px 20px rgba(0, 0, 0, 0.04);">
             <h3 class="wf-full-box-title" style="font-size:16px; font-weight:800; text-transform:uppercase; margin:0 0 16px 0; padding-bottom:12px; border-bottom:2px solid #111111; display:flex; align-items:center; gap:8px;">
                 <span style="color:#e60023;">|</span> Mô tả sản phẩm
@@ -481,7 +505,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- ĐÁNH GIÁ KHÁCH HÀNG -->
+        
         <div class="wf-full-box" style="background:#ffffff; border:1px solid #eeeeee; border-radius:16px; padding:26px 30px; box-shadow:0 4px 20px rgba(0, 0, 0, 0.04);">
             <h3 class="wf-full-box-title" style="font-size:16px; font-weight:800; text-transform:uppercase; margin:0 0 18px 0; padding-bottom:12px; border-bottom:2px solid #111111; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
                 <div>
@@ -496,7 +520,7 @@ require_once __DIR__ . '/includes/header.php';
                 <?php endif; ?>
             </h3>
 
-            <!-- FORM GỬI ĐÁNH GIÁ CHO KHÁCH ĐÃ ĐĂNG NHẬP -->
+            
             <?php if (isLoggedIn()): ?>
                 <div style="background:#fafafa; border:1px solid #eee; border-radius:12px; padding:20px; margin-bottom:24px;">
                     <h4 style="margin:0 0 12px 0; font-size:15px; font-weight:700;">Viết đánh giá của bạn</h4>
@@ -529,7 +553,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             <?php endif; ?>
 
-            <!-- DANH SÁCH ĐÁNH GIÁ -->
+            
             <div class="wf-desc-content">
                 <?php if (!empty($reviews)): ?>
                     <div class="wf-review-list" style="display:flex; flex-direction:column; gap:14px;">
@@ -575,7 +599,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- SẢN PHẨM LIÊN QUAN (4 SẢN PHẨM CÙNG DANH MỤC) -->
+        
         <?php if (!empty($relatedProducts)): ?>
             <div class="wf-full-box" style="background:#ffffff; border:1px solid #eeeeee; border-radius:16px; padding:26px 30px; box-shadow:0 4px 20px rgba(0, 0, 0, 0.04);">
                 <h3 class="wf-full-box-title" style="font-size:16px; font-weight:800; text-transform:uppercase; margin:0 0 20px 0; padding-bottom:12px; border-bottom:2px solid #111111;">
@@ -615,7 +639,6 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- MODAL BẢNG KHUYẾN NGHỊ KÍCH CỠ (SIZE GUIDE) -->
 <div id="sizeGuideModal" class="sg-modal-overlay" onclick="closeSizeModal(event)" style="position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; z-index:9999; padding:16px;">
     <div class="sg-modal-box" onclick="event.stopPropagation()" style="background:#ffffff; color:#111111; width:100%; max-width:520px; border-radius:16px; padding:26px 24px 28px; position:relative; box-shadow:0 20px 50px rgba(0,0,0,0.25); border:1.5px solid #e5e7eb;">
         <button type="button" class="sg-close-btn" onclick="closeSizeModal()" style="position:absolute; top:16px; right:18px; width:34px; height:34px; border-radius:50%; background:#f3f4f6; color:#111; border:1px solid #d1d5db; font-size:20px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;">&times;</button>
@@ -661,11 +684,33 @@ require_once __DIR__ . '/includes/header.php';
     var productVariants = <?= json_encode($variants, JSON_UNESCAPED_UNICODE) ?>;
 
     function switchMainImg(el, url) {
-        document.getElementById('mainProductImg').src = url;
+        var mainImg = document.getElementById('mainProductImg');
+        if (mainImg) {
+            mainImg.src = url;
+        }
         document.querySelectorAll('.wf-thumb-item').forEach(function(item) {
             item.style.borderColor = '#e5e7eb';
         });
         el.style.borderColor = '#e60023';
+
+     
+        document.querySelectorAll('.wf-color-swatch').forEach(function(swatch) {
+            var swatchImg = swatch.getAttribute('data-image');
+            if (swatchImg && swatchImg === url) {
+                document.querySelectorAll('.wf-color-swatch').forEach(function(s) {
+                    s.classList.remove('active');
+                    s.style.borderColor = '#d1d5db';
+                });
+                swatch.classList.add('active');
+                swatch.style.borderColor = '#e60023';
+                var cName = swatch.getAttribute('data-color');
+                if (cName) {
+                    document.getElementById('selectedColorInput').value = cName;
+                    document.getElementById('colorNameLabel').textContent = cName.toUpperCase();
+                    updateMatchedVariantId();
+                }
+            }
+        });
     }
 
     function updateMatchedVariantId() {
@@ -679,7 +724,7 @@ require_once __DIR__ . '/includes/header.php';
         }
     }
 
-    function selectColorOption(btn, colorName) {
+    function selectColorOption(btn, colorName, colorImgUrl) {
         document.querySelectorAll('.wf-color-swatch').forEach(function(el) {
             el.classList.remove('active');
             el.style.borderColor = '#d1d5db';
@@ -688,6 +733,24 @@ require_once __DIR__ . '/includes/header.php';
         btn.style.borderColor = '#e60023';
         document.getElementById('selectedColorInput').value = colorName;
         document.getElementById('colorNameLabel').textContent = colorName.toUpperCase();
+
+   
+        if (colorImgUrl) {
+            var mainImg = document.getElementById('mainProductImg');
+            if (mainImg) {
+                mainImg.src = colorImgUrl;
+            }
+         
+            document.querySelectorAll('.wf-thumb-item').forEach(function(item) {
+                var tImg = item.querySelector('img');
+                if (tImg && tImg.src === colorImgUrl) {
+                    item.style.borderColor = '#e60023';
+                } else {
+                    item.style.borderColor = '#e5e7eb';
+                }
+            });
+        }
+
         updateMatchedVariantId();
     }
 
