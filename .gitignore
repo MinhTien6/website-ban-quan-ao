@@ -7,7 +7,7 @@
 .DS_Store
 
 # Cấu hình cơ sở dữ liệu local
-config/database.php
+# config/database.php
 
 # Thư mục upload người dùng (chỉ giữ .gitkeep)
 # public/uploads/products/*
