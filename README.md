@@ -36,9 +36,6 @@ C:\xampp\htdocs\website-ban-quan-ao\
 
 ### Bước 2: Thiết lập Cơ sở dữ liệu (Database)
 
-Có 2 cách thuận tiện để nạp dữ liệu:
-
-#### Cách 1: Nạp qua phpMyAdmin (Giao diện web trực quan)
 1. Mở trình duyệt và truy cập: `http://127.0.0.1/phpmyadmin/`
 2. Tạo mới một cơ sở dữ liệu:
    - Tên cơ sở dữ liệu: `shop_quanao`
@@ -46,12 +43,6 @@ Có 2 cách thuận tiện để nạp dữ liệu:
 3. Nhấp vào tab **Import** (Nhập).
 4. Chọn tệp `database/shop_quanao.sql` từ thư mục dự án.
 5. Nhấn nút **Import** ở cuối trang để hoàn tất quá trình nạp dữ liệu.
-
-#### Cách 2: Khởi tạo nhanh bằng lệnh PHP CLI
-Mở terminal hoặc PowerShell tại thư mục dự án và chạy lệnh:
-```bash
-php database/apply_new_30_products.php
-```
 
 ---
 
