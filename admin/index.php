@@ -21,7 +21,7 @@ $statusLabels = [
 <div class="admin-dashboard-wrapper">
     <div class="admin-welcome-box">
         <h3>Chào mừng quay trở lại, <?= e($adminUser['full_name']) ?>!</h3>
-        <p>Đây là tổng quan hoạt động đơn hàng của FashionStore.</p>
+        <p>Đây là tổng quan hoạt động đơn hàng của VIBEZ.CLUB.</p>
     </div>
 
     <div class="admin-stats-grid">

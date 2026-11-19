@@ -32,7 +32,7 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 <div class="admin-layout">
     <aside class="admin-sidebar">
         <div class="admin-brand">
-            <a href="<?= BASE_URL ?>/admin/index.php">FASHION<span>ADMIN</span></a>
+            <a href="<?= BASE_URL ?>/admin/index.php">VIBEZ<span>ADMIN</span></a>
         </div>
 
         <nav class="admin-nav">

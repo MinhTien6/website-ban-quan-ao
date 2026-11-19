@@ -3,7 +3,7 @@
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 if (!defined('SITE_NAME')) {
-    define('SITE_NAME', 'FashionStore');
+    define('SITE_NAME', 'VIBEZ.CLUB');
 }
 
 if (!defined('ROOT_PATH')) {

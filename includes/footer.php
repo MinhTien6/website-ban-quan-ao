@@ -226,7 +226,7 @@ require_once __DIR__ . '/functions.php';
             <p style="color:#aaa; font-size:14px; line-height:2; margin:0;">
                 <i class="fa-solid fa-location-dot" style="color:#e60023; width:20px;"></i> Quận Bình Thạnh, TP. Hồ Chí Minh<br>
                 <i class="fa-solid fa-phone" style="color:#e60023; width:20px;"></i> 0909 123 456<br>
-                <i class="fa-solid fa-envelope" style="color:#e60023; width:20px;"></i> support@fashionstore.vn
+                <i class="fa-solid fa-envelope" style="color:#e60023; width:20px;"></i> support@vibez.club
             </p>
         </div>
     </div>

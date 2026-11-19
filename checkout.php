@@ -222,7 +222,7 @@ require_once __DIR__ . '/includes/header.php';
             <h1>Đặt hàng thành công!</h1>
 
             <p>
-                Cảm ơn bạn đã mua sắm tại FashionStore.<br>
+                Cảm ơn bạn đã mua sắm tại VIBEZ.CLUB.<br>
                 Đơn hàng của bạn đã được ghi nhận và đang chờ xử lý.
             </p>
 
@@ -342,7 +342,7 @@ require_once __DIR__ . '/includes/header.php';
                             <strong class="bank-title">Thông tin tài khoản nhận thanh toán:</strong>
                             <p>• Ngân hàng: <strong>Vietcombank - CN TP.HCM</strong></p>
                             <p>• Số tài khoản: <strong>0123456789</strong></p>
-                            <p>• Chủ tài khoản: <strong>FASHION STORE</strong></p>
+                            <p>• Chủ tài khoản: <strong>VIBEZ.CLUB</strong></p>
                             <p>• Nội dung CK: <strong>[Họ tên] + [Số điện thoại đặt hàng]</strong></p>
                             <small style="display: block; margin-top: 6px; color: #64748b;">
                                 <em>* Vui lòng chuyển khoản đúng nội dung để đơn hàng được xác nhận nhanh nhất.</em>
