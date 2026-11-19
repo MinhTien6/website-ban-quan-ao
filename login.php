@@ -1,7 +1,4 @@
 <?php
-/**
- * Trang đăng nhập
- */
 
 $pageTitle = 'Đăng nhập';
 require_once __DIR__ . '/config/config.php';
@@ -9,7 +6,6 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 
-// Nếu đã đăng nhập thì chuyển về trang chủ hoặc trang quản trị
 if (isLoggedIn()) {
     if (isAdmin()) {
         redirect('admin/index.php');
@@ -34,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Email không hợp lệ.';
         } else {
             try {
-                // Tìm tài khoản theo email
+                
                 $stmt = $pdo->prepare(
                     "SELECT id, full_name, email, password_hash, role, status
                      FROM users
@@ -44,17 +40,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute(['email' => $email]);
                 $user = $stmt->fetch();
 
-                // Kiểm tra mật khẩu (thông báo lỗi chung tránh lộ thông tin người dùng)
+                
                 if (!$user || !password_verify($password, $user['password_hash'])) {
                     $error = 'Email hoặc mật khẩu không đúng.';
                 } elseif ((int)$user['status'] !== 1) {
-                    // Kiểm tra trạng thái tài khoản
+                    
                     $error = 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.';
                 } else {
-                    // Đăng nhập thành công, tái tạo ID phiên để chống tấn công Session Fixation
+                    
                     session_regenerate_id(true);
 
-                    // Chuẩn hóa mảng phiên đăng nhập duy nhất
+                    
                     $_SESSION['user'] = [
                         'id'        => (int)$user['id'],
                         'full_name' => $user['full_name'],
@@ -62,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'role'      => $user['role'],
                     ];
 
-                    // Phân luồng chuyển hướng
+                    
                     if ($user['role'] === 'admin') {
                         redirect('admin/index.php');
                     } else {
@@ -123,7 +119,8 @@ require_once __DIR__ . '/includes/header.php';
         </form>
 
         <div class="auth-footer">
-            <p>Chưa có tài khoản? <a href="<?= BASE_URL ?>/register.php">Đăng ký ngay</a></p>
+            <p><a href="<?= BASE_URL ?>/forgot-password.php">Quên mật khẩu?</a></p>
+            <p style="margin-top: 8px;">Chưa có tài khoản? <a href="<?= BASE_URL ?>/register.php">Đăng ký ngay</a></p>
         </div>
     </div>
 </div>

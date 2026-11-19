@@ -1,6 +1,4 @@
-/* ==========================================================================
-   1. BIẾN MÀU & THIẾT LẬP CHUNG
-   ========================================================================== */
+
 :root {
     --primary: #e85d75;
     --primary-hover: #d94460;
@@ -12,7 +10,7 @@
     --text-muted: #666666;
     --border: #e5e7eb;
     --border-radius: 8px;
-    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --success: #15803d;
     --success-bg: #dcfce7;
     --error: #b91c1c;
@@ -64,9 +62,6 @@ button {
     flex: 1 0 auto;
 }
 
-/* ==========================================================================
-   2. THANH ĐIỀU HƯỚNG (HEADER NGƯỜI DÙNG)
-   ========================================================================== */
 .header {
     display: flex;
     justify-content: space-between;
@@ -136,9 +131,6 @@ button {
     color: var(--error);
 }
 
-/* ==========================================================================
-   3. THÔNG BÁO FLASH & ALERTS
-   ========================================================================== */
 .flash-message {
     padding: 12px 7%;
     text-align: center;
@@ -179,9 +171,12 @@ button {
     border: 1px solid #bbf7d0;
 }
 
-/* ==========================================================================
-   4. BANNER TRANG CHỦ (HERO)
-   ========================================================================== */
+.alert-info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
 .hero {
     min-height: 380px;
     padding: 60px 7%;
@@ -218,9 +213,6 @@ button {
     margin-bottom: 24px;
 }
 
-/* ==========================================================================
-   5. NÚT BẤM (BUTTONS)
-   ========================================================================== */
 .button {
     display: inline-block;
     padding: 11px 22px;
@@ -257,9 +249,6 @@ button {
     box-shadow: none !important;
 }
 
-/* ==========================================================================
-   6. DANH SÁCH SẢN PHẨM (GRID & CARD)
-   ========================================================================== */
 .section {
     padding: 50px 7%;
 }
@@ -383,9 +372,6 @@ button {
     border-radius: var(--border-radius);
 }
 
-/* ==========================================================================
-   7. FORM ĐĂNG NHẬP / ĐĂNG KÝ (AUTH)
-   ========================================================================== */
 .auth-wrapper {
     padding: 50px 20px;
     display: flex;
@@ -462,9 +448,6 @@ button {
     font-weight: 600;
 }
 
-/* ==========================================================================
-   8. THANH PHÂN TRANG (PAGINATION)
-   ========================================================================== */
 .pagination {
     display: flex;
     justify-content: center;
@@ -517,9 +500,6 @@ button {
     font-weight: bold;
 }
 
-/* ==========================================================================
-   9. GIAO DIỆN QUẢN TRỊ VIÊN (ADMIN LAYOUT & DASHBOARD)
-   ========================================================================== */
 .admin-body {
     background: #f8fafc;
 }
@@ -529,7 +509,6 @@ button {
     min-height: 100vh;
 }
 
-/* Sidebar Admin */
 .admin-sidebar {
     width: 260px;
     background: var(--sidebar-bg);
@@ -643,7 +622,6 @@ button {
     color: #ffffff;
 }
 
-/* Vùng nội dung chính Admin */
 .admin-main {
     flex: 1 1 auto;
     display: flex;
@@ -695,7 +673,6 @@ button {
     font-size: 14px;
 }
 
-/* Thẻ thống kê Dashboard */
 .admin-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -797,9 +774,6 @@ button {
     color: #94a3b8;
 }
 
-/* ==========================================================================
-   10. CHÂN TRANG NGƯỜI DÙNG (FOOTER)
-   ========================================================================== */
 .footer {
     padding: 30px 7%;
     background: var(--secondary);
@@ -813,10 +787,6 @@ button {
     font-size: 13px;
 }
 
-/* ==========================================================================
-   11. RESPONSIVE DESIGN (TABLET & MOBILE)
-   ========================================================================== */
-/* Tablet */
 @media (min-width: 768px) and (max-width: 1024px) {
     .header {
         padding: 16px 5%;
@@ -836,7 +806,6 @@ button {
     }
 }
 
-/* Mobile */
 @media (max-width: 767px) {
     .header {
         flex-direction: column;
@@ -917,10 +886,6 @@ button {
     }
 }
 
-
-/* ==========================================================================
-   12. GIAO DIỆN QUẢN TRỊ CHI TIẾT (ADMIN CRUD - TV3)
-   ========================================================================== */
 .admin-page-header {
     display: flex;
     justify-content: space-between;
@@ -969,7 +934,6 @@ button {
     margin-bottom: 0;
 }
 
-/* Bố cục Grid 2 cột cho Danh mục */
 .admin-grid-layout {
     display: grid;
     grid-template-columns: 360px 1fr;
@@ -977,7 +941,6 @@ button {
     align-items: start;
 }
 
-/* Bố cục Grid cho Form Sản phẩm */
 .product-form-grid {
     display: grid;
     grid-template-columns: 1fr 340px;
@@ -991,7 +954,6 @@ button {
     gap: 16px;
 }
 
-/* Form Controls */
 .form-group {
     margin-bottom: 16px;
 }
@@ -1038,7 +1000,6 @@ button {
     align-items: center;
 }
 
-/* Bảng dữ liệu quản trị */
 .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -1082,7 +1043,6 @@ button {
     margin-bottom: 14px;
 }
 
-/* Huy hiệu (Badges) */
 .badge-status {
     display: inline-block;
     padding: 3px 8px;
@@ -1128,7 +1088,6 @@ button {
     color: #475569;
 }
 
-/* Thao tác nút bấm trong bảng */
 .action-buttons {
     display: inline-flex;
     align-items: center;
@@ -1178,7 +1137,6 @@ button {
     background: var(--error-bg);
 }
 
-/* Nút bổ sung */
 .button-sm {
     padding: 6px 14px;
     font-size: 12px;
@@ -1196,7 +1154,6 @@ button {
     box-shadow: none;
 }
 
-/* Thumbnail Sản phẩm trong bảng */
 .product-thumb-wrap {
     width: 48px;
     height: 48px;
@@ -1249,7 +1206,6 @@ button {
     color: #475569;
 }
 
-/* Giá bán trong bảng */
 .price-cell {
     display: flex;
     flex-direction: column;
@@ -1272,7 +1228,6 @@ button {
     font-size: 13.5px;
 }
 
-/* Huy hiệu tồn kho */
 .badge-stock {
     display: inline-block;
     padding: 3px 8px;
@@ -1297,7 +1252,6 @@ button {
     color: #dc2626;
 }
 
-/* Cảnh báo tồn kho thấp (Tuần 3) */
 .admin-alert-banner {
     display: flex;
     align-items: center;
@@ -1315,7 +1269,6 @@ button {
     font-size: 22px;
 }
 
-/* Khung tìm kiếm & Lọc */
 .filter-card {
     padding: 14px 18px;
     margin-bottom: 20px;
@@ -1333,7 +1286,6 @@ button {
     min-width: 250px;
 }
 
-/* Xem trước nhiều ảnh */
 .image-preview-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1367,7 +1319,6 @@ button {
     border-radius: 3px;
 }
 
-/* Quản lý Gallery ảnh trong trang Edit */
 .gallery-edit-list {
     display: flex;
     flex-direction: column;
@@ -1448,7 +1399,6 @@ button {
     border-color: var(--error);
 }
 
-/* Responsive cho trang Admin TV3 */
 @media (max-width: 1024px) {
     .admin-grid-layout,
     .product-form-grid {
@@ -1456,8 +1406,6 @@ button {
     }
 }
 
-
-/* Trang chủ: Chọn biến thể & Thêm vào giỏ hàng (TV5) */
 .home-add-cart-form {
     display: flex;
     flex-direction: column;
@@ -1504,9 +1452,6 @@ button {
     font-style: italic;
 }
 
-/* ==========================================================================
-   NAVIGATION CART BUTTON (TV5)
-   ========================================================================== */
 .nav-cart {
     display: inline-flex;
     align-items: center;
@@ -1540,3 +1485,373 @@ button {
     font-size: 11px;
     font-weight: 700;
 }
+
+.admin-orders-page,
+.order-detail-page {
+    max-width: 1320px;
+    margin: 0 auto;
+}
+
+.orders-page-heading,
+.recent-orders-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.orders-page-heading h1 {
+    margin: 0 0 6px;
+    color: var(--secondary);
+    font-size: 22px;
+}
+
+.orders-page-heading p,
+.recent-orders-heading p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.orders-total {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.order-filter-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.order-filter-form label {
+    color: var(--secondary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.order-filter-form .form-control {
+    width: min(260px, 100%);
+}
+
+.order-table-wrap,
+.order-items-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.order-customer-email {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.order-status {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-pending { color: #9a6700; background: #fff4cc; }
+.status-confirmed { color: #1d4ed8; background: #dbeafe; }
+.status-shipping { color: #6d28d9; background: #ede9fe; }
+.status-completed { color: #15803d; background: #dcfce7; }
+.status-cancelled { color: #b91c1c; background: #fee2e2; }
+
+.order-back-link {
+    display: inline-flex;
+    margin-bottom: 18px;
+}
+
+.order-detail-kicker {
+    margin: 0 0 6px !important;
+    color: var(--text-muted);
+    font-size: 11px !important;
+    font-weight: 700;
+    letter-spacing: .08em;
+}
+
+.order-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.order-status-update-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 16px;
+    padding: 20px;
+}
+
+.order-status-update-card h2 {
+    margin: 0 0 6px;
+    font-size: 17px;
+}
+
+.order-status-update-card p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.order-status-update-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.order-status-update-form label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.order-status-update-form select {
+    min-width: 170px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+}
+
+.order-detail-grid .admin-info-card,
+.order-items-card {
+    padding: 20px;
+}
+
+.order-detail-grid h2,
+.order-items-card h2 {
+    margin: 0 0 16px;
+    color: var(--secondary);
+    font-size: 16px;
+}
+
+.order-info-list { margin: 0; }
+.order-info-list div { display: grid; grid-template-columns: 145px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); }
+.order-info-list dt { color: var(--text-muted); font-size: 12px; }
+.order-info-list dd { margin: 0; color: var(--text); font-size: 13px; overflow-wrap: anywhere; }
+
+.order-product-cell { display: flex; align-items: center; gap: 10px; min-width: 190px; }
+.order-product-cell img,
+.order-product-placeholder { width: 46px; height: 52px; border-radius: 5px; object-fit: cover; background: #f1f5f9; }
+.order-product-placeholder { display: inline-grid; place-items: center; font-size: 20px; }
+.order-grand-total { display: flex; justify-content: flex-end; align-items: center; gap: 20px; padding-top: 16px; color: var(--secondary); }
+.order-grand-total strong { color: var(--primary); font-size: 20px; }
+
+.order-price-summary {
+    display: grid;
+    justify-items: end;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.order-price-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    width: min(360px, 100%);
+    color: var(--secondary);
+    font-size: 14px;
+}
+
+.order-discount-row { color: #15803d; }
+
+.order-final-total {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-weight: 700;
+}
+
+.order-final-total strong { color: var(--primary); font-size: 20px; }
+
+.revenue-chart-card {
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.revenue-chart-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.revenue-chart-heading h4 {
+    margin: 0 0 5px;
+    color: var(--secondary);
+    font-size: 16px;
+}
+
+.revenue-chart-heading p,
+.revenue-chart-note {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.revenue-chart-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+}
+
+.recent-orders-card { padding: 20px; }
+.recent-orders-heading h4 { margin: 0 0 5px; color: var(--secondary); font-size: 16px; }
+.recent-orders-heading { margin-bottom: 14px; }
+
+@media (max-width: 900px) {
+    .admin-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .order-detail-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 767px) {
+    .order-status-update-card,
+    .order-status-update-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-stats-grid { grid-template-columns: 1fr; }
+    .revenue-chart-card { padding: 14px; }
+    .revenue-chart-container { height: 240px; }
+    .revenue-chart-heading { flex-direction: column; }
+    .orders-page-heading { align-items: flex-start; flex-direction: column; }
+    .order-filter-form { align-items: stretch; flex-direction: column; }
+    .order-filter-form .form-control { width: 100%; }
+    .order-detail-grid .admin-info-card,
+    .order-items-card,
+    .recent-orders-card { padding: 14px; }
+    .order-info-list div { grid-template-columns: 110px minmax(0, 1fr); }
+    .admin-content { padding: 16px; }
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-admin {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.badge-user {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.badge-active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.badge-locked {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.admin-dashboard-wrapper {
+    background: #ffffff;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.admin-dashboard-wrapper h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text, #0f172a);
+}
+
+.admin-dashboard-wrapper form {
+    margin-bottom: 16px;
+}
+
+.admin-dashboard-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 14px;
+}
+
+.admin-dashboard-wrapper th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.admin-dashboard-wrapper td {
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.admin-dashboard-wrapper tr:hover td {
+    background: #f8fafc;
+}
+
+.admin-dashboard-wrapper input[type="text"],
+.admin-dashboard-wrapper input[type="email"],
+.admin-dashboard-wrapper input[type="password"],
+.admin-dashboard-wrapper select {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 260px;
+    box-sizing: border-box;
+}
+
+.admin-dashboard-wrapper button[type="submit"] {
+    display: inline-block;
+    padding: 7px 14px;
+    background: #0f172a;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+
+.admin-dashboard-wrapper button[type="submit"]:hover {
+    background: #1e293b;
+}
+
+.admin-dashboard-wrapper a {
+    color: #2563eb;
+    text-decoration: none;
+    margin: 0 4px;
+}
+
+.admin-dashboard-wrapper a:hover {
+    text-decoration: underline;
+}
+

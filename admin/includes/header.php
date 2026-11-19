@@ -1,8 +1,4 @@
 <?php
-/**
- * Header giao diện quản trị Admin dùng chung
- * Đã tích hợp Menu của TV3 (Danh mục, Sản phẩm) và TV2 (Người dùng)
- */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -41,7 +37,7 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 
         <nav class="admin-nav">
             <a href="<?= BASE_URL ?>/admin/index.php" class="nav-item <?= $currentScript === 'index.php' ? 'active' : '' ?>">
-                📊 Bảng điều khiển (Dashboard)
+                📊 Bảng điều khiển 
             </a>
             <a href="<?= BASE_URL ?>/index.php" target="_blank" class="nav-item">
                 🌐 Xem trang khách hàng
@@ -52,10 +48,13 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
                 📁 Quản lý danh mục
             </a>
             <a href="<?= BASE_URL ?>/admin/products.php" class="nav-item <?= in_array($currentScript, ['products.php', 'product_form.php'], true) ? 'active' : '' ?>">
-                👕 Quản lý sản phẩm (nhiều ảnh, biến thể)
+                👕 Quản lý sản phẩm 
             </a>
-            <a href="#" class="nav-item nav-disabled" title="Chức năng Tuần 3 - TV6">
-                📦 Quản lý đơn hàng (đổi trạng thái)
+            <a href="<?= BASE_URL ?>/admin/coupons.php" class="nav-item <?= $currentScript === 'coupons.php' ? 'active' : '' ?>">
+                🎟️ Quản lý mã giảm giá
+            </a>
+            <a href="<?= BASE_URL ?>/admin/orders.php" class="nav-item <?= in_array($currentScript, ['orders.php', 'order_detail.php'], true) ? 'active' : '' ?>">
+                📦 Quản lý đơn hàng
             </a>
 
             <div class="nav-heading">Hệ thống & Tài khoản</div>

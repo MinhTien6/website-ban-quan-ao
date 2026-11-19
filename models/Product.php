@@ -1,28 +1,18 @@
 <?php
-/**
- * Lớp xử lý dữ liệu sản phẩm (Product Model)
- * Phục vụ TV3 (Admin sản phẩm, upload nhiều ảnh, biến thể) và TV4 (Giao diện hiển thị, lọc, tìm kiếm, chi tiết)
- */
+
 class Product
 {
     private PDO $pdo;
 
-    /**
-     * Khởi tạo Product model với đối tượng kết nối PDO
-     *
-     * @param PDO $pdo
-     */
+    
+
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
 
-    /**
-     * Lấy danh sách sản phẩm mới nhất đang hoạt động
-     *
-     * @param int $limit Số lượng sản phẩm cần lấy
-     * @return array
-     */
+    
+
     public function getLatest(int $limit = 8): array
     {
         $limit = max(1, (int)$limit);
@@ -42,11 +32,8 @@ class Product
         return $stmt->fetchAll();
     }
 
-    /**
-     * Lấy toàn bộ danh sách sản phẩm đang hoạt động kèm ảnh chính và danh mục
-     *
-     * @return array
-     */
+    
+
     public function getAllActive(): array
     {
         $sql = "SELECT p.*, c.name AS category_name, pi.image_path AS main_image
@@ -60,17 +47,8 @@ class Product
         return $stmt->fetchAll();
     }
 
-    /**
-     * Lấy danh sách sản phẩm có lọc theo danh mục, khoảng giá, sắp xếp và phân trang (TV4)
-     *
-     * @param int|null $categoryId
-     * @param float|null $minPrice
-     * @param float|null $maxPrice
-     * @param string $sort ('latest', 'price_asc', 'price_desc')
-     * @param int $limit
-     * @param int $offset
-     * @return array
-     */
+    
+
     public function getFiltered(
         ?int $categoryId = null,
         ?float $minPrice = null,
@@ -116,14 +94,8 @@ class Product
         return $stmt->fetchAll();
     }
 
-    /**
-     * Đếm tổng số sản phẩm thỏa mãn điều kiện lọc
-     *
-     * @param int|null $categoryId
-     * @param float|null $minPrice
-     * @param float|null $maxPrice
-     * @return int
-     */
+    
+
     public function countFiltered(?int $categoryId = null, ?float $minPrice = null, ?float $maxPrice = null): int
     {
         $params = [];
@@ -150,14 +122,8 @@ class Product
         return (int)$stmt->fetchColumn();
     }
 
-    /**
-     * Tìm kiếm sản phẩm theo từ khóa (TV4)
-     *
-     * @param string $keyword
-     * @param int $limit
-     * @param int $offset
-     * @return array
-     */
+    
+
     public function search(string $keyword, int $limit = 12, int $offset = 0): array
     {
         $keyword = trim($keyword);
@@ -181,12 +147,8 @@ class Product
         return $stmt->fetchAll();
     }
 
-    /**
-     * Đếm số kết quả tìm kiếm theo từ khóa
-     *
-     * @param string $keyword
-     * @return int
-     */
+    
+
     public function countSearch(string $keyword): int
     {
         $keyword = trim($keyword);
@@ -207,12 +169,8 @@ class Product
         return (int)$stmt->fetchColumn();
     }
 
-    /**
-     * Lấy thông tin chi tiết của một sản phẩm theo ID kèm tên danh mục và ảnh chính
-     *
-     * @param int|string $id ID sản phẩm
-     * @return array|false Thông tin sản phẩm hoặc false nếu không tìm thấy
-     */
+    
+
     public function getById(int|string $id): array|false
     {
         $sql = "SELECT p.*, c.name AS category_name, pi.image_path AS main_image
@@ -228,12 +186,8 @@ class Product
         return $stmt->fetch();
     }
 
-    /**
-     * Lấy chi tiết sản phẩm theo slug
-     *
-     * @param string $slug
-     * @return array|false
-     */
+    
+
     public function getBySlug(string $slug): array|false
     {
         $sql = "SELECT p.*, c.name AS category_name, pi.image_path AS main_image
@@ -249,12 +203,8 @@ class Product
         return $stmt->fetch();
     }
 
-    /**
-     * Lấy danh sách tất cả hình ảnh của một sản phẩm (Gallery ảnh)
-     *
-     * @param int $productId
-     * @return array
-     */
+    
+
     public function getImages(int $productId): array
     {
         $sql = "SELECT * FROM product_images 
@@ -266,12 +216,8 @@ class Product
         return $stmt->fetchAll();
     }
 
-    /**
-     * Lấy danh sách tất cả biến thể size/màu kèm tồn kho của một sản phẩm
-     *
-     * @param int $productId
-     * @return array
-     */
+    
+
     public function getVariants(int $productId): array
     {
         $sql = "SELECT * FROM product_variants 
@@ -283,14 +229,8 @@ class Product
         return $stmt->fetchAll();
     }
 
-    /**
-     * Lấy sản phẩm liên quan cùng danh mục
-     *
-     * @param int $productId ID sản phẩm hiện tại (để loại trừ)
-     * @param int $categoryId
-     * @param int $limit
-     * @return array
-     */
+    
+
     public function getRelated(int $productId, int $categoryId, int $limit = 4): array
     {
         $sql = "SELECT p.*, c.name AS category_name, pi.image_path AS main_image
@@ -309,14 +249,8 @@ class Product
         return $stmt->fetchAll();
     }
 
-    /**
-     * Danh sách sản phẩm cho Admin có tìm kiếm và phân trang
-     *
-     * @param string $keyword
-     * @param int $limit
-     * @param int $offset
-     * @return array
-     */
+    
+
     public function getAdminList(string $keyword = '', int $limit = 10, int $offset = 0): array
     {
         $params = [];
@@ -344,12 +278,8 @@ class Product
         return $stmt->fetchAll();
     }
 
-    /**
-     * Đếm tổng số sản phẩm trong Admin
-     *
-     * @param string $keyword
-     * @return int
-     */
+    
+
     public function countAdminList(string $keyword = ''): int
     {
         $params = [];
@@ -371,16 +301,8 @@ class Product
         return (int)$stmt->fetchColumn();
     }
 
-    /** 
-     * Thêm mới sản phẩm kèm danh sách ảnh và biến thể bằng Transaction (Phục vụ TV3 - Chuẩn Báo cáo)
-     *
-     * @param array $data Dữ liệu sản phẩm (name, slug, price, sale_price, description, category_id, status)
-     * @param array $imagePaths Danh sách đường dẫn ảnh tải lên
-     * @param int $mainIndex Chỉ số của ảnh chính trong danh sách tải lên
-     * @param array $variants Danh sách biến thể size/màu/tồn kho
-     * @return int ID của sản phẩm vừa tạo
-     * @throws Throwable
-     */
+    
+
     public function create(array $data, array $imagePaths = [], int $mainIndex = 0, array $variants = []): int
     {
         $this->pdo->beginTransaction();
@@ -399,7 +321,7 @@ class Product
             ]);
             $productId = (int)$this->pdo->lastInsertId();
 
-            // 1. Lưu nhiều ảnh sản phẩm
+            
             if (!empty($imagePaths)) {
                 $mainIdx = ($mainIndex >= 0 && $mainIndex < count($imagePaths)) ? $mainIndex : 0;
                 $imgStmt = $this->pdo->prepare(
@@ -416,7 +338,7 @@ class Product
                 }
             }
 
-            // 2. Lưu các biến thể Size / Màu / Tồn kho an toàn (Gộp trùng lặp chống lỗi uq_variant)
+            
             if (!empty($variants)) {
                 $this->syncVariants($productId, $variants);
             }
@@ -431,18 +353,8 @@ class Product
         }
     }
 
-    /**
-     * Cập nhật sản phẩm kèm thêm ảnh mới và đồng bộ biến thể bằng Transaction (Admin - TV3)
-     *
-     * @param int $id ID sản phẩm cần cập nhật
-     * @param array $data Dữ liệu sản phẩm
-     * @param array $newImagePaths Danh sách ảnh mới tải lên thêm (nếu có)
-     * @param int|null $mainImageId ID ảnh hiện có được chọn làm ảnh chính (nếu có)
-     * @param array $variants Danh sách biến thể cập nhật
-     * @param int|null $newMainIndex Chỉ số của ảnh mới tải lên được chọn làm ảnh chính (nếu có)
-     * @return bool
-     * @throws Throwable
-     */
+    
+
     public function update(int $id, array $data, array $newImagePaths = [], ?int $mainImageId = null, array $variants = [], ?int $newMainIndex = null): bool
     {
         $this->pdo->beginTransaction();
@@ -464,7 +376,7 @@ class Product
                 'status'      => isset($data['status']) ? (int)$data['status'] : 1,
             ]);
 
-            // Thêm các ảnh mới tải lên
+            
             $newImageIds = [];
             if (!empty($newImagePaths)) {
                 $maxOrderStmt = $this->pdo->prepare("SELECT COALESCE(MAX(sort_order), 0) FROM product_images WHERE product_id = :id");
@@ -487,7 +399,7 @@ class Product
                 }
             }
 
-            // Đổi ảnh chính nếu chỉ định
+            
             if ($newMainIndex !== null && isset($newImageIds[$newMainIndex])) {
                 $chosenId = $newImageIds[$newMainIndex];
                 $this->pdo->prepare("UPDATE product_images SET is_main = 0 WHERE product_id = :id AND id != :chosen_id")
@@ -500,7 +412,7 @@ class Product
                           ->execute(['img_id' => $mainImageId, 'id' => $id]);
             }
 
-            // Đảm bảo luôn có ít nhất 1 ảnh làm ảnh chính nếu sản phẩm có ảnh
+            
             $checkMainStmt = $this->pdo->prepare("SELECT COUNT(*) FROM product_images WHERE product_id = :id AND is_main = 1");
             $checkMainStmt->execute(['id' => $id]);
             if ((int)$checkMainStmt->fetchColumn() === 0) {
@@ -508,7 +420,7 @@ class Product
                           ->execute(['id' => $id]);
             }
 
-            // Đồng bộ lại danh sách biến thể nếu được truyền vào
+            
             if (!empty($variants)) {
                 $this->syncVariants($id, $variants);
             }
@@ -523,12 +435,8 @@ class Product
         }
     }
 
-    /**
-     * Xóa sản phẩm an toàn (Nếu đã có đơn hàng thì tự động chuyển sang ẩn status = 0 - Chuẩn Báo cáo)
-     *
-     * @param int $id ID sản phẩm cần xóa
-     * @return string 'hidden' nếu chuyển ẩn, 'deleted' nếu xóa hoàn toàn
-     */
+    
+
     public function delete(int $id): string
     {
         $checkStmt = $this->pdo->prepare("SELECT COUNT(*) FROM order_items WHERE product_id = :id");
@@ -539,7 +447,7 @@ class Product
             return 'hidden';
         }
 
-        // Lấy ảnh để xóa file vật lý
+        
         $images = $this->getImages($id);
         $baseDir = defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__);
         foreach ($images as $img) {
@@ -554,15 +462,8 @@ class Product
         return 'deleted';
     }
 
-    /**
-     * Thêm hình ảnh cho sản phẩm (Admin - TV3)
-     *
-     * @param int $productId ID sản phẩm
-     * @param string $imagePath Đường dẫn ảnh
-     * @param bool $isMain Có phải ảnh đại diện chính không
-     * @param int $sortOrder Thứ tự sắp xếp
-     * @return int ID ảnh vừa thêm
-     */
+    
+
     public function addImage(int $productId, string $imagePath, bool $isMain = false, int $sortOrder = 0): int
     {
         if ($isMain) {
@@ -584,12 +485,8 @@ class Product
         return (int)$this->pdo->lastInsertId();
     }
 
-    /**
-     * Xóa 1 ảnh của sản phẩm
-     *
-     * @param int $imageId ID ảnh cần xóa
-     * @return bool
-     */
+    
+
     public function deleteImage(int $imageId): bool
     {
         $sql = "SELECT * FROM product_images WHERE id = :id LIMIT 1";
@@ -619,13 +516,8 @@ class Product
         return $res;
     }
 
-    /**
-     * Đặt ảnh làm ảnh đại diện chính của sản phẩm
-     *
-     * @param int $productId ID sản phẩm
-     * @param int $imageId ID ảnh được chọn
-     * @return bool
-     */
+    
+
     public function setMainImage(int $productId, int $imageId): bool
     {
         $resetSql = "UPDATE product_images SET is_main = 0 WHERE product_id = :product_id";
@@ -640,16 +532,11 @@ class Product
         ]);
     }
 
-    /**
-     * Đồng bộ danh sách biến thể size/màu/tồn kho an toàn (Tự động gộp nếu trùng Size & Màu, giữ nguyên ID biến thể hiện có)
-     *
-     * @param int $productId ID sản phẩm
-     * @param array $variants Danh sách biến thể [{'size', 'color', 'stock'}]
-     * @return void
-     */
+    
+
     public function syncVariants(int $productId, array $variants): void
     {
-        // 1. Gộp các dòng trùng cặp (size, color) từ dữ liệu truyền vào để chống lỗi uq_variant
+        
         $uniqueVariants = [];
         foreach ($variants as $v) {
             $size  = trim($v['size'] ?? '');
@@ -675,7 +562,7 @@ class Product
             }
         }
 
-        // 2. Lấy danh sách các biến thể hiện có của sản phẩm trong CSDL
+        
         $getExistingStmt = $this->pdo->prepare("SELECT id, size, color, stock FROM product_variants WHERE product_id = :product_id");
         $getExistingStmt->execute(['product_id' => $productId]);
         $existing = $getExistingStmt->fetchAll();
@@ -696,7 +583,7 @@ class Product
 
         foreach ($uniqueVariants as $key => $uv) {
             if (isset($existingMap[$key])) {
-                // Biến thể đã có: Cập nhật tồn kho và giữ nguyên ID để bảo toàn giỏ hàng & chi tiết đơn hàng
+                
                 $existingId = (int)$existingMap[$key]['id'];
                 $updateStmt->execute([
                     'stock' => $uv['stock'],
@@ -704,7 +591,7 @@ class Product
                 ]);
                 $keepIds[] = $existingId;
             } else {
-                // Biến thể mới: Chèn mới vào bảng
+                
                 $insertStmt->execute([
                     'product_id' => $productId,
                     'size'       => $uv['size'],
@@ -715,7 +602,7 @@ class Product
             }
         }
 
-        // 3. Xóa những biến thể cũ không còn trong danh sách gửi lên
+        
         if (!empty($keepIds)) {
             $placeholders = implode(',', array_fill(0, count($keepIds), '?'));
             $delStmt = $this->pdo->prepare("DELETE FROM product_variants WHERE product_id = ? AND id NOT IN ($placeholders)");
@@ -727,13 +614,8 @@ class Product
         }
     }
 
-    /**
-     * Lấy danh sách sản phẩm cảnh báo tồn kho thấp (Admin Tuần 3 - TV3)
-     *
-     * @param int $threshold Ngưỡng cảnh báo (mặc định 10 cái)
-     * @param int $limit Số lượng sản phẩm
-     * @return array
-     */
+    
+
     public function getLowStockProducts(int $threshold = 10, int $limit = 10): array
     {
         $sql = "SELECT p.*, c.name AS category_name, pi.image_path AS main_image,
@@ -755,12 +637,8 @@ class Product
         return $stmt->fetchAll();
     }
 
-    /**
-     * Lấy thông tin biến thể theo ID, kèm thông tin sản phẩm và ảnh chính (Phục vụ TV5 giỏ hàng)
-     *
-     * @param int $variantId
-     * @return array|false
-     */
+    
+
     public function getVariantById(int $variantId): array|false
     {
         $sql = "SELECT pv.id AS variant_id, pv.product_id, pv.size, pv.color, pv.stock,

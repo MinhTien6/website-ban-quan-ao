@@ -1,7 +1,4 @@
 <?php
-/**
- * Trang đổi mật khẩu
- */
 
 $pageTitle = 'Đổi mật khẩu';
 
@@ -11,7 +8,6 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/models/User.php';
 
-// Bắt buộc đăng nhập
 requireLogin();
 
 $userModel = new User($pdo);
@@ -37,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Mật khẩu mới phải khác mật khẩu hiện tại.';
         } else {
             try {
-                // Lấy mật khẩu hiện tại trong database
+                
                 $stmt = $pdo->prepare(
                     "SELECT password_hash FROM users WHERE id = :id LIMIT 1"
                 );
@@ -47,10 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$user || !password_verify($currentPassword, $user['password_hash'])) {
                     $error = 'Mật khẩu hiện tại không chính xác.';
                 } else {
-                    // Mã hóa mật khẩu mới
+                    
                     $newPasswordHash = password_hash($newPassword, PASSWORD_DEFAULT);
 
                     $userModel->changePassword($userId, $newPasswordHash);
+
+                    session_regenerate_id(true);
 
                     setFlash('success', 'Đổi mật khẩu thành công.');
                     redirect('profile.php');

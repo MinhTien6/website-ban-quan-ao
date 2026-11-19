@@ -1,869 +1,725 @@
-/*M!999999\- enable the sandbox mode */ 
--- MariaDB dump 10.19  Distrib 10.11.16-MariaDB, for Win64 (AMD64)
---
--- Host: 127.0.0.1    Database: shop_quanao
--- ------------------------------------------------------
--- Server version	10.11.16-MariaDB
+CREATE DATABASE IF NOT EXISTS shop_quanao
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE shop_quanao;
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
 
---
--- Table structure for table `banners`
---
 
-DROP TABLE IF EXISTS `banners`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `banners` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(150) DEFAULT NULL,
-  `image_path` varchar(255) NOT NULL,
-  `link` varchar(255) DEFAULT NULL,
-  `sort_order` int(11) NOT NULL DEFAULT 0,
-  `status` tinyint(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`),
-  KEY `idx_banners_status_sort` (`status`,`sort_order`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS cart_items, carts, wishlists, reviews, order_items, orders,
+  coupons, product_variants, product_images, products, categories, banners,
+  password_resets, users;
 
---
--- Dumping data for table `banners`
---
+SET FOREIGN_KEY_CHECKS = 1;
 
-LOCK TABLES `banners` WRITE;
-/*!40000 ALTER TABLE `banners` DISABLE KEYS */;
-INSERT INTO `banners` VALUES
-(1,'Bộ sưu tập Thu Đông 2026','uploads/banners/banner-1.jpg','products.php',1,1),
-(2,'Sale đến 30% - Áo khoác & Hoodie','uploads/banners/banner-2.jpg','products.php?category=ao-khoac',2,1),
-(3,'Freeship đơn từ 500.000đ','uploads/banners/banner-3.jpg','products.php',3,1);
-/*!40000 ALTER TABLE `banners` ENABLE KEYS */;
-UNLOCK TABLES;
 
---
--- Table structure for table `cart_items`
---
-
-DROP TABLE IF EXISTS `cart_items`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `cart_items` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `cart_id` int(11) NOT NULL,
-  `variant_id` int(11) NOT NULL,
-  `quantity` int(11) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_cart_variant` (`cart_id`,`variant_id`),
-  KEY `fk_ci_variant` (`variant_id`),
-  CONSTRAINT `fk_ci_cart` FOREIGN KEY (`cart_id`) REFERENCES `carts` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_ci_variant` FOREIGN KEY (`variant_id`) REFERENCES `product_variants` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `cart_items`
---
-
-LOCK TABLES `cart_items` WRITE;
-/*!40000 ALTER TABLE `cart_items` DISABLE KEYS */;
-INSERT INTO `cart_items` VALUES
-(1,1,1,1),
-(2,1,25,2);
-/*!40000 ALTER TABLE `cart_items` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `carts`
---
-
-DROP TABLE IF EXISTS `carts`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `carts` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_carts_user` (`user_id`),
-  CONSTRAINT `fk_carts_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `carts`
---
-
-LOCK TABLES `carts` WRITE;
-/*!40000 ALTER TABLE `carts` DISABLE KEYS */;
-INSERT INTO `carts` VALUES
-(1,2);
-/*!40000 ALTER TABLE `carts` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `categories`
---
-
-DROP TABLE IF EXISTS `categories`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `categories` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `slug` varchar(120) NOT NULL,
-  `description` text DEFAULT NULL,
-  `parent_id` int(11) DEFAULT NULL,
-  `status` tinyint(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_categories_slug` (`slug`),
-  KEY `idx_categories_parent` (`parent_id`),
-  CONSTRAINT `fk_categories_parent` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `categories`
---
-
-LOCK TABLES `categories` WRITE;
-/*!40000 ALTER TABLE `categories` DISABLE KEYS */;
-INSERT INTO `categories` VALUES
-(1,'Áo Thun & Croptop','ao-thun-croptop','Áo thun nam nữ cotton, áo oversize và áo croptop tôn dáng',NULL,1),
-(2,'Áo Sơ Mi & Polo','ao-so-mi-polo','Áo sơ mi công sở, sơ mi dạo phố và áo polo thanh lịch',NULL,1),
-(3,'Áo Khoác, Bomber & Hoodie','ao-khoac-bomber-hoodie','Áo khoác denim, varsity, bomber và hoodie ấm áp',NULL,1),
-(4,'Quần Jean & Quần Short','quan-jean-short','Quần jean slimfit, ống rộng, baggy và quần short năng động',NULL,1),
-(5,'Váy, Đầm & Chân Váy','vay-dam-chan-vay','Váy hoa nhí, đầm công sở, đầm maxi và chân váy xếp ly',NULL,1),
-(7,'Áo khoác bomber','ao-khoac-bomber','Bomber dù, bomber da thời trang',3,1),
-(8,'Hoodie','hoodie','Áo hoodie nỉ bông, hoodie zip',3,1);
-/*!40000 ALTER TABLE `categories` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `coupons`
---
-
-DROP TABLE IF EXISTS `coupons`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `coupons` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `code` varchar(30) NOT NULL,
-  `discount_type` enum('percent','amount') NOT NULL DEFAULT 'percent',
-  `discount_value` decimal(12,0) NOT NULL,
-  `min_order` decimal(12,0) NOT NULL DEFAULT 0,
-  `expires_at` datetime DEFAULT NULL,
-  `usage_limit` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_coupons_code` (`code`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `coupons`
---
-
-LOCK TABLES `coupons` WRITE;
-/*!40000 ALTER TABLE `coupons` DISABLE KEYS */;
-INSERT INTO `coupons` VALUES
-(1,'WELCOME10','percent',10,300000,'2026-12-31 23:59:59',100),
-(2,'GIAM50K','amount',50000,500000,'2026-12-31 23:59:59',50),
-(3,'SALE20','percent',20,800000,'2026-11-30 23:59:59',30),
-(4,'HETHAN','percent',15,0,'2026-01-31 23:59:59',10);
-/*!40000 ALTER TABLE `coupons` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `order_items`
---
-
-DROP TABLE IF EXISTS `order_items`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `order_items` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `order_id` int(11) NOT NULL,
-  `product_id` int(11) NOT NULL,
-  `variant_id` int(11) DEFAULT NULL,
-  `quantity` int(11) NOT NULL,
-  `price` decimal(12,0) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_oi_order` (`order_id`),
-  KEY `idx_oi_product` (`product_id`),
-  KEY `fk_oi_variant` (`variant_id`),
-  CONSTRAINT `fk_oi_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_oi_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `fk_oi_variant` FOREIGN KEY (`variant_id`) REFERENCES `product_variants` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `order_items`
---
-
-LOCK TABLES `order_items` WRITE;
-/*!40000 ALTER TABLE `order_items` DISABLE KEYS */;
-INSERT INTO `order_items` VALUES
-(1,1,1,2,2,149000),
-(2,1,10,40,1,369000),
-(3,2,16,65,1,449000),
-(4,2,21,85,1,549000),
-(5,3,26,105,1,459000),
-(6,3,5,14,1,129000),
-(7,4,6,25,1,259000),
-(8,5,24,95,1,399000),
-(9,5,1,4,2,149000);
-/*!40000 ALTER TABLE `order_items` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `orders`
---
-
-DROP TABLE IF EXISTS `orders`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `orders` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `receiver_name` varchar(100) NOT NULL,
-  `phone` varchar(20) NOT NULL,
-  `address` varchar(255) NOT NULL,
-  `total` decimal(12,0) NOT NULL,
-  `payment_method` enum('cod','bank') NOT NULL DEFAULT 'cod',
-  `status` enum('pending','confirmed','shipping','completed','cancelled') NOT NULL DEFAULT 'pending',
-  `coupon_id` int(11) DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `idx_orders_user` (`user_id`),
-  KEY `idx_orders_status_created` (`status`,`created_at`),
-  KEY `idx_orders_coupon` (`coupon_id`),
-  CONSTRAINT `fk_orders_coupon` FOREIGN KEY (`coupon_id`) REFERENCES `coupons` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `orders`
---
-
-LOCK TABLES `orders` WRITE;
-/*!40000 ALTER TABLE `orders` DISABLE KEYS */;
-INSERT INTO `orders` VALUES
-(1,2,'Nguyễn Thị Lan','0912345678','12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh',762300,'cod','completed',1,'2026-10-01 09:15:00'),
-(2,3,'Trần Văn Minh','0987654321','45 Lê Lợi, Quận 3, TP. Hồ Chí Minh',788000,'bank','shipping',NULL,'2026-10-12 14:40:00'),
-(3,2,'Nguyễn Thị Lan','0912345678','12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh',558000,'cod','pending',2,'2026-10-20 19:05:00'),
-(4,3,'Trần Văn Minh','0987654321','45 Lê Lợi, Quận 3, TP. Hồ Chí Minh',349000,'cod','cancelled',NULL,'2026-10-05 11:30:00'),
-(5,2,'Nguyễn Thị Lan','0912345678','12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh',897000,'bank','confirmed',NULL,'2026-10-21 08:50:00');
-/*!40000 ALTER TABLE `orders` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `password_resets`
---
-
-DROP TABLE IF EXISTS `password_resets`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `password_resets` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `email` varchar(150) NOT NULL,
-  `token` varchar(100) NOT NULL,
-  `expires_at` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_pr_token` (`token`),
-  KEY `idx_pr_email` (`email`)
+CREATE TABLE users (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  full_name     VARCHAR(100) NOT NULL,
+  email         VARCHAR(150) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  phone         VARCHAR(20)  DEFAULT NULL,
+  address       VARCHAR(255) DEFAULT NULL,
+  avatar        VARCHAR(255) DEFAULT NULL,
+  role          ENUM('admin','user') NOT NULL DEFAULT 'user',
+  status        TINYINT(1)   NOT NULL DEFAULT 1,
+  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_users_email (email),
+  KEY idx_users_role_status (role, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `password_resets`
---
 
-LOCK TABLES `password_resets` WRITE;
-/*!40000 ALTER TABLE `password_resets` DISABLE KEYS */;
-/*!40000 ALTER TABLE `password_resets` ENABLE KEYS */;
-UNLOCK TABLES;
+CREATE TABLE password_resets (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  email      VARCHAR(150) NOT NULL,
+  token      VARCHAR(100) NOT NULL,
+  expires_at DATETIME     NOT NULL,
+  KEY idx_pr_token (token),
+  KEY idx_pr_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Table structure for table `product_images`
---
 
-DROP TABLE IF EXISTS `product_images`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `product_images` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `product_id` int(11) NOT NULL,
-  `image_path` varchar(255) NOT NULL,
-  `is_main` tinyint(1) NOT NULL DEFAULT 0,
-  `sort_order` int(11) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `idx_pi_product` (`product_id`,`sort_order`),
-  CONSTRAINT `fk_pi_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+CREATE TABLE categories (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  name        VARCHAR(100) NOT NULL,
+  slug        VARCHAR(100) NOT NULL,
+  description TEXT         DEFAULT NULL,
+  parent_id   INT          DEFAULT NULL,
+  status      TINYINT(1)   NOT NULL DEFAULT 1,
+  UNIQUE KEY uq_categories_slug (slug),
+  KEY idx_categories_parent (parent_id),
+  KEY idx_categories_status (status),
+  CONSTRAINT fk_categories_parent FOREIGN KEY (parent_id)
+    REFERENCES categories(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `product_images`
---
 
-LOCK TABLES `product_images` WRITE;
-/*!40000 ALTER TABLE `product_images` DISABLE KEYS */;
-INSERT INTO `product_images` VALUES
-(1,1,'uploads/products/Ao-thun-basic-co-tron-den-mat-truoc.jpg',1,1),
-(2,1,'uploads/products/Ao-thun-basic-co-tron-den-mat-sau.jpg',0,2),
-(3,2,'uploads/products/Ao-thun-oversize-basic-mat-truoc.jpg',1,1),
-(4,2,'uploads/products/Ao-thun-oversize-basic-mat-sau.webp',0,2),
-(5,3,'uploads/products/Ao-thun-in-logo-mat-truoc.jpg',1,1),
-(6,3,'uploads/products/Ao-thun-in-logo-mat-sau.webp',0,2),
-(7,4,'uploads/products/ao-thun-tay-dai-thu-dong-1.jpg',1,1),
-(8,4,'uploads/products/ao-thun-tay-dai-thu-dong-2.jpg',0,2),
-(9,5,'uploads/products/Ao-croptop-mat-truoc.jpg',1,1),
-(10,5,'uploads/products/Ao-croptop-mat-sau.webp',0,2),
-(11,6,'uploads/products/Ao-polo-tron-mat-truoc.jpg',1,1),
-(12,6,'uploads/products/Ao-polo-tron-mat-sau.webp',0,2),
-(13,7,'uploads/products/Ao-polo-co-tron-mat-truoc.jpg',1,1),
-(14,7,'uploads/products/ao-polo-nam-vai-ca-sau-2.jpg',0,2),
-(15,8,'uploads/products/ao-so-mi-trang-cong-so-1.jpg',1,1),
-(16,8,'uploads/products/ao-so-mi-trang-cong-so-2.jpg',0,2),
-(17,9,'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg',1,1),
-(18,9,'uploads/products/ao-so-mi-ke-soc-xanh-2.jpg',0,2),
-(19,9,'uploads/products/ao-so-mi-ke-soc-den-mat-truoc.jpg',0,3),
-(20,9,'uploads/products/ao-so-mi-ke-soc-den-mat-sau.jpg',0,4),
-(21,9,'uploads/products/ao-so-mi-ke-soc-do-mat-truoc.jpg',0,5),
-(22,9,'uploads/products/ao-so-mi-ke-soc-do-mat-sau.jpg',0,6),
-(23,10,'uploads/products/ao-so-mi-linen-tay-ngan-1.jpg',1,1),
-(24,10,'uploads/products/ao-so-mi-linen-tay-ngan-2.jpg',0,2),
-(25,11,'uploads/products/Ao-khoac-denim-mat-truoc.jpg',1,1),
-(26,11,'uploads/products/Ao-khoac-denim-mat-sau.webp',0,2),
-(27,12,'uploads/products/Ao-khoac-varsity-mat-truoc.jpg',1,1),
-(28,12,'uploads/products/Ao-khoac-varsity-mat-sau.webp',0,2),
-(29,13,'uploads/products/ao-bomber-du-2-lop-1.jpg',1,1),
-(30,13,'uploads/products/ao-bomber-du-2-lop-2.jpg',0,2),
-(31,14,'uploads/products/ao-bomber-da-pu-1.jpg',1,1),
-(32,14,'uploads/products/ao-bomber-da-pu-2.jpg',0,2),
-(33,15,'uploads/products/ao-khoac-jean-unisex-1.jpg',1,1),
-(34,15,'uploads/products/ao-khoac-jean-unisex-2.jpg',0,2),
-(35,16,'uploads/products/Ao-khoac-hoodie-oversize-mat-truoc.jpg',1,1),
-(36,16,'uploads/products/Ao-khoac-hoodie-oversize-mat-sau.webp',0,2),
-(37,17,'uploads/products/Ao-khoac-hoodie-zip-mat-truoc.jpg',1,1),
-(38,17,'uploads/products/Ao-khoac-hoodie-zip-mat-sau.webp',0,2),
-(39,18,'uploads/products/hoodie-ni-bong-form-rong-1.jpg',1,1),
-(40,18,'uploads/products/hoodie-ni-bong-form-rong-2.jpg',0,2),
-(41,19,'uploads/products/hoodie-zip-khoa-keo-1.jpg',1,1),
-(42,19,'uploads/products/hoodie-zip-khoa-keo-2.jpg',0,2),
-(43,20,'uploads/products/ao-bomber-du-2-lop-3.jpg',1,1),
-(44,20,'uploads/products/ao-bomber-da-pu-3.jpg',0,2),
-(45,21,'uploads/products/Quan-jeans-straight-mat-truoc.jpg',1,1),
-(46,21,'uploads/products/Quan-jeans-straight-mat-sau.webp',0,2),
-(47,22,'uploads/products/Quan-jeans-ong-rong-mat-truoc.jpg',1,1),
-(48,22,'uploads/products/Quan-jeans-ong-rong-mat-sau.webp',0,2),
-(49,23,'uploads/products/quan-jean-rach-goi-1.jpg',1,1),
-(50,23,'uploads/products/quan-jean-rach-goi-2.jpg',0,2),
-(51,24,'uploads/products/quan-short-jean-nam-1.jpg',1,1),
-(52,24,'uploads/products/quan-short-jean-nam-2.jpg',0,2),
-(53,25,'uploads/products/Quan-short-the-thao-mat-truoc.jpg',1,1),
-(54,25,'uploads/products/Quan-short-the-thao-mat-sau.webp',0,2),
-(55,26,'uploads/products/Chan-vay-midi-mat-truoc.jpg',1,1),
-(56,26,'uploads/products/Chan-vay-midi-mat-sau.webp',0,2),
-(57,27,'uploads/products/dam-suong-cong-so-1.jpg',1,1),
-(58,27,'uploads/products/dam-suong-cong-so-2.jpg',0,2),
-(59,28,'uploads/products/dam-maxi-du-tiec-1.jpg',1,1),
-(60,28,'uploads/products/dam-maxi-du-tiec-2.jpg',0,2),
-(61,29,'uploads/products/chan-vay-chu-a-1.jpg',1,1),
-(62,29,'uploads/products/chan-vay-chu-a-2.jpg',0,2),
-(63,30,'uploads/products/Chan-vay-xep-ly-mat-truoc.jpg',1,1),
-(64,30,'uploads/products/Chan-vay-xep-li-mat-sau.webp',0,2);
-/*!40000 ALTER TABLE `product_images` ENABLE KEYS */;
-UNLOCK TABLES;
+CREATE TABLE products (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  name        VARCHAR(200)  NOT NULL,
+  slug        VARCHAR(200)  NOT NULL,
+  price       DECIMAL(12,0) NOT NULL,
+  sale_price  DECIMAL(12,0) DEFAULT NULL,
+  description LONGTEXT      DEFAULT NULL,
+  category_id INT           NOT NULL,
+  status      TINYINT(1)    NOT NULL DEFAULT 1,
+  views       INT           NOT NULL DEFAULT 0,
+  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_products_slug (slug),
+  KEY idx_products_cat_status (category_id, status),
+  KEY idx_products_created (created_at),
+  KEY idx_products_views (views),
+  CONSTRAINT fk_products_category FOREIGN KEY (category_id)
+    REFERENCES categories(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Table structure for table `product_variants`
---
+CREATE TABLE product_images (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  product_id INT          NOT NULL,
+  image_path VARCHAR(255) NOT NULL,
+  is_main    TINYINT(1)   NOT NULL DEFAULT 0,
+  sort_order INT          NOT NULL DEFAULT 0,
+  KEY idx_pi_product_main (product_id, is_main),
+  CONSTRAINT fk_pi_product FOREIGN KEY (product_id)
+    REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-DROP TABLE IF EXISTS `product_variants`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `product_variants` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `product_id` int(11) NOT NULL,
-  `size` varchar(10) DEFAULT NULL,
-  `color` varchar(30) DEFAULT NULL,
-  `stock` int(11) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_variant` (`product_id`,`size`,`color`),
-  CONSTRAINT `fk_pv_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=267 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+CREATE TABLE product_variants (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  product_id INT          NOT NULL,
+  size       VARCHAR(20)  NOT NULL,
+  color      VARCHAR(50)  NOT NULL,
+  stock      INT          NOT NULL DEFAULT 0,
+  image_path VARCHAR(255) DEFAULT NULL,
+  UNIQUE KEY uq_variant (product_id, size, color),
+  KEY idx_variants_product (product_id),
+  KEY idx_variants_stock (stock),
+  CONSTRAINT fk_pv_product FOREIGN KEY (product_id)
+    REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `product_variants`
---
+CREATE TABLE carts (
+  id      INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  UNIQUE KEY uq_carts_user (user_id),
+  CONSTRAINT fk_carts_user FOREIGN KEY (user_id)
+    REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-LOCK TABLES `product_variants` WRITE;
-/*!40000 ALTER TABLE `product_variants` DISABLE KEYS */;
-INSERT INTO `product_variants` VALUES
-(1,1,'S','Trắng',17),
-(2,1,'M','Trắng',24),
-(3,1,'L','Trắng',31),
-(4,1,'S','Đen',13),
-(5,1,'M','Đen',20),
-(6,1,'L','Đen',27),
-(7,1,'S','Xám',34),
-(8,1,'M','Xám',16),
-(9,1,'L','Xám',23),
-(10,2,'S','Trắng',30),
-(11,2,'M','Trắng',12),
-(12,2,'L','Trắng',19),
-(13,2,'S','Be',26),
-(14,2,'M','Be',33),
-(15,2,'L','Be',15),
-(16,2,'S','Xám',22),
-(17,2,'M','Xám',29),
-(18,2,'L','Xám',11),
-(19,3,'S','Đen',18),
-(20,3,'M','Đen',25),
-(21,3,'L','Đen',32),
-(22,3,'S','Trắng',14),
-(23,3,'M','Trắng',21),
-(24,3,'L','Trắng',28),
-(25,4,'S','Xám',10),
-(26,4,'M','Xám',17),
-(27,4,'L','Xám',24),
-(28,4,'S','Đen',31),
-(29,4,'M','Đen',13),
-(30,4,'L','Đen',20),
-(31,4,'S','Xanh rêu',27),
-(32,4,'M','Xanh rêu',34),
-(33,4,'L','Xanh rêu',16),
-(34,5,'S','Đen',0),
-(35,5,'M','Đen',30),
-(36,5,'L','Đen',12),
-(37,5,'S','Trắng',19),
-(38,5,'M','Trắng',26),
-(39,5,'L','Trắng',33),
-(40,5,'S','Hồng',15),
-(41,5,'M','Hồng',22),
-(42,5,'L','Hồng',29),
-(43,6,'S','Xanh navy',11),
-(44,6,'M','Xanh navy',18),
-(45,6,'L','Xanh navy',25),
-(46,6,'XL','Xanh navy',32),
-(47,6,'S','Trắng',14),
-(48,6,'M','Trắng',21),
-(49,6,'L','Trắng',28),
-(50,6,'XL','Trắng',10),
-(51,6,'S','Đen',17),
-(52,6,'M','Đen',24),
-(53,6,'L','Đen',31),
-(54,6,'XL','Đen',13),
-(55,7,'S','Xám',20),
-(56,7,'M','Xám',27),
-(57,7,'L','Xám',34),
-(58,7,'XL','Xám',16),
-(59,7,'S','Đen',23),
-(60,7,'M','Đen',30),
-(61,7,'L','Đen',12),
-(62,7,'XL','Đen',19),
-(63,7,'S','Trắng',26),
-(64,7,'M','Trắng',33),
-(65,7,'L','Trắng',15),
-(66,7,'XL','Trắng',22),
-(67,8,'S','Trắng',29),
-(68,8,'M','Trắng',11),
-(69,8,'L','Trắng',18),
-(70,8,'XL','Trắng',25),
-(71,8,'S','Xanh nhạt',32),
-(72,8,'M','Xanh nhạt',14),
-(73,8,'L','Xanh nhạt',21),
-(74,8,'XL','Xanh nhạt',28),
-(75,9,'S','Kẻ sọc xanh',10),
-(76,9,'M','Kẻ sọc xanh',17),
-(77,9,'L','Kẻ sọc xanh',24),
-(78,9,'XL','Kẻ sọc xanh',31),
-(79,9,'S','Kẻ sọc đen',13),
-(80,9,'M','Kẻ sọc đen',20),
-(81,9,'L','Kẻ sọc đen',27),
-(82,9,'XL','Kẻ sọc đen',34),
-(83,9,'S','Kẻ sọc đỏ đô',16),
-(84,9,'M','Kẻ sọc đỏ đô',23),
-(85,9,'L','Kẻ sọc đỏ đô',30),
-(86,9,'XL','Kẻ sọc đỏ đô',12),
-(87,10,'S','Be',19),
-(88,10,'M','Be',26),
-(89,10,'L','Be',33),
-(90,10,'XL','Be',15),
-(91,10,'S','Trắng',22),
-(92,10,'M','Trắng',29),
-(93,10,'L','Trắng',11),
-(94,10,'XL','Trắng',18),
-(95,10,'S','Xanh rêu',25),
-(96,10,'M','Xanh rêu',32),
-(97,10,'L','Xanh rêu',14),
-(98,10,'XL','Xanh rêu',21),
-(99,11,'S','Xanh nhạt',28),
-(100,11,'M','Xanh nhạt',10),
-(101,11,'L','Xanh nhạt',17),
-(102,11,'XL','Xanh nhạt',24),
-(103,11,'S','Xanh đậm',31),
-(104,11,'M','Xanh đậm',13),
-(105,11,'L','Xanh đậm',20),
-(106,11,'XL','Xanh đậm',27),
-(107,12,'S','Đen phối trắng',34),
-(108,12,'M','Đen phối trắng',16),
-(109,12,'L','Đen phối trắng',23),
-(110,12,'XL','Đen phối trắng',30),
-(111,12,'S','Xanh navy phối trắng',12),
-(112,12,'M','Xanh navy phối trắng',19),
-(113,12,'L','Xanh navy phối trắng',26),
-(114,12,'XL','Xanh navy phối trắng',33),
-(115,13,'S','Đen',2),
-(116,13,'M','Đen',22),
-(117,13,'L','Đen',29),
-(118,13,'XL','Đen',11),
-(119,13,'S','Xanh rêu',18),
-(120,13,'M','Xanh rêu',25),
-(121,13,'L','Xanh rêu',32),
-(122,13,'XL','Xanh rêu',14),
-(123,14,'S','Đen',21),
-(124,14,'M','Đen',28),
-(125,14,'L','Đen',10),
-(126,14,'XL','Đen',17),
-(127,14,'S','Nâu bò',24),
-(128,14,'M','Nâu bò',31),
-(129,14,'L','Nâu bò',13),
-(130,14,'XL','Nâu bò',20),
-(131,15,'S','Xanh wash',27),
-(132,15,'M','Xanh wash',34),
-(133,15,'L','Xanh wash',16),
-(134,15,'XL','Xanh wash',23),
-(135,15,'S','Đen denim',30),
-(136,15,'M','Đen denim',12),
-(137,15,'L','Đen denim',19),
-(138,15,'XL','Đen denim',26),
-(139,16,'S','Xám tiêu',33),
-(140,16,'M','Xám tiêu',15),
-(141,16,'L','Xám tiêu',22),
-(142,16,'XL','Xám tiêu',29),
-(143,16,'S','Đen',11),
-(144,16,'M','Đen',18),
-(145,16,'L','Đen',25),
-(146,16,'XL','Đen',32),
-(147,16,'S','Xanh pastel',14),
-(148,16,'M','Xanh pastel',21),
-(149,16,'L','Xanh pastel',28),
-(150,16,'XL','Xanh pastel',10),
-(151,17,'S','Xám chì',17),
-(152,17,'M','Xám chì',24),
-(153,17,'L','Xám chì',31),
-(154,17,'XL','Xám chì',13),
-(155,17,'S','Đen',20),
-(156,17,'M','Đen',27),
-(157,17,'L','Đen',34),
-(158,17,'XL','Đen',16),
-(159,17,'S','Be',23),
-(160,17,'M','Be',30),
-(161,17,'L','Be',12),
-(162,17,'XL','Be',19),
-(163,18,'S','Đen',26),
-(164,18,'M','Đen',33),
-(165,18,'L','Đen',15),
-(166,18,'XL','Đen',22),
-(167,18,'S','Trắng kem',29),
-(168,18,'M','Trắng kem',11),
-(169,18,'L','Trắng kem',18),
-(170,18,'XL','Trắng kem',25),
-(171,19,'S','Đen',32),
-(172,19,'M','Đen',14),
-(173,19,'L','Đen',21),
-(174,19,'XL','Đen',28),
-(175,19,'S','Xám ghi',10),
-(176,19,'M','Xám ghi',17),
-(177,19,'L','Xám ghi',24),
-(178,19,'XL','Xám ghi',31),
-(179,20,'S','Đen',13),
-(180,20,'M','Đen',20),
-(181,20,'L','Đen',27),
-(182,20,'XL','Đen',34),
-(183,20,'S','Xanh than',16),
-(184,20,'M','Xanh than',23),
-(185,20,'L','Xanh than',30),
-(186,20,'XL','Xanh than',12),
-(187,21,'29','Xanh đậm',19),
-(188,21,'30','Xanh đậm',26),
-(189,21,'31','Xanh đậm',33),
-(190,21,'32','Xanh đậm',15),
-(191,21,'29','Đen',22),
-(192,21,'30','Đen',29),
-(193,21,'31','Đen',11),
-(194,21,'32','Đen',18),
-(195,22,'29','Xanh nhạt',25),
-(196,22,'30','Xanh nhạt',32),
-(197,22,'31','Xanh nhạt',14),
-(198,22,'32','Xanh nhạt',21),
-(199,22,'29','Xanh retro',28),
-(200,22,'30','Xanh retro',10),
-(201,22,'31','Xanh retro',17),
-(202,22,'32','Xanh retro',24),
-(203,23,'29','Xanh wash rách',31),
-(204,23,'30','Xanh wash rách',13),
-(205,23,'31','Xanh wash rách',20),
-(206,23,'32','Xanh wash rách',27),
-(207,23,'29','Đen wash rách',34),
-(208,23,'30','Đen wash rách',16),
-(209,23,'31','Đen wash rách',23),
-(210,23,'32','Đen wash rách',30),
-(211,24,'29','Xanh nhạt',12),
-(212,24,'30','Xanh nhạt',19),
-(213,24,'31','Xanh nhạt',26),
-(214,24,'32','Xanh nhạt',33),
-(215,24,'29','Đen denim',15),
-(216,24,'30','Đen denim',22),
-(217,24,'31','Đen denim',29),
-(218,24,'32','Đen denim',11),
-(219,25,'M','Đen',18),
-(220,25,'L','Đen',25),
-(221,25,'XL','Đen',32),
-(222,25,'M','Xám',14),
-(223,25,'L','Xám',21),
-(224,25,'XL','Xám',28),
-(225,25,'M','Xanh than',10),
-(226,25,'L','Xanh than',17),
-(227,25,'XL','Xanh than',24),
-(228,26,'S','Hoa vàng vintage',31),
-(229,26,'M','Hoa vàng vintage',13),
-(230,26,'L','Hoa vàng vintage',20),
-(231,26,'S','Hoa xanh pastel',27),
-(232,26,'M','Hoa xanh pastel',34),
-(233,26,'L','Hoa xanh pastel',16),
-(234,27,'S','Đen',23),
-(235,27,'M','Đen',30),
-(236,27,'L','Đen',12),
-(237,27,'S','Be cát',19),
-(238,27,'M','Be cát',26),
-(239,27,'L','Be cát',33),
-(240,27,'S','Hồng phấn',15),
-(241,27,'M','Hồng phấn',22),
-(242,27,'L','Hồng phấn',29),
-(243,28,'S','Đỏ rượu',11),
-(244,28,'M','Đỏ rượu',18),
-(245,28,'L','Đỏ rượu',25),
-(246,28,'S','Trắng ngọc',32),
-(247,28,'M','Trắng ngọc',14),
-(248,28,'L','Trắng ngọc',21),
-(249,28,'S','Đen tuyền',28),
-(250,28,'M','Đen tuyền',10),
-(251,28,'L','Đen tuyền',17),
-(252,29,'S','Đen',24),
-(253,29,'M','Đen',31),
-(254,29,'L','Đen',13),
-(255,29,'S','Xám ghi',20),
-(256,29,'M','Xám ghi',27),
-(257,29,'L','Xám ghi',34),
-(258,29,'S','Nâu tây',16),
-(259,29,'M','Nâu tây',23),
-(260,29,'L','Nâu tây',30),
-(261,30,'S','Kem be',12),
-(262,30,'M','Kem be',19),
-(263,30,'L','Kem be',26),
-(264,30,'S','Hồng đất',33),
-(265,30,'M','Hồng đất',15),
-(266,30,'L','Hồng đất',22);
-/*!40000 ALTER TABLE `product_variants` ENABLE KEYS */;
-UNLOCK TABLES;
+CREATE TABLE cart_items (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  cart_id    INT NOT NULL,
+  variant_id INT NOT NULL,
+  quantity   INT NOT NULL DEFAULT 1,
+  UNIQUE KEY uq_cart_variant (cart_id, variant_id),
+  CONSTRAINT fk_ci_cart FOREIGN KEY (cart_id)
+    REFERENCES carts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_ci_variant FOREIGN KEY (variant_id)
+    REFERENCES product_variants(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Table structure for table `products`
---
+CREATE TABLE coupons (
+  id             INT AUTO_INCREMENT PRIMARY KEY,
+  code           VARCHAR(30)   NOT NULL,
+  discount_type  ENUM('percent','amount') NOT NULL DEFAULT 'percent',
+  discount_value DECIMAL(12,0) NOT NULL,
+  min_order      DECIMAL(12,0) NOT NULL DEFAULT 0,
+  expires_at     DATETIME      DEFAULT NULL,
+  usage_limit    INT           DEFAULT NULL,
+  UNIQUE KEY uq_coupons_code (code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-DROP TABLE IF EXISTS `products`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `products` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(200) NOT NULL,
-  `slug` varchar(220) NOT NULL,
-  `price` decimal(12,0) NOT NULL,
-  `sale_price` decimal(12,0) DEFAULT NULL,
-  `description` text DEFAULT NULL,
-  `category_id` int(11) NOT NULL,
-  `status` tinyint(1) NOT NULL DEFAULT 1,
-  `views` int(11) NOT NULL DEFAULT 0,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_products_slug` (`slug`),
-  KEY `idx_products_category` (`category_id`),
-  KEY `idx_products_status_created` (`status`,`created_at`),
-  KEY `idx_products_price` (`price`),
-  FULLTEXT KEY `ft_products_name` (`name`),
-  CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+CREATE TABLE orders (
+  id             INT AUTO_INCREMENT PRIMARY KEY,
+  user_id        INT           NOT NULL,
+  receiver_name  VARCHAR(100)  NOT NULL,
+  phone          VARCHAR(20)   NOT NULL,
+  address        VARCHAR(255)  NOT NULL,
+  total          DECIMAL(12,0) NOT NULL,
+  payment_method ENUM('cod','bank') NOT NULL DEFAULT 'cod',
+  status         ENUM('pending','confirmed','shipping','completed','cancelled') NOT NULL DEFAULT 'pending',
+  coupon_id      INT           DEFAULT NULL,
+  created_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_orders_user (user_id),
+  KEY idx_orders_status_created (status, created_at),
+  KEY idx_orders_coupon (coupon_id),
+  CONSTRAINT fk_orders_user FOREIGN KEY (user_id)
+    REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_orders_coupon FOREIGN KEY (coupon_id)
+    REFERENCES coupons(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `products`
---
+CREATE TABLE order_items (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  order_id   INT           NOT NULL,
+  product_id INT           NOT NULL,
+  variant_id INT           NOT NULL,
+  quantity   INT           NOT NULL DEFAULT 1,
+  price      DECIMAL(12,0) NOT NULL,
+  KEY idx_oi_order (order_id),
+  CONSTRAINT fk_oi_order FOREIGN KEY (order_id)
+    REFERENCES orders(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_oi_product FOREIGN KEY (product_id)
+    REFERENCES products(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_oi_variant FOREIGN KEY (variant_id)
+    REFERENCES product_variants(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-LOCK TABLES `products` WRITE;
-/*!40000 ALTER TABLE `products` DISABLE KEYS */;
-INSERT INTO `products` VALUES
-(1,'Áo thun basic cotton cổ tròn','ao-thun-basic-cotton-co-tron',189000,149000,'<p>Áo thun cotton 100% mềm mịn, thoáng mát, form regular dễ phối đồ hàng ngày.</p>',1,1,150,'2026-09-04 10:00:00'),
-(2,'Áo thun oversize form rộng unisex','ao-thun-oversize-form-rong',249000,NULL,'<p>Form oversize phong cách streetwear Hàn Quốc, vải dày 250gsm không bai dão.</p>',1,1,95,'2026-09-07 10:00:00'),
-(3,'Áo thun in hình graphic cá tính','ao-thun-in-hinh-graphic',229000,NULL,'<p>Họa tiết in sắc nét, độ bền màu cao, giặt máy thoải mái không lo bong tróc.</p>',1,1,168,'2026-09-13 10:00:00'),
-(4,'Áo thun tay dài thu đông','ao-thun-tay-dai-thu-dong',279000,NULL,'<p>Chất liệu cotton co giãn nhẹ, giữ ấm vừa phải cho những ngày se lạnh.</p>',1,1,242,'2026-09-19 10:00:00'),
-(5,'Áo croptop nữ ôm body tôn dáng','ao-croptop-nu-om-body',169000,129000,'<p>Croptop co giãn 4 chiều, ôm sát vòng eo thon gọn, dễ mix cùng quần cạp cao.</p>',1,1,205,'2026-09-16 10:00:00'),
-(6,'Áo polo nam vải cá sấu pique','ao-polo-nam-vai-ca-sau',299000,259000,'<p>Polo pique dệt tổ ong thấm hút mồ hôi, cổ dệt bền form sang trọng.</p>',2,1,131,'2026-09-10 10:00:00'),
-(7,'Áo polo cổ bẻ thể thao năng động','ao-polo-co-be-the-thao',319000,NULL,'<p>Kiểu dáng thể thao khỏe khoắn, vải co giãn vận động cực kỳ thoải mái.</p>',2,1,110,'2026-09-12 10:00:00'),
-(8,'Áo sơ mi trắng công sở chống nhăn','ao-so-mi-trang-cong-so',349000,NULL,'<p>Sơ mi trắng chống nhăn cao cấp từ sợi Bamboo, thoáng mát cả ngày.</p>',2,1,145,'2026-09-22 10:00:00'),
-(9,'Áo sơ mi kẻ sọc cao cấp','ao-so-mi-ke-soc',329000,279000,'<p>Áo sơ mi họa tiết kẻ sọc thanh lịch. Đầy đủ 3 màu: Kẻ sọc xanh, Kẻ sọc đen, Kẻ sọc đỏ đô.</p>',2,1,166,'2026-09-25 10:00:00'),
-(10,'Áo sơ mi linen tay ngắn thoáng mát','ao-so-mi-linen-tay-ngan',369000,NULL,'<p>Chất liệu 100% linen tự nhiên, thấm hút mồ hôi tối ưu, phong cách phóng khoáng.</p>',2,1,103,'2026-09-28 10:00:00'),
-(11,'Áo khoác denim jean unisex','ao-khoac-jean-unisex',649000,NULL,'<p>Jacket denim wash nhẹ, form rộng unisex, phong cách bụi bặm đường phố.</p>',3,1,84,'2026-09-11 10:00:00'),
-(12,'Áo khoác varsity bóng chày','ao-khoac-varsity-bong-chay',629000,549000,'<p>Áo khoác varsity phong cách học đường năng động, phối màu tương phản cá tính.</p>',3,1,175,'2026-09-18 10:00:00'),
-(13,'Áo khoác bomber dù 2 lớp chống gió','ao-bomber-du-2-lop',589000,499000,'<p>Bomber vải dù cản gió và chống nước nhẹ, lót trong mềm mại giữ ấm.</p>',7,1,121,'2026-09-14 10:00:00'),
-(14,'Áo khoác bomber da PU cao cấp','ao-bomber-da-pu',749000,NULL,'<p>Chất da PU cao cấp chống nổ, lót lụa sang trọng, tôn phong cách nam tính.</p>',7,1,158,'2026-09-17 10:00:00'),
-(15,'Áo khoác jean basic wash bụi bặm','ao-khoac-jean-basic',599000,519000,'<p>Chất denim wash nhẹ cổ điển, đường may chỉ nổi tinh xảo, khuy kim loại đúc.</p>',3,1,98,'2026-09-19 10:00:00'),
-(16,'Hoodie nỉ bông form rộng ấm áp','hoodie-ni-bong-form-rong',449000,NULL,'<p>Nỉ bông 380gsm dày dặn, mũ 2 lớp đứng form, túi kangaroo rộng rãi tiện lợi.</p>',8,1,195,'2026-09-20 10:00:00'),
-(17,'Hoodie zip khóa kéo nỉ chân cua','hoodie-zip-khoa-keo',479000,419000,'<p>Hoodie khóa kéo dễ mặc, vải nỉ da cá thoáng khí, khóa kéo kim loại mượt mà.</p>',8,1,232,'2026-09-23 10:00:00'),
-(18,'Hoodie in hình graphic streetwear','hoodie-in-hinh-graphic',469000,NULL,'<p>Họa tiết in nổi bật sau lưng, form rộng oversize phong cách Gen Z năng động.</p>',8,1,160,'2026-09-24 10:00:00'),
-(19,'Hoodie zip basic phong cách tối giản','hoodie-zip-basic',439000,389000,'<p>Form dáng regular thanh thoát, chất nỉ êm ái, thích hợp đi học và dạo phố.</p>',8,1,140,'2026-09-25 10:00:00'),
-(20,'Áo bomber dù thể thao đa năng','ao-bomber-du-the-thao',529000,NULL,'<p>Áo bomber nhẹ thoáng khí, bo tay co giãn tốt, tiện lợi khoác ngoài thể thao.</p>',7,1,115,'2026-09-26 10:00:00'),
-(21,'Quần jean slim fit wash xanh đậm','quan-jean-slim-fit-xanh-dam',549000,NULL,'<p>Jean co giãn 2% spandex, ôm vừa vặn bắp chân, wash xanh đậm lịch lãm.</p>',4,1,214,'2026-09-09 10:00:00'),
-(22,'Quần jean ống rộng cạp cao tôn dáng','quan-jean-ong-rong-nu',529000,459000,'<p>Ống suông rộng cạp cao, tôn chân dài và che khuyết điểm chân hoàn hảo.</p>',4,1,251,'2026-09-12 10:00:00'),
-(23,'Quần jean rách gối bụi bặm cá tính','quan-jean-rach-goi',579000,NULL,'<p>Cào rách gối thủ công tạo điểm nhấn mạnh mẽ, phong cách streetwear đường phố.</p>',4,1,138,'2026-09-15 10:00:00'),
-(24,'Quần short jean rách gấu năng động','quan-short-jean-nam',399000,349000,'<p>Short jean mùa hè thoáng mát, gấu quần xước nhẹ phong cách trẻ trung.</p>',4,1,112,'2026-09-21 10:00:00'),
-(25,'Quần short thể thao co giãn thoáng khí','quan-short-the-thao-nam-nu',289000,249000,'<p>Vải dù co giãn 4 chiều siêu nhẹ, nhanh khô, lưng thun dây rút thoải mái.</p>',4,1,95,'2026-09-22 10:00:00'),
-(26,'Váy midi hoa nhí vintage dáng dài','vay-midi-hoa-nhi',459000,NULL,'<p>Váy midi hoa nhí vintage, chất voan tơ mềm mại kèm lớp lót kín đáo.</p>',5,1,149,'2026-09-24 10:00:00'),
-(27,'Đầm suông công sở thanh lịch','dam-suong-cong-so',489000,429000,'<p>Đầm suông thiết kế tối giản, che khuyết điểm eo và bắp tay hiệu quả.</p>',5,1,186,'2026-09-27 10:00:00'),
-(28,'Đầm maxi dự tiệc chiết eo dáng dài','dam-maxi-du-tiec',699000,NULL,'<p>Đầm maxi dáng dài thướt tha, đường cắt cúp tôn vòng eo sang trọng.</p>',5,1,260,'2026-09-05 10:00:00'),
-(29,'Chân váy chữ A lưng cao tôn dáng','chan-vay-chu-a',289000,NULL,'<p>Chân váy chữ A cạp cao tôn dáng, có quần bảo hộ bên trong an toàn tiện lợi.</p>',5,1,223,'2026-09-02 10:00:00'),
-(30,'Chân váy xếp ly dáng dài thanh lịch','chan-vay-xep-ly-dang-dai',379000,329000,'<p>Xếp ly ép nhiệt vĩnh viễn, chất voan cát 2 lớp dày dặn, bồng bềnh nữ tính.</p>',5,1,147,'2026-09-08 10:00:00');
-/*!40000 ALTER TABLE `products` ENABLE KEYS */;
-UNLOCK TABLES;
+CREATE TABLE reviews (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  product_id INT        NOT NULL,
+  user_id    INT        NOT NULL,
+  rating     TINYINT(1) NOT NULL,
+  comment    TEXT       DEFAULT NULL,
+  status     TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_reviews_product_status (product_id, status),
+  CONSTRAINT fk_reviews_product FOREIGN KEY (product_id)
+    REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_reviews_user FOREIGN KEY (user_id)
+    REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Table structure for table `reviews`
---
+CREATE TABLE wishlists (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT NOT NULL,
+  product_id INT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_wishlist (user_id, product_id),
+  CONSTRAINT fk_wl_user FOREIGN KEY (user_id)
+    REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_wl_product FOREIGN KEY (product_id)
+    REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-DROP TABLE IF EXISTS `reviews`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `reviews` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `product_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `rating` tinyint(4) NOT NULL,
-  `comment` text DEFAULT NULL,
-  `status` tinyint(1) NOT NULL DEFAULT 0,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `idx_reviews_product` (`product_id`,`status`),
-  KEY `idx_reviews_user` (`user_id`),
-  CONSTRAINT `fk_reviews_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_reviews_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `chk_reviews_rating` CHECK (`rating` between 1 and 5)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+CREATE TABLE banners (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  title      VARCHAR(150) NOT NULL,
+  image_path VARCHAR(255) NOT NULL,
+  link       VARCHAR(255) DEFAULT NULL,
+  sort_order INT          NOT NULL DEFAULT 0,
+  status     TINYINT(1)   NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `reviews`
---
 
-LOCK TABLES `reviews` WRITE;
-/*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
-INSERT INTO `reviews` VALUES
-(1,1,2,5,'Vải mềm mịn, mặc rất thoải mái, chuẩn ảnh mặt trước sau.',1,'2026-10-04 20:00:00'),
-(2,9,2,4,'Áo kẻ sọc đường may đẹp, màu đỏ đô và sọc đen mặc rất tôn da.',1,'2026-10-05 21:10:00'),
-(3,16,3,5,'Hoodie nỉ bông dày dặn ấm cực kỳ, form unisex rất ưng.',1,'2026-10-18 09:00:00'),
-(4,6,3,4,'Áo polo đẹp, vải cá sấu mặc thoáng khí.',1,'2026-10-10 15:30:00'),
-(5,21,3,3,'Quần jean rách cá tính, hơi dài một chút.',1,'2026-10-19 12:45:00');
-/*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO users (id, full_name, email, password_hash, phone, address, avatar, role, status, created_at) VALUES
+  (1, 'Quản trị viên', 'admin@shop.local', '$2y$10$lWIn5om4nh.WMIEx6jPKO.33l9TD0YSbaJ95MYbUyN1Knxm0bkn2u', '0900000001', 'Củ Chi, TP. Hồ Chí Minh', NULL, 'admin', 1, '2026-09-01 08:00:00'),
+  (2, 'Nguyễn Thị Lan', 'lan.nguyen@example.com', '$2y$10$1.Io99/lojPEJVsBNeVAG.m5GJ8rYJqbaBB/qBJofb1OWZCjh0qe.', '0912345678', '12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh', NULL, 'user', 1, '2026-09-10 09:30:00'),
+  (3, 'Trần Văn Minh', 'minh.tran@example.com', '$2y$10$1.Io99/lojPEJVsBNeVAG.m5GJ8rYJqbaBB/qBJofb1OWZCjh0qe.', '0987654321', '45 Lê Lợi, Quận 3, TP. Hồ Chí Minh', NULL, 'user', 1, '2026-09-15 14:20:00'),
+  (4, 'Lê Đăng Khoa', 'khoa@example.com', '$2y$10$1.Io99/lojPEJVsBNeVAG.m5GJ8rYJqbaBB/qBJofb1OWZCjh0qe.', '0933221100', '8 Trần Hưng Đạo, Quận 5, TP. Hồ Chí Minh', NULL, 'user', 0, '2026-09-20 10:00:00');
 
---
--- Table structure for table `users`
---
 
-DROP TABLE IF EXISTS `users`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `users` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `full_name` varchar(100) NOT NULL,
-  `email` varchar(150) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `address` varchar(255) DEFAULT NULL,
-  `avatar` varchar(255) DEFAULT NULL,
-  `role` enum('admin','user') NOT NULL DEFAULT 'user',
-  `status` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_users_email` (`email`),
-  KEY `idx_users_role_status` (`role`,`status`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO categories (id, name, slug, description, parent_id, status) VALUES
+  (1, 'Áo thun', 'ao-thun', 'Áo thun nam nữ chất liệu cotton thoáng mát, form rộng unisex, croptop', NULL, 1),
+  (2, 'Áo sơ mi', 'ao-so-mi', 'Sơ mi công sở, sơ mi caro flannel, sơ mi linen và polo thể thao', NULL, 1),
+  (3, 'Quần jean', 'quan-jean', 'Quần jean ống rộng, slim fit, rách gối, baggy và quần short thời trang', NULL, 1),
+  (4, 'Váy đầm', 'vay-dam', 'Váy midi hoa nhí, đầm công sở, đầm maxi dự tiệc, chân váy chữ A, xếp ly', NULL, 1),
+  (5, 'Áo khoác', 'ao-khoac', 'Áo khoác denim jean, varsity jacket và áo ấm thời trang', NULL, 1),
+  (7, 'Áo khoác bomber', 'ao-khoac-bomber', 'Bomber dù 2 lớp chống gió, bomber da PU cao cấp', 5, 1),
+  (8, 'Hoodie', 'hoodie', 'Áo hoodie nỉ bông form rộng, hoodie zip khóa kéo thời thượng', 5, 1);
 
---
--- Dumping data for table `users`
---
 
-LOCK TABLES `users` WRITE;
-/*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES
-(1,'Quản trị viên','admin@shop.local','$2y$10$lWIn5om4nh.WMIEx6jPKO.33l9TD0YSbaJ95MYbUyN1Knxm0bkn2u','0900000001','Củ Chi, TP. Hồ Chí Minh',NULL,'admin',1,'2026-09-01 08:00:00'),
-(2,'Nguyễn Thị Lan','lan.nguyen@example.com','$2y$10$1.Io99/lojPEJVsBNeVAG.m5GJ8rYJqbaBB/qBJofb1OWZCjh0qe.','0912345678','12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh',NULL,'user',1,'2026-09-10 09:30:00'),
-(3,'Trần Văn Minh','minh.tran@example.com','$2y$10$1.Io99/lojPEJVsBNeVAG.m5GJ8rYJqbaBB/qBJofb1OWZCjh0qe.','0987654321','45 Lê Lợi, Quận 3, TP. Hồ Chí Minh',NULL,'user',1,'2026-09-15 14:20:00'),
-(4,'Lê Đăng Khoa','khoa@example.com','$2y$10$1.Io99/lojPEJVsBNeVAG.m5GJ8rYJqbaBB/qBJofb1OWZCjh0qe.','0933221100','8 Trần Hưng Đạo, Quận 5, TP. Hồ Chí Minh',NULL,'user',0,'2026-09-20 10:00:00');
-/*!40000 ALTER TABLE `users` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO products (id, name, slug, price, sale_price, description, category_id, status, views) VALUES
+  (1, 'Áo thun basic cotton cổ tròn', 'ao-thun-basic-cotton-co-tron', 189000, 149000, '<p>Áo thun cotton 100% 250gsm thoáng mát, form regular fit dễ phối đồ unisex.</p>', 1, 1, 547),
+  (2, 'Áo thun oversize form rộng', 'ao-thun-oversize-form-rong', 229000, 179000, '<p>Áo thun form oversize thụng vai cá tính đậm chất streetwear đường phố.</p>', 1, 1, 594),
+  (3, 'Áo thun in hình graphic', 'ao-thun-in-hinh-graphic', 249000, 199000, '<p>Họa tiết in lụa graphic nổi bật, sắc nét, không bong tróc khi giặt máy.</p>', 1, 1, 641),
+  (4, 'Áo thun tay dài thu đông', 'ao-thun-tay-dai-thu-dong', 259000, NULL, '<p>Áo thun tay dài chất vải cotton dày dặn, giữ ấm nhẹ nhàng cho tiết trời thu đông.</p>', 1, 1, 688),
+  (5, 'Áo croptop nữ ôm body', 'ao-croptop-nu-om-body', 179000, 139000, '<p>Áo croptop ôm dáng tôn vòng eo thon gọn, chất thun gân co giãn 4 chiều.</p>', 1, 1, 735),
+  (6, 'Áo polo cổ bẻ thể thao', 'ao-polo-co-be-the-thao', 279000, 229000, '<p>Áo polo thể thao chất cá sấu mắt chim thoáng khí, bo cổ dệt kim cao cấp.</p>', 2, 1, 782),
+  (7, 'Áo polo trơn basic', 'ao-polo-tron-basic', 259000, NULL, '<p>Thiết kế cổ bẻ trơn thanh lịch, thích hợp cả đi học, đi làm và dạo phố.</p>', 2, 1, 829),
+  (8, 'Áo sơ mi trắng công sở', 'ao-so-mi-trang-cong-so', 289000, 239000, '<p>Áo sơ mi vải lụa tuyết chống nhăn, form đứng chuẩn mực lịch thiệp.</p>', 2, 1, 876),
+  (9, 'Áo sơ mi kẻ sọc', 'ao-so-mi-ke-soc', 299000, 249000, '<p>Họa tiết kẻ sọc thanh mảnh kéo dài dáng người, phong cách smart casual hiện đại.</p>', 2, 1, 923),
+  (10, 'Áo sơ mi linen nữ tay dài', 'ao-so-mi-linen-nu-tay-dai', 319000, 269000, '<p>Chất liệu linen tự nhiên mềm rũ thoáng khí, tông màu pastel dịu dàng nữ tính.</p>', 2, 1, 970),
+  (11, 'Áo sơ mi flannel caro', 'ao-so-mi-flannel-caro', 329000, NULL, '<p>Chất vải flannel dạ mềm ấm, phối caro vintage đậm chất đường phố Mỹ.</p>', 2, 1, 1017),
+  (12, 'Áo khoác denim jean unisex', 'ao-khoac-denim-jean-unisex', 429000, 369000, '<p>Denim wash cao cấp dày dặn, nút kim loại khắc chìm chống gỉ bền bỉ theo năm tháng.</p>', 5, 1, 1064),
+  (13, 'Áo khoác varsity bóng chày', 'ao-khoac-varsity-bong-chay', 469000, 399000, '<p>Form varsity bóng chày bo gân kẻ sọc thể thao, lớp lót dù cách nhiệt cản gió tốt.</p>', 5, 1, 1111),
+  (14, 'Áo bomber dù thể thao', 'ao-bomber-du-the-thao', 399000, 349000, '<p>Vải dù 2 lớp chống thấm nước nhẹ, cản gió giữ ấm hiệu quả cho ngày se lạnh.</p>', 5, 1, 1158),
+  (15, 'Áo hoodie nỉ bông form rộng', 'ao-hoodie-ni-bong-form-rong', 379000, 319000, '<p>Nỉ bông trần bông dày dặn ấm áp, mũ trùm 2 lớp có dây rút tiện dụng.</p>', 5, 1, 1205),
+  (16, 'Áo hoodie zip khóa kéo', 'ao-hoodie-zip-khoa-keo', 389000, NULL, '<p>Khóa kéo kim loại trơn tru, túi kangaroo tiện lợi đựng điện thoại và giữ ấm tay.</p>', 5, 1, 1252),
+  (17, 'Quần jeans straight fit', 'quan-jeans-straight-fit', 389000, 329000, '<p>Ống đứng straight tôn dáng chân dài, vải denim cotton dày có độ co giãn 2% thoải mái.</p>', 3, 1, 1299),
+  (18, 'Quần jean ống rộng nữ', 'quan-jean-ong-rong-nu', 369000, 319000, '<p>Cạp cao che khuyết điểm bụng, ống rộng che bắp chân cực đỉnh cho phái nữ.</p>', 3, 1, 1346),
+  (19, 'Quần jean rách gối', 'quan-jean-rach-goi', 399000, 339000, '<p>Chi tiết rách gối mài xước thủ công phong cách bụi bặm, phá cách cho bạn trẻ.</p>', 3, 1, 1393),
+  (20, 'Quần jean baggy', 'quan-jean-baggy', 359000, NULL, '<p>Dáng baggy đùi rộng gấu ôm nhẹ, dễ mặc phù hợp với mọi vóc dáng.</p>', 3, 1, 1440),
+  (21, 'Quần short jean nam', 'quan-short-jean-nam', 279000, 229000, '<p>Quần lửng jean ngang gối năng động, chất denim co giãn nhẹ cho mùa hè mát mẻ.</p>', 3, 1, 1487),
+  (22, 'Quần short thể thao', 'quan-short-the-thao', 219000, 169000, '<p>Chất dù polyeste thể thao nhẹ tênh, cạp chun có dây rút co giãn tối đa.</p>', 3, 1, 1534),
+  (23, 'Quần short nữ', 'quan-short-nu', 229000, 189000, '<p>Short nữ lưng cao tôn dáng chân, chất kaki mềm mịn thoáng mát.</p>', 3, 1, 1581),
+  (24, 'Quần kaki', 'quan-kaki', 349000, 299000, '<p>Quần dài kaki cotton chống nhăn, phom dáng slimfit vừa vặn chỉn chu.</p>', 3, 1, 1628),
+  (25, 'Quần tây ống rộng', 'quan-tay-ong-rong', 359000, NULL, '<p>Quần âu ống suông rộng xếp ly chuẩn Hàn Quốc, chất vải tuyết mưa mềm rũ thanh lịch.</p>', 3, 1, 1675),
+  (26, 'Váy midi hoa nhí', 'vay-midi-hoa-nhi', 389000, 329000, '<p>Họa tiết hoa nhí nữ tính trên nền voan cát mềm mại, dáng váy xòe bồng bềnh thanh lịch.</p>', 4, 1, 1722),
+  (27, 'Váy midi dáng dài', 'vay-midi-dang-dai', 369000, NULL, '<p>Dáng váy midi qua gối kín đáo, xếp ly nhẹ nhàng thướt tha trong từng bước chân.</p>', 4, 1, 1769),
+  (28, 'Đầm maxi dự tiệc', 'dam-maxi-du-tiec', 549000, 459000, '<p>Đầm maxi hai dây dáng dài quyến rũ, chất lụa satin bóng nhẹ sang trọng cho buổi tiệc đêm.</p>', 4, 1, 1816),
+  (29, 'Chân váy chữ A', 'chan-vay-chu-a', 279000, 229000, '<p>Chân váy dáng chữ A tôn eo giấu hông cực tốt, cạp cao lưng êm mặc cả ngày dễ chịu.</p>', 4, 1, 1863),
+  (30, 'Chân váy xếp ly', 'chan-vay-xep-ly', 329000, 279000, '<p>Xếp ly dập nhiệt công nghệ cao chống bung nếp, phong cách tennis skirt trẻ trung năng động.</p>', 4, 1, 1910);
 
---
--- Table structure for table `wishlists`
---
 
-DROP TABLE IF EXISTS `wishlists`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `wishlists` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `product_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_wishlist` (`user_id`,`product_id`),
-  KEY `fk_wl_product` (`product_id`),
-  CONSTRAINT `fk_wl_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_wl_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO product_images (id, product_id, image_path, is_main, sort_order) VALUES
+  (1, 1, 'uploads/products/Ao-thun-basic-co-tron-den-mat-truoc.jpg', 1, 1),
+  (2, 1, 'uploads/products/Ao-thun-basic-co-tron-den-mat-sau.jpg', 0, 2),
+  (3, 1, 'uploads/products/ao-thun-basic-cotton-co-tron-1.webp', 0, 3),
+  (4, 1, 'uploads/products/ao-thun-basic-cotton-co-tron-2.webp', 0, 4),
+  (5, 1, 'uploads/products/ao-thun-basic-cotton-co-tron-3.webp', 0, 5),
+  (6, 1, 'uploads/products/ao-thun-basic-cotton-co-tron-4.webp', 0, 6),
+  (7, 2, 'uploads/products/Ao-thun-oversize-basic-mat-truoc.jpg', 1, 1),
+  (8, 2, 'uploads/products/Ao-thun-oversize-basic-mat-sau.webp', 0, 2),
+  (9, 2, 'uploads/products/ao-thun-oversize-form-rong-1.webp', 0, 3),
+  (10, 2, 'uploads/products/ao-thun-oversize-form-rong-2.webp', 0, 4),
+  (11, 2, 'uploads/products/ao-thun-oversize-form-rong-3.webp', 0, 5),
+  (12, 2, 'uploads/products/ao-thun-oversize-form-rong-4.webp', 0, 6),
+  (13, 3, 'uploads/products/Ao-thun-in-logo-mat-truoc.jpg', 1, 1),
+  (14, 3, 'uploads/products/Ao-thun-in-logo-mat-sau.webp', 0, 2),
+  (15, 3, 'uploads/products/ao-thun-in-hinh-graphic-1.webp', 0, 3),
+  (16, 3, 'uploads/products/ao-thun-in-hinh-graphic-1-2.webp', 0, 4),
+  (17, 3, 'uploads/products/ao-thun-in-hinh-graphic-3.webp', 0, 5),
+  (18, 3, 'uploads/products/ao-thun-in-hinh-graphic-4.webp', 0, 6),
+  (19, 4, 'uploads/products/ao-thun-tay-dai-thu-dong-1.webp', 1, 1),
+  (20, 4, 'uploads/products/ao-thun-tay-dai-thu-dong-2.webp', 0, 2),
+  (21, 4, 'uploads/products/ao-thun-tay-dai-thu-dong-3.webp', 0, 3),
+  (22, 4, 'uploads/products/ao-thun-tay-dai-thu-dong-4.webp', 0, 4),
+  (23, 4, 'uploads/products/ao-thun-tay-dai-thu-dong-5.webp', 0, 5),
+  (24, 4, 'uploads/products/ao-thun-tay-dai-thu-dong-6.webp', 0, 6),
+  (25, 5, 'uploads/products/Ao-croptop-mat-truoc.jpg', 1, 1),
+  (26, 5, 'uploads/products/Ao-croptop-mat-sau.webp', 0, 2),
+  (27, 5, 'uploads/products/ao-croptop-nu-om-body-3.webp', 0, 3),
+  (28, 5, 'uploads/products/ao-croptop-nu-om-body-4.webp', 0, 4),
+  (29, 5, 'uploads/products/ao-croptop-nu-om-body-5.webp', 0, 5),
+  (30, 5, 'uploads/products/ao-croptop-nu-om-body-6.webp', 0, 6),
+  (31, 6, 'uploads/products/ao-polo-co-be-the-thao-1.webp', 1, 1),
+  (32, 6, 'uploads/products/ao-polo-co-be-the-thao-2.webp', 0, 2),
+  (33, 6, 'uploads/products/ao-polo-co-be-the-thao-3.webp', 0, 3),
+  (34, 6, 'uploads/products/ao-polo-co-be-the-thao-4.webp', 0, 4),
+  (35, 6, 'uploads/products/ao-polo-co-be-the-thao-5.webp', 0, 5),
+  (36, 6, 'uploads/products/Ao-polo-co-be-the-thao-6.jpg', 0, 6),
+  (37, 7, 'uploads/products/Ao-polo-tron-mat-truoc.jpg', 1, 1),
+  (38, 7, 'uploads/products/Ao-polo-tron-mat-sau.webp', 0, 2),
+  (39, 7, 'uploads/products/Ao-polo-co-tron-mat-truoc.jpg', 0, 3),
+  (40, 8, 'uploads/products/ao-so-mi-trang-cong-so-1.webp', 1, 1),
+  (41, 8, 'uploads/products/ao-so-mi-trang-cong-so-2.webp', 0, 2),
+  (42, 8, 'uploads/products/ao-so-mi-trang-cong-so-3.webp', 0, 3),
+  (43, 8, 'uploads/products/ao-so-mi-trang-cong-so-4.webp', 0, 4),
+  (44, 8, 'uploads/products/ao-so-mi-trang-cong-so-5.webp', 0, 5),
+  (45, 8, 'uploads/products/ao-so-mi-trang-cong-so-6.webp', 0, 6),
+  (46, 9, 'uploads/products/ao-so-mi-ke-soc-den-mat-truoc.jpg', 1, 1),
+  (47, 9, 'uploads/products/ao-so-mi-ke-soc-den-mat-sau.jpg', 0, 2),
+  (48, 9, 'uploads/products/ao-so-mi-ke-soc-do-mat-truoc.jpg', 0, 3),
+  (49, 9, 'uploads/products/ao-so-mi-ke-soc-do-mat-sau.jpg', 0, 4),
+  (50, 9, 'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg', 0, 5),
+  (51, 9, 'uploads/products/ao-so-mi-ke-soc-xanh-3.jpg', 0, 6),
+  (52, 10, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-truoc.jpg', 1, 1),
+  (53, 10, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-sau.webp', 0, 2),
+  (54, 11, 'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg', 1, 1),
+  (55, 11, 'uploads/products/ao-so-mi-ke-soc-xanh-3.jpg', 0, 2),
+  (56, 12, 'uploads/products/Ao-khoac-denim-mat-truoc.jpg', 1, 1),
+  (57, 12, 'uploads/products/Ao-khoac-denim-mat-sau.webp', 0, 2),
+  (58, 12, 'uploads/products/ao-khoac-jean-basic-1.webp', 0, 3),
+  (59, 12, 'uploads/products/ao-khoac-jean-basic-2.webp', 0, 4),
+  (60, 12, 'uploads/products/ao-khoac-jean-basic-3.webp', 0, 5),
+  (61, 12, 'uploads/products/ao-khoac-jean-basic-4.webp', 0, 6),
+  (62, 13, 'uploads/products/Ao-khoac-varsity-mat-truoc.jpg', 1, 1),
+  (63, 13, 'uploads/products/Ao-khoac-varsity-mat-sau.webp', 0, 2),
+  (64, 14, 'uploads/products/ao-bomber-du-the-thao-1.webp', 1, 1),
+  (65, 14, 'uploads/products/ao-bomber-du-the-thao-2.webp', 0, 2),
+  (66, 14, 'uploads/products/ao-bomber-du-the-thao-3.webp', 0, 3),
+  (67, 14, 'uploads/products/ao-bomber-du-the-thao-4.webp', 0, 4),
+  (68, 15, 'uploads/products/Ao-khoac-hoodie-oversize-mat-truoc.jpg', 1, 1),
+  (69, 15, 'uploads/products/Ao-khoac-hoodie-oversize-mat-sau.webp', 0, 2),
+  (70, 15, 'uploads/products/hoodie-ni-bong-form-rong-1.webp', 0, 3),
+  (71, 15, 'uploads/products/hoodie-ni-bong-form-rong-2.webp', 0, 4),
+  (72, 15, 'uploads/products/hoodie-ni-bong-form-rong-3.webp', 0, 5),
+  (73, 15, 'uploads/products/hoodie-ni-bong-form-rong-4.webp', 0, 6),
+  (74, 16, 'uploads/products/Ao-khoac-hoodie-zip-mat-truoc.jpg', 1, 1),
+  (75, 16, 'uploads/products/Ao-khoac-hoodie-zip-mat-sau.webp', 0, 2),
+  (76, 16, 'uploads/products/hoodie-zip-khoa-keo-1.webp', 0, 3),
+  (77, 16, 'uploads/products/hoodie-zip-khoa-keo-2.webp', 0, 4),
+  (78, 16, 'uploads/products/hoodie-zip-khoa-keo-3.webp', 0, 5),
+  (79, 16, 'uploads/products/hoodie-zip-khoa-keo-4.webp', 0, 6),
+  (80, 17, 'uploads/products/Quan-jeans-straight-mat-truoc.jpg', 1, 1),
+  (81, 17, 'uploads/products/Quan-jeans-straight-mat-sau.webp', 0, 2),
+  (82, 18, 'uploads/products/Quan-jeans-ong-rong-mat-truoc.jpg', 1, 1),
+  (83, 18, 'uploads/products/Quan-jeans-ong-rong-mat-sau.webp', 0, 2),
+  (84, 18, 'uploads/products/quan-jean-ong-rong-nu-1.webp', 0, 3),
+  (85, 18, 'uploads/products/quan-jean-ong-rong-nu-2.webp', 0, 4),
+  (86, 18, 'uploads/products/quan-jean-ong-rong-nu-3.webp', 0, 5),
+  (87, 18, 'uploads/products/quan-jean-ong-rong-nu-4.webp', 0, 6),
+  (88, 19, 'uploads/products/quan-jean-rach-goi-1.webp', 1, 1),
+  (89, 19, 'uploads/products/quan-jean-rach-goi-2.webp', 0, 2),
+  (90, 19, 'uploads/products/quan-jean-rach-goi-3.webp', 0, 3),
+  (91, 19, 'uploads/products/quan-jean-rach-goi-4.webp', 0, 4),
+  (92, 19, 'uploads/products/quan-jean-rach-goi-5.webp', 0, 5),
+  (93, 19, 'uploads/products/quan-jean-rach-goi-6.webp', 0, 6),
+  (94, 20, 'uploads/products/quan-jean-baggy-1.jpg', 1, 1),
+  (95, 20, 'uploads/products/quan-jean-baggy-2.jpg', 0, 2),
+  (96, 21, 'uploads/products/quan-short-jean-nam-1.webp', 1, 1),
+  (97, 21, 'uploads/products/quan-short-jean-nam-2.webp', 0, 2),
+  (98, 21, 'uploads/products/quan-short-jean-nam-3.webp', 0, 3),
+  (99, 21, 'uploads/products/quan-short-jean-nam-4.webp', 0, 4),
+  (100, 21, 'uploads/products/quan-short-jean-nam-5.webp', 0, 5),
+  (101, 21, 'uploads/products/quan-short-jean-nam-6.webp', 0, 6),
+  (102, 22, 'uploads/products/Quan-short-the-thao-mat-truoc.jpg', 1, 1),
+  (103, 22, 'uploads/products/Quan-short-the-thao-mat-sau.webp', 0, 2),
+  (104, 22, 'uploads/products/quan-short-the-thao-nam-nu-1.webp', 0, 3),
+  (105, 22, 'uploads/products/quan-short-the-thao-nam-nu-2.webp', 0, 4),
+  (106, 22, 'uploads/products/quan-short-the-thao-nam-nu-3.webp', 0, 5),
+  (107, 22, 'uploads/products/quan-short-the-thao-nam-nu-4.webp', 0, 6),
+  (108, 23, 'uploads/products/Quan-short-nu-mat-truoc.jpg', 1, 1),
+  (109, 23, 'uploads/products/Quan-short-nu-mat-sau.webp', 0, 2),
+  (110, 24, 'uploads/products/Quan-kaki-mat-truoc.jpg', 1, 1),
+  (111, 24, 'uploads/products/Quan-kaki-mat-sau.webp', 0, 2),
+  (112, 25, 'uploads/products/Quan-tay-ong-rong-mat-truoc.jpg', 1, 1),
+  (113, 25, 'uploads/products/Quan-tay-ong-rong-mat-sau.webp', 0, 2),
+  (114, 26, 'uploads/products/vay-midi-hoa-nhi-1.jpg', 1, 1),
+  (115, 26, 'uploads/products/vay-midi-hoa-nhi-2.jpg', 0, 2),
+  (116, 27, 'uploads/products/vay-midi-dang-dai-2.webp', 1, 1),
+  (117, 27, 'uploads/products/vay-midi-dang-dai-1.webp', 0, 2),
+  (118, 27, 'uploads/products/vay-midi-dang-dai-4.webp', 0, 3),
+  (119, 27, 'uploads/products/vay-midi-dang-dai-3.webp', 0, 4),
+  (120, 28, 'uploads/products/dam-maxi-du-tiec-1.webp', 1, 1),
+  (121, 28, 'uploads/products/dam-maxi-du-tiec-2.webp', 0, 2),
+  (122, 28, 'uploads/products/dam-maxi-du-tiec-3.webp', 0, 3),
+  (123, 28, 'uploads/products/dam-maxi-du-tiec-4.webp', 0, 4),
+  (124, 28, 'uploads/products/dam-maxi-du-tiec-5.webp', 0, 5),
+  (125, 28, 'uploads/products/dam-maxi-du-tiec-6.webp', 0, 6),
+  (126, 29, 'uploads/products/chan-vay-chu-a-2.webp', 1, 1),
+  (127, 29, 'uploads/products/chan-vay-chu-a-1.webp', 0, 2),
+  (128, 29, 'uploads/products/chan-vay-chu-a-4.webp', 0, 3),
+  (129, 29, 'uploads/products/chan-vay-chu-a-3.webp', 0, 4),
+  (130, 29, 'uploads/products/chan-vay-chu-a-6.webp', 0, 5),
+  (131, 29, 'uploads/products/chan-vay-chu-a-5.webp', 0, 6),
+  (132, 30, 'uploads/products/Chan-vay-xep-ly-mat-truoc.jpg', 1, 1),
+  (133, 30, 'uploads/products/Chan-vay-xep-li-mat-sau.webp', 0, 2),
+  (134, 30, 'uploads/products/chan-vay-xep-ly-dang-dai-2.webp', 0, 3),
+  (135, 30, 'uploads/products/chan-vay-xep-ly-dang-dai-3.webp', 0, 4);
 
---
--- Dumping data for table `wishlists`
---
 
-LOCK TABLES `wishlists` WRITE;
-/*!40000 ALTER TABLE `wishlists` DISABLE KEYS */;
-INSERT INTO `wishlists` VALUES
-(1,2,16),
-(2,2,21),
-(3,3,11),
-(4,3,26);
-/*!40000 ALTER TABLE `wishlists` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+INSERT INTO product_variants (id, product_id, size, color, stock, image_path) VALUES
+  (1, 1, 'S', 'Đen', 4, 'uploads/products/Ao-thun-basic-co-tron-den-mat-truoc.jpg'),
+  (2, 1, 'M', 'Đen', 25, 'uploads/products/Ao-thun-basic-co-tron-den-mat-truoc.jpg'),
+  (3, 1, 'L', 'Đen', 28, 'uploads/products/Ao-thun-basic-co-tron-den-mat-truoc.jpg'),
+  (4, 1, 'XL', 'Đen', 31, 'uploads/products/Ao-thun-basic-co-tron-den-mat-truoc.jpg'),
+  (5, 1, 'S', 'Trắng', 2, 'uploads/products/ao-thun-basic-cotton-co-tron-1.webp'),
+  (6, 1, 'M', 'Trắng', 30, 'uploads/products/ao-thun-basic-cotton-co-tron-1.webp'),
+  (7, 1, 'L', 'Trắng', 33, 'uploads/products/ao-thun-basic-cotton-co-tron-1.webp'),
+  (8, 1, 'XL', 'Trắng', 36, 'uploads/products/ao-thun-basic-cotton-co-tron-1.webp'),
+  (9, 1, 'S', 'Xanh rêu', 32, 'uploads/products/ao-thun-basic-cotton-co-tron-3.webp'),
+  (10, 1, 'M', 'Xanh rêu', 35, 'uploads/products/ao-thun-basic-cotton-co-tron-3.webp'),
+  (11, 1, 'L', 'Xanh rêu', 38, 'uploads/products/ao-thun-basic-cotton-co-tron-3.webp'),
+  (12, 1, 'XL', 'Xanh rêu', 3, 'uploads/products/ao-thun-basic-cotton-co-tron-3.webp'),
+  (13, 2, 'S', 'Đen', 29, 'uploads/products/Ao-thun-oversize-basic-mat-truoc.jpg'),
+  (14, 2, 'M', 'Đen', 32, 'uploads/products/Ao-thun-oversize-basic-mat-truoc.jpg'),
+  (15, 2, 'L', 'Đen', 35, 'uploads/products/Ao-thun-oversize-basic-mat-truoc.jpg'),
+  (16, 2, 'XL', 'Đen', 38, 'uploads/products/Ao-thun-oversize-basic-mat-truoc.jpg'),
+  (17, 2, 'S', 'Xám', 34, 'uploads/products/ao-thun-oversize-form-rong-1.webp'),
+  (18, 2, 'M', 'Xám', 37, 'uploads/products/ao-thun-oversize-form-rong-1.webp'),
+  (19, 2, 'L', 'Xám', 40, 'uploads/products/ao-thun-oversize-form-rong-1.webp'),
+  (20, 2, 'XL', 'Xám', 43, 'uploads/products/ao-thun-oversize-form-rong-1.webp'),
+  (21, 2, 'S', 'Xanh rêu', 39, 'uploads/products/ao-thun-oversize-form-rong-3.webp'),
+  (22, 2, 'M', 'Xanh rêu', 42, 'uploads/products/ao-thun-oversize-form-rong-3.webp'),
+  (23, 2, 'L', 'Xanh rêu', 45, 'uploads/products/ao-thun-oversize-form-rong-3.webp'),
+  (24, 2, 'XL', 'Xanh rêu', 48, 'uploads/products/ao-thun-oversize-form-rong-3.webp'),
+  (25, 3, 'S', 'Xám', 36, 'uploads/products/Ao-thun-in-logo-mat-truoc.jpg'),
+  (26, 3, 'M', 'Xám', 39, 'uploads/products/Ao-thun-in-logo-mat-truoc.jpg'),
+  (27, 3, 'L', 'Xám', 42, 'uploads/products/Ao-thun-in-logo-mat-truoc.jpg'),
+  (28, 3, 'XL', 'Xám', 45, 'uploads/products/Ao-thun-in-logo-mat-truoc.jpg'),
+  (29, 3, 'S', 'Trắng', 41, 'uploads/products/ao-thun-in-hinh-graphic-1.webp'),
+  (30, 3, 'M', 'Trắng', 44, 'uploads/products/ao-thun-in-hinh-graphic-1.webp'),
+  (31, 3, 'L', 'Trắng', 47, 'uploads/products/ao-thun-in-hinh-graphic-1.webp'),
+  (32, 3, 'XL', 'Trắng', 15, 'uploads/products/ao-thun-in-hinh-graphic-1.webp'),
+  (33, 3, 'S', 'Đen', 46, 'uploads/products/ao-thun-in-hinh-graphic-3.webp'),
+  (34, 3, 'M', 'Đen', 49, 'uploads/products/ao-thun-in-hinh-graphic-3.webp'),
+  (35, 3, 'L', 'Đen', 17, 'uploads/products/ao-thun-in-hinh-graphic-3.webp'),
+  (36, 3, 'XL', 'Đen', 20, 'uploads/products/ao-thun-in-hinh-graphic-3.webp'),
+  (37, 4, 'S', 'Xanh rêu', 43, 'uploads/products/ao-thun-tay-dai-thu-dong-1.webp'),
+  (38, 4, 'M', 'Xanh rêu', 46, 'uploads/products/ao-thun-tay-dai-thu-dong-1.webp'),
+  (39, 4, 'L', 'Xanh rêu', 49, 'uploads/products/ao-thun-tay-dai-thu-dong-1.webp'),
+  (40, 4, 'XL', 'Xanh rêu', 17, 'uploads/products/ao-thun-tay-dai-thu-dong-1.webp'),
+  (41, 4, 'S', 'Xám', 48, 'uploads/products/ao-thun-tay-dai-thu-dong-3.webp'),
+  (42, 4, 'M', 'Xám', 16, 'uploads/products/ao-thun-tay-dai-thu-dong-3.webp'),
+  (43, 4, 'L', 'Xám', 19, 'uploads/products/ao-thun-tay-dai-thu-dong-3.webp'),
+  (44, 4, 'XL', 'Xám', 22, 'uploads/products/ao-thun-tay-dai-thu-dong-3.webp'),
+  (45, 4, 'S', 'Đen', 18, 'uploads/products/ao-thun-tay-dai-thu-dong-5.webp'),
+  (46, 4, 'M', 'Đen', 21, 'uploads/products/ao-thun-tay-dai-thu-dong-5.webp'),
+  (47, 4, 'L', 'Đen', 24, 'uploads/products/ao-thun-tay-dai-thu-dong-5.webp'),
+  (48, 4, 'XL', 'Đen', 27, 'uploads/products/ao-thun-tay-dai-thu-dong-5.webp'),
+  (49, 5, 'S', 'Đen', 15, 'uploads/products/Ao-croptop-mat-truoc.jpg'),
+  (50, 5, 'M', 'Đen', 18, 'uploads/products/Ao-croptop-mat-truoc.jpg'),
+  (51, 5, 'L', 'Đen', 21, 'uploads/products/Ao-croptop-mat-truoc.jpg'),
+  (52, 5, 'XL', 'Đen', 24, 'uploads/products/Ao-croptop-mat-truoc.jpg'),
+  (53, 5, 'S', 'Nâu', 20, 'uploads/products/ao-croptop-nu-om-body-3.webp'),
+  (54, 5, 'M', 'Nâu', 23, 'uploads/products/ao-croptop-nu-om-body-3.webp'),
+  (55, 5, 'L', 'Nâu', 26, 'uploads/products/ao-croptop-nu-om-body-3.webp'),
+  (56, 5, 'XL', 'Nâu', 29, 'uploads/products/ao-croptop-nu-om-body-3.webp'),
+  (57, 5, 'S', 'Trắng', 25, 'uploads/products/ao-croptop-nu-om-body-5.webp'),
+  (58, 5, 'M', 'Trắng', 28, 'uploads/products/ao-croptop-nu-om-body-5.webp'),
+  (59, 5, 'L', 'Trắng', 31, 'uploads/products/ao-croptop-nu-om-body-5.webp'),
+  (60, 5, 'XL', 'Trắng', 34, 'uploads/products/ao-croptop-nu-om-body-5.webp'),
+  (61, 6, 'S', 'Xám', 22, 'uploads/products/ao-polo-co-be-the-thao-1.webp'),
+  (62, 6, 'M', 'Xám', 25, 'uploads/products/ao-polo-co-be-the-thao-1.webp'),
+  (63, 6, 'L', 'Xám', 28, 'uploads/products/ao-polo-co-be-the-thao-1.webp'),
+  (64, 6, 'XL', 'Xám', 31, 'uploads/products/ao-polo-co-be-the-thao-1.webp'),
+  (65, 6, 'S', 'Trắng', 27, 'uploads/products/ao-polo-co-be-the-thao-3.webp'),
+  (66, 6, 'M', 'Trắng', 30, 'uploads/products/ao-polo-co-be-the-thao-3.webp'),
+  (67, 6, 'L', 'Trắng', 33, 'uploads/products/ao-polo-co-be-the-thao-3.webp'),
+  (68, 6, 'XL', 'Trắng', 36, 'uploads/products/ao-polo-co-be-the-thao-3.webp'),
+  (69, 6, 'S', 'Xanh navy', 32, 'uploads/products/ao-polo-co-be-the-thao-5.webp'),
+  (70, 6, 'M', 'Xanh navy', 35, 'uploads/products/ao-polo-co-be-the-thao-5.webp'),
+  (71, 6, 'L', 'Xanh navy', 38, 'uploads/products/ao-polo-co-be-the-thao-5.webp'),
+  (72, 6, 'XL', 'Xanh navy', 41, 'uploads/products/ao-polo-co-be-the-thao-5.webp'),
+  (73, 7, 'S', 'Trắng', 29, 'uploads/products/Ao-polo-tron-mat-truoc.jpg'),
+  (74, 7, 'M', 'Trắng', 32, 'uploads/products/Ao-polo-tron-mat-truoc.jpg'),
+  (75, 7, 'L', 'Trắng', 35, 'uploads/products/Ao-polo-tron-mat-truoc.jpg'),
+  (76, 7, 'XL', 'Trắng', 38, 'uploads/products/Ao-polo-tron-mat-truoc.jpg'),
+  (77, 7, 'S', 'Xanh navy', 34, 'uploads/products/Ao-polo-co-tron-mat-truoc.jpg'),
+  (78, 7, 'M', 'Xanh navy', 37, 'uploads/products/Ao-polo-co-tron-mat-truoc.jpg'),
+  (79, 7, 'L', 'Xanh navy', 40, 'uploads/products/Ao-polo-co-tron-mat-truoc.jpg'),
+  (80, 7, 'XL', 'Xanh navy', 43, 'uploads/products/Ao-polo-co-tron-mat-truoc.jpg'),
+  (81, 8, 'S', 'Trắng', 36, 'uploads/products/ao-so-mi-trang-cong-so-1.webp'),
+  (82, 8, 'M', 'Trắng', 39, 'uploads/products/ao-so-mi-trang-cong-so-1.webp'),
+  (83, 8, 'L', 'Trắng', 42, 'uploads/products/ao-so-mi-trang-cong-so-1.webp'),
+  (84, 8, 'XL', 'Trắng', 45, 'uploads/products/ao-so-mi-trang-cong-so-1.webp'),
+  (85, 8, 'S', 'Xanh mint', 41, 'uploads/products/ao-so-mi-trang-cong-so-3.webp'),
+  (86, 8, 'M', 'Xanh mint', 44, 'uploads/products/ao-so-mi-trang-cong-so-3.webp'),
+  (87, 8, 'L', 'Xanh mint', 47, 'uploads/products/ao-so-mi-trang-cong-so-3.webp'),
+  (88, 8, 'XL', 'Xanh mint', 15, 'uploads/products/ao-so-mi-trang-cong-so-3.webp'),
+  (89, 8, 'S', 'Xanh nhạt', 46, 'uploads/products/ao-so-mi-trang-cong-so-5.webp'),
+  (90, 8, 'M', 'Xanh nhạt', 49, 'uploads/products/ao-so-mi-trang-cong-so-5.webp'),
+  (91, 8, 'L', 'Xanh nhạt', 17, 'uploads/products/ao-so-mi-trang-cong-so-5.webp'),
+  (92, 8, 'XL', 'Xanh nhạt', 20, 'uploads/products/ao-so-mi-trang-cong-so-5.webp'),
+  (93, 9, 'S', 'Sọc đen', 43, 'uploads/products/ao-so-mi-ke-soc-den-mat-truoc.jpg'),
+  (94, 9, 'M', 'Sọc đen', 46, 'uploads/products/ao-so-mi-ke-soc-den-mat-truoc.jpg'),
+  (95, 9, 'L', 'Sọc đen', 49, 'uploads/products/ao-so-mi-ke-soc-den-mat-truoc.jpg'),
+  (96, 9, 'XL', 'Sọc đen', 17, 'uploads/products/ao-so-mi-ke-soc-den-mat-truoc.jpg'),
+  (97, 9, 'S', 'Sọc đỏ', 48, 'uploads/products/ao-so-mi-ke-soc-do-mat-truoc.jpg'),
+  (98, 9, 'M', 'Sọc đỏ', 16, 'uploads/products/ao-so-mi-ke-soc-do-mat-truoc.jpg'),
+  (99, 9, 'L', 'Sọc đỏ', 19, 'uploads/products/ao-so-mi-ke-soc-do-mat-truoc.jpg'),
+  (100, 9, 'XL', 'Sọc đỏ', 22, 'uploads/products/ao-so-mi-ke-soc-do-mat-truoc.jpg'),
+  (101, 9, 'S', 'Sọc xanh', 18, 'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg'),
+  (102, 9, 'M', 'Sọc xanh', 21, 'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg'),
+  (103, 9, 'L', 'Sọc xanh', 24, 'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg'),
+  (104, 9, 'XL', 'Sọc xanh', 27, 'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg'),
+  (105, 10, 'S', 'Hồng pastel', 15, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-truoc.jpg'),
+  (106, 10, 'M', 'Hồng pastel', 18, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-truoc.jpg'),
+  (107, 10, 'L', 'Hồng pastel', 21, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-truoc.jpg'),
+  (108, 10, 'XL', 'Hồng pastel', 24, 'uploads/products/Ao-so-mi-linen-nu-tay-dai-mat-truoc.jpg'),
+  (109, 11, 'S', 'Caro xanh', 22, 'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg'),
+  (110, 11, 'M', 'Caro xanh', 25, 'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg'),
+  (111, 11, 'L', 'Caro xanh', 28, 'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg'),
+  (112, 11, 'XL', 'Caro xanh', 31, 'uploads/products/ao-so-mi-ke-soc-xanh-1.jpg'),
+  (113, 12, 'S', 'Xanh jean', 29, 'uploads/products/Ao-khoac-denim-mat-truoc.jpg'),
+  (114, 12, 'M', 'Xanh jean', 32, 'uploads/products/Ao-khoac-denim-mat-truoc.jpg'),
+  (115, 12, 'L', 'Xanh jean', 35, 'uploads/products/Ao-khoac-denim-mat-truoc.jpg'),
+  (116, 12, 'XL', 'Xanh jean', 38, 'uploads/products/Ao-khoac-denim-mat-truoc.jpg'),
+  (117, 12, 'S', 'Xanh nhạt', 34, 'uploads/products/ao-khoac-jean-basic-1.webp'),
+  (118, 12, 'M', 'Xanh nhạt', 37, 'uploads/products/ao-khoac-jean-basic-1.webp'),
+  (119, 12, 'L', 'Xanh nhạt', 40, 'uploads/products/ao-khoac-jean-basic-1.webp'),
+  (120, 12, 'XL', 'Xanh nhạt', 43, 'uploads/products/ao-khoac-jean-basic-1.webp'),
+  (121, 12, 'S', 'Đen', 39, 'uploads/products/ao-khoac-jean-basic-3.webp'),
+  (122, 12, 'M', 'Đen', 42, 'uploads/products/ao-khoac-jean-basic-3.webp'),
+  (123, 12, 'L', 'Đen', 45, 'uploads/products/ao-khoac-jean-basic-3.webp'),
+  (124, 12, 'XL', 'Đen', 48, 'uploads/products/ao-khoac-jean-basic-3.webp'),
+  (125, 13, 'S', 'Xám đen', 36, 'uploads/products/Ao-khoac-varsity-mat-truoc.jpg'),
+  (126, 13, 'M', 'Xám đen', 39, 'uploads/products/Ao-khoac-varsity-mat-truoc.jpg'),
+  (127, 13, 'L', 'Xám đen', 42, 'uploads/products/Ao-khoac-varsity-mat-truoc.jpg'),
+  (128, 13, 'XL', 'Xám đen', 45, 'uploads/products/Ao-khoac-varsity-mat-truoc.jpg'),
+  (129, 14, 'S', 'Xám', 43, 'uploads/products/ao-bomber-du-the-thao-1.webp'),
+  (130, 14, 'M', 'Xám', 46, 'uploads/products/ao-bomber-du-the-thao-1.webp'),
+  (131, 14, 'L', 'Xám', 49, 'uploads/products/ao-bomber-du-the-thao-1.webp'),
+  (132, 14, 'XL', 'Xám', 17, 'uploads/products/ao-bomber-du-the-thao-1.webp'),
+  (133, 14, 'S', 'Đỏ đô', 48, 'uploads/products/ao-bomber-du-the-thao-3.webp'),
+  (134, 14, 'M', 'Đỏ đô', 16, 'uploads/products/ao-bomber-du-the-thao-3.webp'),
+  (135, 14, 'L', 'Đỏ đô', 19, 'uploads/products/ao-bomber-du-the-thao-3.webp'),
+  (136, 14, 'XL', 'Đỏ đô', 22, 'uploads/products/ao-bomber-du-the-thao-3.webp'),
+  (137, 15, 'S', 'Xám', 15, 'uploads/products/Ao-khoac-hoodie-oversize-mat-truoc.jpg'),
+  (138, 15, 'M', 'Xám', 18, 'uploads/products/Ao-khoac-hoodie-oversize-mat-truoc.jpg'),
+  (139, 15, 'L', 'Xám', 21, 'uploads/products/Ao-khoac-hoodie-oversize-mat-truoc.jpg'),
+  (140, 15, 'XL', 'Xám', 24, 'uploads/products/Ao-khoac-hoodie-oversize-mat-truoc.jpg'),
+  (141, 15, 'S', 'Đỏ đô', 20, 'uploads/products/hoodie-ni-bong-form-rong-1.webp'),
+  (142, 15, 'M', 'Đỏ đô', 23, 'uploads/products/hoodie-ni-bong-form-rong-1.webp'),
+  (143, 15, 'L', 'Đỏ đô', 26, 'uploads/products/hoodie-ni-bong-form-rong-1.webp'),
+  (144, 15, 'XL', 'Đỏ đô', 29, 'uploads/products/hoodie-ni-bong-form-rong-1.webp'),
+  (145, 15, 'S', 'Xanh navy', 25, 'uploads/products/hoodie-ni-bong-form-rong-3.webp'),
+  (146, 15, 'M', 'Xanh navy', 28, 'uploads/products/hoodie-ni-bong-form-rong-3.webp'),
+  (147, 15, 'L', 'Xanh navy', 31, 'uploads/products/hoodie-ni-bong-form-rong-3.webp'),
+  (148, 15, 'XL', 'Xanh navy', 34, 'uploads/products/hoodie-ni-bong-form-rong-3.webp'),
+  (149, 16, 'S', 'Đen', 22, 'uploads/products/Ao-khoac-hoodie-zip-mat-truoc.jpg'),
+  (150, 16, 'M', 'Đen', 25, 'uploads/products/Ao-khoac-hoodie-zip-mat-truoc.jpg'),
+  (151, 16, 'L', 'Đen', 28, 'uploads/products/Ao-khoac-hoodie-zip-mat-truoc.jpg'),
+  (152, 16, 'XL', 'Đen', 31, 'uploads/products/Ao-khoac-hoodie-zip-mat-truoc.jpg'),
+  (153, 16, 'S', 'Kem', 27, 'uploads/products/hoodie-zip-khoa-keo-1.webp'),
+  (154, 16, 'M', 'Kem', 30, 'uploads/products/hoodie-zip-khoa-keo-1.webp'),
+  (155, 16, 'L', 'Kem', 33, 'uploads/products/hoodie-zip-khoa-keo-1.webp'),
+  (156, 16, 'XL', 'Kem', 36, 'uploads/products/hoodie-zip-khoa-keo-1.webp'),
+  (157, 16, 'S', 'Xám', 32, 'uploads/products/hoodie-zip-khoa-keo-3.webp'),
+  (158, 16, 'M', 'Xám', 35, 'uploads/products/hoodie-zip-khoa-keo-3.webp'),
+  (159, 16, 'L', 'Xám', 38, 'uploads/products/hoodie-zip-khoa-keo-3.webp'),
+  (160, 16, 'XL', 'Xám', 41, 'uploads/products/hoodie-zip-khoa-keo-3.webp'),
+  (161, 17, 'S', 'Xanh jean', 29, 'uploads/products/Quan-jeans-straight-mat-truoc.jpg'),
+  (162, 17, 'M', 'Xanh jean', 32, 'uploads/products/Quan-jeans-straight-mat-truoc.jpg'),
+  (163, 17, 'L', 'Xanh jean', 35, 'uploads/products/Quan-jeans-straight-mat-truoc.jpg'),
+  (164, 17, 'XL', 'Xanh jean', 38, 'uploads/products/Quan-jeans-straight-mat-truoc.jpg'),
+  (165, 18, 'S', 'Xám', 36, 'uploads/products/Quan-jeans-ong-rong-mat-truoc.jpg'),
+  (166, 18, 'M', 'Xám', 39, 'uploads/products/Quan-jeans-ong-rong-mat-truoc.jpg'),
+  (167, 18, 'L', 'Xám', 42, 'uploads/products/Quan-jeans-ong-rong-mat-truoc.jpg'),
+  (168, 18, 'XL', 'Xám', 45, 'uploads/products/Quan-jeans-ong-rong-mat-truoc.jpg'),
+  (169, 18, 'S', 'Xanh nhạt', 41, 'uploads/products/quan-jean-ong-rong-nu-1.webp'),
+  (170, 18, 'M', 'Xanh nhạt', 44, 'uploads/products/quan-jean-ong-rong-nu-1.webp'),
+  (171, 18, 'L', 'Xanh nhạt', 47, 'uploads/products/quan-jean-ong-rong-nu-1.webp'),
+  (172, 18, 'XL', 'Xanh nhạt', 15, 'uploads/products/quan-jean-ong-rong-nu-1.webp'),
+  (173, 18, 'S', 'Xanh đậm', 46, 'uploads/products/quan-jean-ong-rong-nu-3.webp'),
+  (174, 18, 'M', 'Xanh đậm', 49, 'uploads/products/quan-jean-ong-rong-nu-3.webp'),
+  (175, 18, 'L', 'Xanh đậm', 17, 'uploads/products/quan-jean-ong-rong-nu-3.webp'),
+  (176, 18, 'XL', 'Xanh đậm', 20, 'uploads/products/quan-jean-ong-rong-nu-3.webp'),
+  (177, 19, 'S', 'Xanh nhạt', 43, 'uploads/products/quan-jean-rach-goi-1.webp'),
+  (178, 19, 'M', 'Xanh nhạt', 46, 'uploads/products/quan-jean-rach-goi-1.webp'),
+  (179, 19, 'L', 'Xanh nhạt', 49, 'uploads/products/quan-jean-rach-goi-1.webp'),
+  (180, 19, 'XL', 'Xanh nhạt', 17, 'uploads/products/quan-jean-rach-goi-1.webp'),
+  (181, 19, 'S', 'Xám', 48, 'uploads/products/quan-jean-rach-goi-3.webp'),
+  (182, 19, 'M', 'Xám', 16, 'uploads/products/quan-jean-rach-goi-3.webp'),
+  (183, 19, 'L', 'Xám', 19, 'uploads/products/quan-jean-rach-goi-3.webp'),
+  (184, 19, 'XL', 'Xám', 22, 'uploads/products/quan-jean-rach-goi-3.webp'),
+  (185, 19, 'S', 'Xanh đậm', 18, 'uploads/products/quan-jean-rach-goi-5.webp'),
+  (186, 19, 'M', 'Xanh đậm', 21, 'uploads/products/quan-jean-rach-goi-5.webp'),
+  (187, 19, 'L', 'Xanh đậm', 24, 'uploads/products/quan-jean-rach-goi-5.webp'),
+  (188, 19, 'XL', 'Xanh đậm', 27, 'uploads/products/quan-jean-rach-goi-5.webp'),
+  (189, 20, 'S', 'Kem', 15, 'uploads/products/quan-jean-baggy-1.jpg'),
+  (190, 20, 'M', 'Kem', 18, 'uploads/products/quan-jean-baggy-1.jpg'),
+  (191, 20, 'L', 'Kem', 21, 'uploads/products/quan-jean-baggy-1.jpg'),
+  (192, 20, 'XL', 'Kem', 24, 'uploads/products/quan-jean-baggy-1.jpg'),
+  (193, 21, 'S', 'Xanh nhạt', 22, 'uploads/products/quan-short-jean-nam-1.webp'),
+  (194, 21, 'M', 'Xanh nhạt', 25, 'uploads/products/quan-short-jean-nam-1.webp'),
+  (195, 21, 'L', 'Xanh nhạt', 28, 'uploads/products/quan-short-jean-nam-1.webp'),
+  (196, 21, 'XL', 'Xanh nhạt', 31, 'uploads/products/quan-short-jean-nam-1.webp'),
+  (197, 21, 'S', 'Xám', 27, 'uploads/products/quan-short-jean-nam-3.webp'),
+  (198, 21, 'M', 'Xám', 30, 'uploads/products/quan-short-jean-nam-3.webp'),
+  (199, 21, 'L', 'Xám', 33, 'uploads/products/quan-short-jean-nam-3.webp'),
+  (200, 21, 'XL', 'Xám', 36, 'uploads/products/quan-short-jean-nam-3.webp'),
+  (201, 21, 'S', 'Xanh đậm', 32, 'uploads/products/quan-short-jean-nam-5.webp'),
+  (202, 21, 'M', 'Xanh đậm', 35, 'uploads/products/quan-short-jean-nam-5.webp'),
+  (203, 21, 'L', 'Xanh đậm', 38, 'uploads/products/quan-short-jean-nam-5.webp'),
+  (204, 21, 'XL', 'Xanh đậm', 41, 'uploads/products/quan-short-jean-nam-5.webp'),
+  (205, 22, 'S', 'Đen', 29, 'uploads/products/Quan-short-the-thao-mat-truoc.jpg'),
+  (206, 22, 'M', 'Đen', 32, 'uploads/products/Quan-short-the-thao-mat-truoc.jpg'),
+  (207, 22, 'L', 'Đen', 35, 'uploads/products/Quan-short-the-thao-mat-truoc.jpg'),
+  (208, 22, 'XL', 'Đen', 38, 'uploads/products/Quan-short-the-thao-mat-truoc.jpg'),
+  (209, 22, 'S', 'Xanh navy', 34, 'uploads/products/quan-short-the-thao-nam-nu-1.webp'),
+  (210, 22, 'M', 'Xanh navy', 37, 'uploads/products/quan-short-the-thao-nam-nu-1.webp'),
+  (211, 22, 'L', 'Xanh navy', 40, 'uploads/products/quan-short-the-thao-nam-nu-1.webp'),
+  (212, 22, 'XL', 'Xanh navy', 43, 'uploads/products/quan-short-the-thao-nam-nu-1.webp'),
+  (213, 22, 'S', 'Xanh rêu', 39, 'uploads/products/quan-short-the-thao-nam-nu-3.webp'),
+  (214, 22, 'M', 'Xanh rêu', 42, 'uploads/products/quan-short-the-thao-nam-nu-3.webp'),
+  (215, 22, 'L', 'Xanh rêu', 45, 'uploads/products/quan-short-the-thao-nam-nu-3.webp'),
+  (216, 22, 'XL', 'Xanh rêu', 48, 'uploads/products/quan-short-the-thao-nam-nu-3.webp'),
+  (217, 23, 'S', 'Kem', 36, 'uploads/products/Quan-short-nu-mat-truoc.jpg'),
+  (218, 23, 'M', 'Kem', 39, 'uploads/products/Quan-short-nu-mat-truoc.jpg'),
+  (219, 23, 'L', 'Kem', 42, 'uploads/products/Quan-short-nu-mat-truoc.jpg'),
+  (220, 23, 'XL', 'Kem', 45, 'uploads/products/Quan-short-nu-mat-truoc.jpg'),
+  (221, 24, 'S', 'Kem', 43, 'uploads/products/Quan-kaki-mat-truoc.jpg'),
+  (222, 24, 'M', 'Kem', 46, 'uploads/products/Quan-kaki-mat-truoc.jpg'),
+  (223, 24, 'L', 'Kem', 49, 'uploads/products/Quan-kaki-mat-truoc.jpg'),
+  (224, 24, 'XL', 'Kem', 17, 'uploads/products/Quan-kaki-mat-truoc.jpg'),
+  (225, 25, 'S', 'Đen', 15, 'uploads/products/Quan-tay-ong-rong-mat-truoc.jpg'),
+  (226, 25, 'M', 'Đen', 18, 'uploads/products/Quan-tay-ong-rong-mat-truoc.jpg'),
+  (227, 25, 'L', 'Đen', 21, 'uploads/products/Quan-tay-ong-rong-mat-truoc.jpg'),
+  (228, 25, 'XL', 'Đen', 24, 'uploads/products/Quan-tay-ong-rong-mat-truoc.jpg'),
+  (229, 26, 'S', 'Đen hoa', 22, 'uploads/products/vay-midi-hoa-nhi-1.jpg'),
+  (230, 26, 'M', 'Đen hoa', 25, 'uploads/products/vay-midi-hoa-nhi-1.jpg'),
+  (231, 26, 'L', 'Đen hoa', 28, 'uploads/products/vay-midi-hoa-nhi-1.jpg'),
+  (232, 26, 'XL', 'Đen hoa', 31, 'uploads/products/vay-midi-hoa-nhi-1.jpg'),
+  (233, 27, 'S', 'Xanh rêu', 29, 'uploads/products/vay-midi-dang-dai-2.webp'),
+  (234, 27, 'M', 'Xanh rêu', 32, 'uploads/products/vay-midi-dang-dai-2.webp'),
+  (235, 27, 'L', 'Xanh rêu', 35, 'uploads/products/vay-midi-dang-dai-2.webp'),
+  (236, 27, 'XL', 'Xanh rêu', 38, 'uploads/products/vay-midi-dang-dai-2.webp'),
+  (237, 27, 'S', 'Kem', 34, 'uploads/products/vay-midi-dang-dai-4.webp'),
+  (238, 27, 'M', 'Kem', 37, 'uploads/products/vay-midi-dang-dai-4.webp'),
+  (239, 27, 'L', 'Kem', 40, 'uploads/products/vay-midi-dang-dai-4.webp'),
+  (240, 27, 'XL', 'Kem', 43, 'uploads/products/vay-midi-dang-dai-4.webp'),
+  (241, 28, 'S', 'Đen', 36, 'uploads/products/dam-maxi-du-tiec-1.webp'),
+  (242, 28, 'M', 'Đen', 39, 'uploads/products/dam-maxi-du-tiec-1.webp'),
+  (243, 28, 'L', 'Đen', 42, 'uploads/products/dam-maxi-du-tiec-1.webp'),
+  (244, 28, 'XL', 'Đen', 45, 'uploads/products/dam-maxi-du-tiec-1.webp'),
+  (245, 28, 'S', 'Xanh navy', 41, 'uploads/products/dam-maxi-du-tiec-3.webp'),
+  (246, 28, 'M', 'Xanh navy', 44, 'uploads/products/dam-maxi-du-tiec-3.webp'),
+  (247, 28, 'L', 'Xanh navy', 47, 'uploads/products/dam-maxi-du-tiec-3.webp'),
+  (248, 28, 'XL', 'Xanh navy', 15, 'uploads/products/dam-maxi-du-tiec-3.webp'),
+  (249, 28, 'S', 'Đỏ đô', 46, 'uploads/products/dam-maxi-du-tiec-5.webp'),
+  (250, 28, 'M', 'Đỏ đô', 49, 'uploads/products/dam-maxi-du-tiec-5.webp'),
+  (251, 28, 'L', 'Đỏ đô', 17, 'uploads/products/dam-maxi-du-tiec-5.webp'),
+  (252, 28, 'XL', 'Đỏ đô', 20, 'uploads/products/dam-maxi-du-tiec-5.webp'),
+  (253, 29, 'S', 'Nâu', 43, 'uploads/products/chan-vay-chu-a-2.webp'),
+  (254, 29, 'M', 'Nâu', 46, 'uploads/products/chan-vay-chu-a-2.webp'),
+  (255, 29, 'L', 'Nâu', 49, 'uploads/products/chan-vay-chu-a-2.webp'),
+  (256, 29, 'XL', 'Nâu', 17, 'uploads/products/chan-vay-chu-a-2.webp'),
+  (257, 29, 'S', 'Kem', 48, 'uploads/products/chan-vay-chu-a-4.webp'),
+  (258, 29, 'M', 'Kem', 16, 'uploads/products/chan-vay-chu-a-4.webp'),
+  (259, 29, 'L', 'Kem', 19, 'uploads/products/chan-vay-chu-a-4.webp'),
+  (260, 29, 'XL', 'Kem', 22, 'uploads/products/chan-vay-chu-a-4.webp'),
+  (261, 29, 'S', 'Đen', 18, 'uploads/products/chan-vay-chu-a-6.webp'),
+  (262, 29, 'M', 'Đen', 21, 'uploads/products/chan-vay-chu-a-6.webp'),
+  (263, 29, 'L', 'Đen', 24, 'uploads/products/chan-vay-chu-a-6.webp'),
+  (264, 29, 'XL', 'Đen', 27, 'uploads/products/chan-vay-chu-a-6.webp'),
+  (265, 30, 'S', 'Đen', 15, 'uploads/products/Chan-vay-xep-ly-mat-truoc.jpg'),
+  (266, 30, 'M', 'Đen', 18, 'uploads/products/Chan-vay-xep-ly-mat-truoc.jpg'),
+  (267, 30, 'L', 'Đen', 21, 'uploads/products/Chan-vay-xep-ly-mat-truoc.jpg'),
+  (268, 30, 'XL', 'Đen', 24, 'uploads/products/Chan-vay-xep-ly-mat-truoc.jpg'),
+  (269, 30, 'S', 'Nâu', 20, 'uploads/products/chan-vay-xep-ly-dang-dai-2.webp'),
+  (270, 30, 'M', 'Nâu', 23, 'uploads/products/chan-vay-xep-ly-dang-dai-2.webp'),
+  (271, 30, 'L', 'Nâu', 26, 'uploads/products/chan-vay-xep-ly-dang-dai-2.webp'),
+  (272, 30, 'XL', 'Nâu', 29, 'uploads/products/chan-vay-xep-ly-dang-dai-2.webp'),
+  (273, 30, 'S', 'Xám', 25, 'uploads/products/chan-vay-xep-ly-dang-dai-3.webp'),
+  (274, 30, 'M', 'Xám', 28, 'uploads/products/chan-vay-xep-ly-dang-dai-3.webp'),
+  (275, 30, 'L', 'Xám', 31, 'uploads/products/chan-vay-xep-ly-dang-dai-3.webp'),
+  (276, 30, 'XL', 'Xám', 34, 'uploads/products/chan-vay-xep-ly-dang-dai-3.webp');
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-11-13 18:55:30
+INSERT INTO coupons (id, code, discount_type, discount_value, min_order, expires_at, usage_limit) VALUES
+  (1, 'WELCOME10', 'percent', 10, 300000, '2026-12-31 23:59:59', 100),
+  (2, 'GIAM50K', 'amount', 50000, 500000, '2026-12-31 23:59:59', 50),
+  (3, 'SALE20', 'percent', 20, 800000, '2026-11-30 23:59:59', 30),
+  (4, 'HETHAN', 'percent', 15, 0, '2026-01-31 23:59:59', 10);
+
+
+INSERT INTO orders (id, user_id, receiver_name, phone, address, total, payment_method, status, coupon_id, created_at) VALUES
+  (1, 2, 'Nguyễn Thị Lan', '0912345678', '12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh', 762300, 'cod', 'completed', 1, '2026-10-01 09:15:00'),
+  (2, 3, 'Trần Văn Minh', '0987654321', '45 Lê Lợi, Quận 3, TP. Hồ Chí Minh', 788000, 'bank', 'shipping', NULL, '2026-10-12 14:40:00'),
+  (3, 2, 'Nguyễn Thị Lan', '0912345678', '12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh', 528000, 'cod', 'pending', 2, '2026-10-20 19:05:00'),
+  (4, 3, 'Trần Văn Minh', '0987654321', '45 Lê Lợi, Quận 3, TP. Hồ Chí Minh', 349000, 'cod', 'cancelled', NULL, '2026-10-05 11:30:00'),
+  (5, 2, 'Nguyễn Thị Lan', '0912345678', '12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh', 797000, 'bank', 'confirmed', NULL, '2026-10-21 08:50:00');
+
+
+INSERT INTO order_items (id, order_id, product_id, variant_id, quantity, price) VALUES
+  (1, 1, 1, 2, 2, 149000),
+  (2, 1, 12, 68, 1, 319000),
+  (3, 2, 17, 99, 1, 449000),
+  (4, 2, 21, 125, 1, 389000),
+  (5, 3, 25, 155, 1, 329000),
+  (6, 3, 5, 26, 1, 159000),
+  (7, 4, 7, 38, 1, 249000),
+  (8, 5, 23, 140, 1, 249000),
+  (9, 5, 1, 4, 2, 149000);
+
+
+INSERT INTO reviews (id, product_id, user_id, rating, comment, status, created_at) VALUES
+  (1, 1, 2, 5, 'Vải mềm mịn, mặc rất thoáng mát, đóng gói cẩn thận và giao hàng siêu nhanh!', 1, '2026-10-04 20:00:00'),
+  (2, 12, 2, 4, 'Sơ mi flannel caro form rất đẹp, mặc khoác ngoài chuẩn streetwear.', 1, '2026-10-05 21:10:00'),
+  (3, 17, 3, 5, 'Hoodie nỉ bông dày dặn ấm áp, mũ đứng form cực ưng ý.', 1, '2026-10-18 09:00:00'),
+  (4, 3, 3, 4, 'Áo thun graphic in hình đẹp, chất vải co giãn tốt.', 1, '2026-10-10 15:30:00'),
+  (5, 21, 3, 3, 'Quần jean rách gối cá tính, vải co giãn tốt.', 0, '2026-10-19 12:45:00');
+
+
+INSERT INTO wishlists (id, user_id, product_id) VALUES
+  (1, 2, 17),
+  (2, 2, 23),
+  (3, 3, 12),
+  (4, 3, 25);
+
+
+INSERT INTO carts (id, user_id) VALUES
+  (1, 2);
+
+INSERT INTO cart_items (id, cart_id, variant_id, quantity) VALUES
+  (1, 1, 1, 1),
+  (2, 1, 10, 2);
+
+
+INSERT INTO banners (id, title, image_path, link, sort_order, status) VALUES
+  (1, 'Bộ sưu tập Streetwear Gen Z 2026', 'uploads/banners/banner-1.jpg', 'products.php', 1, 1),
+  (2, 'Sale đến 30% - Áo khoác & Hoodie', 'uploads/banners/banner-2.jpg', 'products.php?category=5', 2, 1),
+  (3, 'Freeship đơn từ 399.000đ', 'uploads/banners/banner-3.jpg', 'products.php', 3, 1);

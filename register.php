@@ -1,7 +1,4 @@
 <?php
-/**
- * Trang đăng ký tài khoản
- */
 
 $pageTitle = 'Đăng ký tài khoản';
 require_once __DIR__ . '/config/config.php';
@@ -9,7 +6,6 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 
-// Nếu đã đăng nhập thì chuyển về trang chủ
 if (isLoggedIn()) {
     redirect('index.php');
 }
@@ -37,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Mật khẩu xác nhận không khớp.';
         } else {
             try {
-                // Kiểm tra trước email đã tồn tại hay chưa
+                
                 $checkStmt = $pdo->prepare("SELECT id FROM users WHERE email = :email LIMIT 1");
                 $checkStmt->execute(['email' => $email]);
 
@@ -57,12 +53,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'password_hash' => $passwordHash,
                     ]);
 
-                    // Đăng ký thành công, tạo thông báo flash và chuyển sang trang đăng nhập
+                    
                     setFlash('success', 'Đăng ký tài khoản thành công! Bạn có thể đăng nhập ngay bây giờ.');
                     redirect('login.php');
                 }
             } catch (PDOException $e) {
-                // Bắt trường hợp race condition (mã lỗi trùng lặp dữ liệu unique 23000)
+                
                 if ($e->getCode() === '23000') {
                     $error = 'Địa chỉ email này đã được đăng ký. Vui lòng thử đăng nhập.';
                 } else {

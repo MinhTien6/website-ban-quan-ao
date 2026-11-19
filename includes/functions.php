@@ -1,25 +1,10 @@
 <?php
-/**
- * Các hàm tiện ích dùng chung trong toàn bộ hệ thống
- */
 
-/**
- * Mã hóa an toàn chuỗi trước khi in ra HTML (chống XSS)
- *
- * @param mixed $value Dữ liệu cần in
- * @return string Chuỗi đã escape an toàn
- */
 function e(mixed $value): string
 {
     return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
 }
 
-/**
- * Chuyển hướng tới một trang tương đối tính từ BASE_URL
- *
- * @param string $path Đường dẫn (ví dụ: 'login.php' hoặc 'admin/index.php')
- * @return never
- */
 function redirect(string $path): never
 {
     $url = BASE_URL . '/' . ltrim($path, '/');
@@ -27,25 +12,12 @@ function redirect(string $path): never
     exit;
 }
 
-/**
- * Định dạng số tiền sang định dạng tiền tệ Việt Nam (VNĐ)
- *
- * @param float|int|string|null $amount Số tiền
- * @return string Chuỗi định dạng, ví dụ: "150.000đ"
- */
 function formatPrice(mixed $amount): string
 {
     $number = (float)($amount ?? 0);
     return number_format($number, 0, ',', '.') . 'đ';
 }
 
-/**
- * Thiết lập thông báo nhanh (Flash message) lưu trong phiên
- *
- * @param string $type Loại thông báo ('success', 'error', 'info', 'warning')
- * @param string $message Nội dung thông báo
- * @return void
- */
 function setFlash(string $type, string $message): void
 {
     if (session_status() === PHP_SESSION_NONE) {
@@ -57,11 +29,6 @@ function setFlash(string $type, string $message): void
     ];
 }
 
-/**
- * Lấy thông báo Flash và tự động xóa khỏi phiên
- *
- * @return array{type: string, message: string}|null
- */
 function getFlash(): ?array
 {
     if (session_status() === PHP_SESSION_NONE) {
@@ -75,12 +42,6 @@ function getFlash(): ?array
     return null;
 }
 
-/**
- * Chuyển chuỗi tiếng Việt có dấu thành chuỗi URL thân thiện (slug)
- *
- * @param string $string Chuỗi ban đầu (ví dụ: "Áo sơ mi kẻ sọc")
- * @return string Chuỗi slug chuẩn (ví dụ: "ao-so-mi-ke-soc")
- */
 function createSlug(string $string): string
 {
     $search = [
@@ -124,17 +85,6 @@ function createSlug(string $string): string
     return trim($slug, '-');
 }
 
-/**
- * Xử lý tải lên tệp tin hình ảnh an toàn
- *
- * @param array $file Mảng $_FILES['tên_input']
- * @param string $subFolder Thư mục con trong public/uploads (vd: 'products', 'banners')
- * @param int $maxSizeMb Dung lượng tối đa tính bằng MB
- * @param array $allowedExtensions Các định dạng ảnh cho phép
- * @param string|null $fileNamePrefix Tiền tố tên tệp, thường là slug sản phẩm
- * @param int $sequence Số thứ tự ảnh trong bộ ảnh của sản phẩm
- * @return array{success: bool, path?: string, error?: string}
- */
 function uploadImage(
     array $file,
     string $subFolder = 'products',
@@ -164,13 +114,13 @@ function uploadImage(
         return ['success' => false, 'error' => 'Chỉ chấp nhận các định dạng ảnh: ' . implode(', ', $allowedExtensions) . '.'];
     }
 
-    // Kiểm tra tính hợp lệ thực sự của file ảnh
+    
     $imageInfo = @getimagesize($file['tmp_name']);
     if ($imageInfo === false) {
         return ['success' => false, 'error' => 'Tệp tin tải lên không phải là ảnh hợp lệ.'];
     }
 
-    // Tạo thư mục nếu chưa tồn tại
+    
     $targetDir = ROOT_PATH . '/public/uploads/' . trim($subFolder, '/');
     if (!is_dir($targetDir) && !mkdir($targetDir, 0755, true) && !is_dir($targetDir)) {
         return ['success' => false, 'error' => 'Không thể tạo thư mục lưu trữ ảnh trên máy chủ.'];
@@ -187,7 +137,7 @@ function uploadImage(
         $fileNameStem = strtolower($safePrefix) . '-' . max(1, $sequence);
     }
 
-    // Tăng số thứ tự nếu tên ảnh đã tồn tại để không ghi đè tệp cũ
+    
     $newFileName = $fileNameStem . '.' . $extension;
     $collisionNumber = 2;
     while (file_exists($targetDir . '/' . $newFileName)) {
@@ -200,7 +150,7 @@ function uploadImage(
         return ['success' => false, 'error' => 'Không thể lưu tệp ảnh vào thư mục đích.'];
     }
 
-    // Trả về đường dẫn tương đối lưu vào CSDL (khớp schema: uploads/products/...)
+    
     $relativeDbPath = 'uploads/' . trim($subFolder, '/') . '/' . $newFileName;
     return [
         'success'  => true,
@@ -209,14 +159,6 @@ function uploadImage(
     ];
 }
 
-/**
- * Tính toán dữ liệu phân trang
- *
- * @param int $totalItems Tổng số mục
- * @param int $currentPage Trang hiện tại
- * @param int $limit Số mục mỗi trang
- * @return array
- */
 function paginate(int $totalItems, int $currentPage = 1, int $limit = 10): array
 {
     $limit = max(1, $limit);
@@ -239,14 +181,6 @@ function paginate(int $totalItems, int $currentPage = 1, int $limit = 10): array
     ];
 }
 
-/**
- * Sinh chuỗi HTML thanh phân trang (Pagination)
- *
- * @param array $pagination Mảng trả về từ hàm paginate()
- * @param string $baseUrl URL gốc (có thể chứa query string)
- * @param string $pageParam Tên tham số query phân trang (mặc định 'page')
- * @return string HTML thanh phân trang
- */
 function renderPagination(array $pagination, string $baseUrl, string $pageParam = 'page'): string
 {
     if (($pagination['total_pages'] ?? 1) <= 1) {
@@ -260,7 +194,7 @@ function renderPagination(array $pagination, string $baseUrl, string $pageParam 
 
     $html = '<div class="pagination">';
 
-    // Nút Trước
+    
     if ($pagination['has_prev']) {
         $prevUrl = e($baseUrl . $separator . $pageParam . '=' . ($currentPage - 1));
         $html .= '<a href="' . $prevUrl . '" class="page-link page-prev">&laquo; Trước</a>';
@@ -268,7 +202,7 @@ function renderPagination(array $pagination, string $baseUrl, string $pageParam 
         $html .= '<span class="page-link page-disabled">&laquo; Trước</span>';
     }
 
-    // Các số trang
+    
     for ($i = 1; $i <= $totalPages; $i++) {
         if ($i === $currentPage) {
             $html .= '<span class="page-link page-active">' . $i . '</span>';
@@ -282,7 +216,7 @@ function renderPagination(array $pagination, string $baseUrl, string $pageParam 
         }
     }
 
-    // Nút Sau
+    
     if ($pagination['has_next']) {
         $nextUrl = e($baseUrl . $separator . $pageParam . '=' . ($currentPage + 1));
         $html .= '<a href="' . $nextUrl . '" class="page-link page-next">Sau &raquo;</a>';
@@ -294,11 +228,6 @@ function renderPagination(array $pagination, string $baseUrl, string $pageParam 
     return $html;
 }
 
-/**
- * Lấy hoặc tạo mã CSRF Token duy nhất trong phiên
- *
- * @return string Mã CSRF token
- */
 function csrfToken(): string
 {
     if (session_status() === PHP_SESSION_NONE) {
@@ -310,23 +239,12 @@ function csrfToken(): string
     return $_SESSION['csrf_token'];
 }
 
-/**
- * Sinh trường input ẩn chứa CSRF Token dùng trong form HTML
- *
- * @return string HTML input ẩn
- */
 function csrfField(): string
 {
     $token = csrfToken();
     return '<input type="hidden" name="csrf_token" value="' . e($token) . '">';
 }
 
-/**
- * Xác thực CSRF Token từ form POST
- *
- * @param string|null $token Token gửi lên từ form (mặc định lấy từ $_POST['csrf_token'])
- * @return bool True nếu hợp lệ, False nếu sai hoặc thiếu
- */
 function verifyCsrfToken(?string $token = null): bool
 {
     if (session_status() === PHP_SESSION_NONE) {
@@ -342,16 +260,6 @@ function verifyCsrfToken(?string $token = null): bool
     return hash_equals($sessionToken, $submittedToken);
 }
 
-/**
- * Xử lý tải lên nhiều tệp tin hình ảnh cùng lúc (hỗ trợ TV3 quản lý sản phẩm)
- *
- * @param array $files Mảng $_FILES['tên_input'] (dạng đa tệp: files['name'][i], ...)
- * @param string $subFolder Thư mục con trong public/uploads
- * @param int $maxSizeMb Dung lượng tối đa mỗi ảnh (MB)
- * @param array $allowedExtensions Các định dạng ảnh cho phép
- * @param string|null $fileNamePrefix Tiền tố tên tệp, thường là slug sản phẩm
- * @return array{success: bool, files: array<array{path: string, filename: string}>, errors: array<string>}
- */
 function uploadMultipleImages(
     array $files,
     string $subFolder = 'products',
@@ -362,7 +270,7 @@ function uploadMultipleImages(
     $uploaded = [];
     $errors = [];
 
-    // Kiểm tra cấu trúc mảng đa file của PHP
+    
     if (!isset($files['name']) || !is_array($files['name'])) {
         return [
             'success' => false,
@@ -373,7 +281,7 @@ function uploadMultipleImages(
 
     $fileCount = count($files['name']);
     for ($i = 0; $i < $fileCount; $i++) {
-        // Bỏ qua nếu người dùng không chọn file ở input này
+        
         if ($files['error'][$i] === UPLOAD_ERR_NO_FILE) {
             continue;
         }
@@ -404,10 +312,7 @@ function uploadMultipleImages(
         'errors'  => $errors,
     ];
 }
-/**
- * Tự động nạp các hàm xử lý Giỏ hàng của TV5 (nếu file tồn tại)
- * Giúp cô lập mã nguồn nghiệp vụ giỏ hàng, tránh xung đột file functions.php chung
- */
+
 if (file_exists(__DIR__ . '/cart_functions.php')) {
     require_once __DIR__ . '/cart_functions.php';
 }

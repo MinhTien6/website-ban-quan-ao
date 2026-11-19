@@ -1,7 +1,4 @@
 <?php
-/**
- * Quản lý danh mục sản phẩm (Admin Categories - TV3)
- */
 
 $pageTitle = 'Quản lý danh mục';
 
@@ -27,11 +24,9 @@ if ($action === 'edit' && $editId > 0) {
     }
 }
 
-// Xử lý gửi biểu mẫu POST (Thêm mới, Cập nhật, Xóa)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $postAction = $_POST['action'] ?? '';
 
-    // Kiểm tra bảo mật CSRF
     if (!verifyCsrfToken()) {
         setFlash('error', 'Mã xác thực CSRF không hợp lệ hoặc đã hết hạn.');
         redirect('admin/categories.php');
@@ -53,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $slug = createSlug($slug);
             }
 
-            // Kiểm tra trùng slug (kể cả danh mục đang ẩn)
+            
             $checkSlugStmt = $pdo->prepare("SELECT id FROM categories WHERE slug = :slug LIMIT 1");
             $checkSlugStmt->execute(['slug' => $slug]);
             if ($checkSlugStmt->fetch()) {
@@ -82,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $parentId = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
         $status = isset($_POST['status']) ? (int)$_POST['status'] : 1;
 
-        // Tránh chọn chính nó làm danh mục cha
+        
         if ($parentId === $id) {
             $parentId = null;
         }
@@ -96,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $slug = createSlug($slug);
             }
 
-            // Kiểm tra trùng slug với danh mục khác (kể cả danh mục đang ẩn)
+            
             $checkSlugStmt = $pdo->prepare("SELECT id FROM categories WHERE slug = :slug AND id != :id LIMIT 1");
             $checkSlugStmt->execute(['slug' => $slug, 'id' => $id]);
             if ($checkSlugStmt->fetch()) {
@@ -131,9 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Lấy danh sách danh mục
 $allCategories = $categoryModel->getAll();
-// Tạo danh sách tra cứu danh mục cha
+
 $categoryLookup = [];
 foreach ($allCategories as $cat) {
     $categoryLookup[$cat['id']] = $cat['name'];
@@ -145,12 +139,12 @@ require_once __DIR__ . '/includes/header.php';
 <div class="admin-page-header">
     <div>
         <h3>Quản lý danh mục sản phẩm</h3>
-        <p class="admin-subtitle">Phân loại hàng hóa giúp khách hàng dễ dàng tìm kiếm sản phẩm (Nhiệm vụ TV3)</p>
+        <p class="admin-subtitle">Phân loại hàng hóa giúp khách hàng dễ dàng tìm kiếm sản phẩm</p>
     </div>
 </div>
 
 <div class="admin-grid-layout">
-    <!-- Cột trái: Form Thêm / Sửa danh mục -->
+
     <div class="admin-form-col">
         <div class="admin-card">
             <h4><?= $editCategory ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới' ?></h4>
@@ -213,7 +207,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 
-    <!-- Cột phải: Bảng danh sách danh mục -->
+    
     <div class="admin-table-col">
         <div class="admin-card">
             <div class="table-card-header">
@@ -292,7 +286,7 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <script>
-// Tự động sinh slug khi người dùng gõ tên danh mục
+
 const nameInput = document.getElementById('cat-name');
 const slugInput = document.getElementById('cat-slug');
 

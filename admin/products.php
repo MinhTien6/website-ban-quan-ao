@@ -1,7 +1,4 @@
 <?php
-/**
- * Quản lý danh sách sản phẩm (Admin Products - TV3)
- */
 
 $pageTitle = 'Quản lý sản phẩm';
 
@@ -17,7 +14,6 @@ requireAdmin();
 $productModel = new Product($pdo);
 $categoryModel = new Category($pdo);
 
-// Xử lý hành động Xóa sản phẩm
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
@@ -44,19 +40,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Lọc và tìm kiếm
 $keyword = trim($_GET['keyword'] ?? '');
 $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 
-// Đếm tổng số sản phẩm và tính phân trang
 $totalProducts = $productModel->countAdminList($keyword);
 $pagination = paginate($totalProducts, $currentPage, $limit);
 
-// Lấy danh sách sản phẩm theo trang
 $products = $productModel->getAdminList($keyword, $limit, $pagination['offset']);
 
-// Lấy danh sách sản phẩm sắp hết hàng để hiển thị cảnh báo (Nhiệm vụ Tuần 3 TV3)
 $lowStockAlerts = $productModel->getLowStockProducts(10, 5);
 
 require_once __DIR__ . '/includes/header.php';
@@ -65,7 +57,7 @@ require_once __DIR__ . '/includes/header.php';
 <div class="admin-page-header">
     <div>
         <h3>Quản lý sản phẩm</h3>
-        <p class="admin-subtitle">Danh sách sản phẩm, quản lý kho hàng, biến thể size/màu và hình ảnh (Nhiệm vụ TV3)</p>
+        <p class="admin-subtitle">Danh sách sản phẩm, quản lý kho hàng, biến thể size/màu và hình ảnh</p>
     </div>
     <div>
         <a href="<?= BASE_URL ?>/admin/product_form.php" class="button">
@@ -84,7 +76,6 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 <?php endif; ?>
 
-<!-- Khung tìm kiếm và bộ lọc -->
 <div class="admin-card filter-card">
     <form action="<?= BASE_URL ?>/admin/products.php" method="GET" class="filter-form">
         <div class="filter-input-wrap">
@@ -98,7 +89,6 @@ require_once __DIR__ . '/includes/header.php';
     </form>
 </div>
 
-<!-- Bảng danh sách sản phẩm -->
 <div class="admin-card">
     <div class="table-card-header">
         <h4>Tất cả sản phẩm (<?= $totalProducts ?>)</h4>
@@ -202,7 +192,7 @@ require_once __DIR__ . '/includes/header.php';
         </table>
     </div>
 
-    <!-- Phân trang -->
+    
     <?php
     $baseUrl = BASE_URL . '/admin/products.php';
     if ($keyword !== '') {

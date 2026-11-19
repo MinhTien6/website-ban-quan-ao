@@ -3,38 +3,120 @@ require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/models/Product.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $cart = getCart();
+$productModel = new Product($pdo);
 
-// Xử lý cập nhật và xóa sản phẩm
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // 1. Kiểm tra CSRF
+    
     if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
-        setFlash('error', 'Yêu cầu không hợp lệ.');
+        setFlash('error', 'Yêu cầu không hợp lệ hoặc phiên làm việc đã hết hạn.');
         redirect('cart.php');
     }
 
-    // 2. Lấy dữ liệu gửi lên
+    $action = $_POST['action'] ?? '';
+    if (isset($_POST['add_to_cart']) && empty($action)) {
+        $action = 'add';
+    }
+
     $variantId = filter_input(
         INPUT_POST,
         'variant_id',
         FILTER_VALIDATE_INT
     );
 
-    $action = $_POST['action'] ?? '';
+    
+    if ($action === 'add') {
+        $productId = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT)
+            ?: filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $quantity = filter_input(INPUT_POST, 'quantity', FILTER_VALIDATE_INT) ?: 1;
+        $size = trim($_POST['size'] ?? '');
+        $color = trim($_POST['color'] ?? '');
+        $isBuyNow = !empty($_POST['buy_now']);
 
-    // 3. Kiểm tra dữ liệu
+        if ($quantity < 1) {
+            $quantity = 1;
+        } elseif ($quantity > 100) {
+            $quantity = 100;
+        }
+
+        
+        if ((!$variantId || $variantId <= 0) && $productId) {
+            if ($size !== '' || $color !== '') {
+                $vSql = "SELECT id FROM product_variants 
+                         WHERE product_id = :pid";
+                $vParams = ['pid' => $productId];
+                if ($size !== '') {
+                    $vSql .= " AND size = :size";
+                    $vParams['size'] = $size;
+                }
+                if ($color !== '') {
+                    $vSql .= " AND color = :color";
+                    $vParams['color'] = $color;
+                }
+                $vSql .= " AND stock > 0 ORDER BY id ASC LIMIT 1";
+                $vStmt = $pdo->prepare($vSql);
+                $vStmt->execute($vParams);
+                $foundVId = $vStmt->fetchColumn();
+                if ($foundVId) {
+                    $variantId = (int)$foundVId;
+                }
+            }
+
+            
+            if (!$variantId || $variantId <= 0) {
+                $fStmt = $pdo->prepare("SELECT id FROM product_variants WHERE product_id = :pid ORDER BY id ASC LIMIT 1");
+                $fStmt->execute(['pid' => $productId]);
+                $variantId = (int)$fStmt->fetchColumn();
+            }
+        }
+
+        if (!$variantId || $variantId <= 0) {
+            setFlash('error', 'Vui lòng chọn phân loại sản phẩm (kích cỡ, màu sắc).');
+            redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
+        }
+
+        
+        $variantData = $productModel->getVariantById($variantId);
+        if (!$variantData || (int)$variantData['status'] !== 1) {
+            setFlash('error', 'Sản phẩm hoặc phân loại không còn tồn tại trên hệ thống.');
+            redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
+        }
+
+        $stock = (int)$variantData['stock'];
+        if ($stock <= 0) {
+            setFlash('error', 'Phân loại sản phẩm này hiện đã hết hàng.');
+            redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
+        }
+
+        
+        $added = addToCart($variantData, $quantity);
+        if (!$added) {
+            setFlash('error', "Không thể thêm vào giỏ. Số lượng bạn chọn vượt quá số lượng tồn kho (còn {$stock} sản phẩm).");
+            redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
+        }
+
+        if ($isBuyNow) {
+            redirect('checkout.php');
+        } else {
+            setFlash('success', 'Đã thêm sản phẩm vào giỏ hàng thành công!');
+            redirect($_SERVER['HTTP_REFERER'] ?? 'cart.php');
+        }
+    }
+
+    
     if (!$variantId || !isset($cart[$variantId])) {
         setFlash('error', 'Sản phẩm không tồn tại trong giỏ hàng.');
         redirect('cart.php');
     }
 
-    // 4. Xử lý xóa sản phẩm
+    
     if ($action === 'remove') {
 
         unset($_SESSION['cart'][$variantId]);
@@ -43,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('cart.php');
     }
 
-    // 5. Xử lý cập nhật số lượng
+    
     if ($action === 'update') {
 
         $quantity = filter_input(
@@ -52,12 +134,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             FILTER_VALIDATE_INT
         );
 
-        if (!$quantity || $quantity < 1) {
-            setFlash('error', 'Số lượng phải lớn hơn 0.');
+        if ($quantity === false || $quantity < 1 || $quantity > 100) {
+            setFlash(
+                'error',
+                'Số lượng sản phẩm phải từ 1 đến 100.'
+            );
             redirect('cart.php');
         }
 
-        // Kiểm tra biến thể và sản phẩm còn hoạt động
+        
         $stmt = $pdo->prepare("
             SELECT
                 pv.id,
@@ -109,14 +194,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('cart.php');
         }
 
-        // Cập nhật số lượng
+        
         $_SESSION['cart'][$variantId]['quantity'] = $quantity;
 
         setFlash('success', 'Đã cập nhật giỏ hàng.');
         redirect('cart.php');
     }
 
-    // 6. Action không hợp lệ
+    
     setFlash('error', 'Thao tác không hợp lệ.');
     redirect('cart.php');
 }
@@ -135,7 +220,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <?php if (empty($cart)): ?>
 
-    <!-- GIAO DIỆN KHI GIỎ HÀNG TRỐNG -->
+    
     <div class="cart-empty">
         <div class="cart-empty-icon">
             <svg width="60" height="60" viewBox="0 0 24 24"
@@ -158,7 +243,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <?php else: ?>
 
-    <!-- GIAO DIỆN KHI CÓ SẢN PHẨM -->
+    
     <div class="cart-layout">
 
         <div class="cart-list">
@@ -171,7 +256,7 @@ require_once __DIR__ . '/includes/header.php';
 
                 <div class="cart-item">
 
-                    <!-- Ảnh sản phẩm -->
+                    
                     <?php if (!empty($item['image'])): ?>
                         <img
                             class="cart-item-image"
@@ -183,7 +268,7 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     <?php endif; ?>
 
-                    <!-- Thông tin sản phẩm -->
+                    
                     <div>
                         <h3 class="cart-item-name">
                             <?= e($item['name']) ?>
@@ -203,7 +288,7 @@ require_once __DIR__ . '/includes/header.php';
                             <?= formatPrice($item['price']) ?>
                         </div>
 
-                        <!-- Cập nhật số lượng -->
+                        
                         <form method="POST" action="cart.php"
                               class="cart-quantity">
 
@@ -222,7 +307,7 @@ require_once __DIR__ . '/includes/header.php';
                             <button type="submit">Cập nhật</button>
                         </form>
 
-                        <!-- Xóa sản phẩm -->
+                        
                         <form method="POST" action="cart.php"
                               onsubmit="return confirm('Bạn muốn xóa sản phẩm này khỏi giỏ hàng?');">
 
@@ -240,7 +325,7 @@ require_once __DIR__ . '/includes/header.php';
                         </form>
                     </div>
 
-                    <!-- Thành tiền -->
+                    
                     <div class="cart-item-subtotal">
                         <?= formatPrice(
                             $item['price'] * $item['quantity']
@@ -253,7 +338,7 @@ require_once __DIR__ . '/includes/header.php';
 
         </div>
 
-        <!-- TỔNG KẾT ĐƠN HÀNG -->
+        
         <aside class="cart-summary">
 
             <h2>Đơn hàng của bạn</h2>

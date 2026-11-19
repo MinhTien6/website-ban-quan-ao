@@ -1,12 +1,9 @@
 <?php
-/**
- * Kiểm tra tự động CSDL shop_quanao sau khi import file database/shop_quanao.sql
- * Hoạt động tốt trên cả trình duyệt web và dòng lệnh (CLI).
- */
+
 
 $isCli = (php_sapi_name() === 'cli');
 
-// Tải cấu hình CSDL nếu có
+
 $configFile = dirname(__DIR__) . '/config/database.php';
 if (file_exists($configFile)) {
     require_once $configFile;
@@ -49,7 +46,7 @@ function one(PDO $pdo, string $sql, array $params = []) {
     return $st->fetchColumn();
 }
 
-// 1. Kiểm tra 7 bảng cốt lõi (theo ERD)
+
 $coreTables = ['users', 'categories', 'products', 'product_images', 'product_variants', 'orders', 'order_items'];
 $missingCore = [];
 foreach ($coreTables as $ct) {
@@ -60,18 +57,18 @@ foreach ($coreTables as $ct) {
 }
 check('Có đủ 7 bảng cốt lõi theo ERD', count($missingCore) === 0, count($missingCore) ? 'Thiếu: ' . implode(', ', $missingCore) : 'Đủ 7 bảng');
 
-// 2. Tổng số bảng trong CSDL
+
 $totalTables = (int) one($pdo, "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?", [$db]);
 check('CSDL chứa các bảng hệ thống', $totalTables >= 7, "Tìm thấy $totalTables bảng");
 
 $notInno = (int) one($pdo, "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND ENGINE <> 'InnoDB'", [$db]);
 check('Tất cả bảng dùng InnoDB', $notInno === 0, "$notInno bảng sai engine");
 
-// 3. Khóa ngoại liên kết
+
 $fk = (int) one($pdo, "SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = ? AND CONSTRAINT_TYPE = 'FOREIGN KEY'", [$db]);
 check('Có đầy đủ các ràng buộc khóa ngoại (FK)', $fk >= 7, "Tìm thấy $fk khóa ngoại");
 
-// 4. Số dòng dữ liệu mẫu cho các bảng chính
+
 $expected = [
     'users'            => 4,
     'categories'       => 7,
@@ -86,11 +83,11 @@ foreach ($expected as $table => $n) {
     check("Bảng {$table} có ít nhất {$n} dòng mẫu", $got >= $n, "Thực tế {$got} dòng");
 }
 
-// 5. Kiểm tra Tiếng Việt có dấu UTF-8
+
 $name = (string) one($pdo, "SELECT name FROM products WHERE id = 1");
 check('Tiếng Việt hiển thị đúng dấu utf8mb4', $name === 'Áo thun basic cotton cổ tròn', "Đọc được: {$name}");
 
-// 6. Mật khẩu mẫu bảo mật bằng bcrypt
+
 foreach (['admin@shop.local' => 'Admin@123', 'lan.nguyen@example.com' => 'User@123'] as $email => $pw) {
     $hash = (string) one($pdo, "SELECT password_hash FROM users WHERE email = ?", [$email]);
     check("password_verify hợp lệ cho {$email}", password_verify($pw, $hash));
@@ -102,7 +99,6 @@ check('Tài khoản admin có role = admin', $role === 'admin');
 $locked = (int) one($pdo, "SELECT COUNT(*) FROM users WHERE status = 0");
 check('Có ít nhất 1 tài khoản bị khóa để test', $locked >= 1, "Tìm thấy {$locked}");
 
-// 7. Dữ liệu liên kết không bị mồ côi
 $orphan = (int) one($pdo, "SELECT COUNT(*) FROM order_items oi LEFT JOIN orders o ON o.id = oi.order_id WHERE o.id IS NULL");
 check('Không có order_items mồ côi', $orphan === 0);
 
@@ -112,7 +108,7 @@ check('Mỗi sản phẩm có đúng ảnh chính', $noMain === 0, "{$noMain} s�
 $noVar = (int) one($pdo, "SELECT COUNT(*) FROM products p WHERE NOT EXISTS (SELECT 1 FROM product_variants v WHERE v.product_id = p.id)");
 check('Mỗi sản phẩm có ít nhất 1 biến thể', $noVar === 0, "{$noVar} sản phẩm thiếu biến thể");
 
-// 8. Ràng buộc toàn vẹn: Không được trùng email
+
 try {
     $pdo->exec("INSERT INTO users (full_name, email, password_hash) VALUES ('Trùng Email', 'admin@shop.local', 'dummy_hash')");
     check('Ràng buộc UNIQUE Email hoạt động', false, 'Vẫn thêm được email trùng!');
@@ -120,11 +116,11 @@ try {
     check('Ràng buộc UNIQUE Email hoạt động', true, 'Đã chặn trùng email chính xác');
 }
 
-// 9. Biến thể sắp hết hàng để demo cảnh báo
+
 $low = (int) one($pdo, "SELECT COUNT(*) FROM product_variants WHERE stock <= 5");
 check('Có biến thể tồn kho thấp để demo cảnh báo', $low >= 2, "Tìm thấy {$low} biến thể");
 
-// Xuất kết quả
+
 $pass = count(array_filter($results, fn($r) => $r[1]));
 $total = count($results);
 

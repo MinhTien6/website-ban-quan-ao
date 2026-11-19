@@ -1,7 +1,4 @@
 <?php
-/**
- * Trang hồ sơ cá nhân
- */
 
 $pageTitle = 'Tài khoản của tôi';
 
@@ -11,7 +8,6 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/models/User.php';
 
-// Chỉ người đã đăng nhập mới được truy cập
 requireLogin();
 
 $userModel = new User($pdo);
@@ -20,7 +16,6 @@ $userId = (int) currentUser()['id'];
 $error = '';
 $success = '';
 
-// Xử lý cập nhật hồ sơ
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCsrfToken()) {
         $error = 'Yêu cầu không hợp lệ. Vui lòng thử lại.';
@@ -33,8 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Vui lòng nhập họ và tên.';
         } elseif (mb_strlen($fullName) > 100) {
             $error = 'Họ và tên không được vượt quá 100 ký tự.';
-        } elseif (strlen($phone) > 20) {
-            $error = 'Số điện thoại không được vượt quá 20 ký tự.';
+        } elseif (
+            $phone !== '' &&
+            !preg_match('/^(0|\+84|84)[0-9]{9}$/', $phone)
+        ) {
+            $error = 'Số điện thoại không đúng định dạng Việt Nam (ví dụ: 0912345678).';
         } elseif (mb_strlen($address) > 255) {
             $error = 'Địa chỉ không được vượt quá 255 ký tự.';
         } else {
@@ -46,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
 
                 if ($updated) {
-                    // Cập nhật tên trong session
+                    
                     refreshCurrentUser();
 
                     setFlash('success', 'Cập nhật hồ sơ thành công.');
@@ -62,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Lấy thông tin người dùng
 $user = $userModel->findById($userId);
 
 if (!$user) {
