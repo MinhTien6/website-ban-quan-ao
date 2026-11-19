@@ -7,7 +7,20 @@ function e(mixed $value): string
 
 function redirect(string $path): never
 {
-    $url = BASE_URL . '/' . ltrim($path, '/');
+    if (preg_match('#^https?://#i', $path)) {
+        header("Location: {$path}");
+        exit;
+    }
+
+    $cleanPath = ltrim($path, '/');
+    $cleanBase = trim((string)BASE_URL, '/');
+
+    if ($cleanBase !== '' && (str_starts_with($cleanPath, $cleanBase . '/') || $cleanPath === $cleanBase)) {
+        $url = '/' . $cleanPath;
+    } else {
+        $url = BASE_URL . '/' . $cleanPath;
+    }
+
     header("Location: {$url}");
     exit;
 }
