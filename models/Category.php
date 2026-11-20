@@ -18,7 +18,7 @@ class Category
         $sql = "SELECT c.*, COUNT(p.id) AS total_products
                 FROM categories c
                 LEFT JOIN products p ON c.id = p.category_id AND p.status = 1
-                WHERE c.status = 1
+                WHERE c.status = 1 AND c.parent_id IS NULL AND c.id NOT IN (7, 8)
                 GROUP BY c.id
                 ORDER BY c.id ASC";
 

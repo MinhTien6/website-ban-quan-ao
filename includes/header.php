@@ -276,7 +276,7 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
                             <div class="mega-col">
                                 <h5><a href="<?= BASE_URL ?>/products.php?category=10">ÁO UNISEX & KIỂU</a></h5>
                                 <ul>
-                                    <li><a href="<?= BASE_URL ?>/products.php?category=1">ÁO THUN STREETWEAR</a></li>
+                                    <li><a href="<?= BASE_URL ?>/products.php?category=1">ÁO THUN & CROPTOP</a></li>
                                     <li><a href="<?= BASE_URL ?>/products.php?category=2">ÁO SƠ MI & POLO</a></li>
                                     <li><a href="<?= BASE_URL ?>/products.php?category=5">ÁO KHOÁC & HOODIE</a></li>
                                 </ul>
@@ -293,11 +293,11 @@ $currentSort = $_GET['sort'] ?? $_GET['tab'] ?? '';
                     </div>
                 </div>
 
-                <a href="<?= BASE_URL ?>/products.php?sort=newest" class="nav-link <?= in_array($currentSort, ['new', 'newest'], true) ? 'active' : '' ?>">
+                <a href="<?= BASE_URL ?>/products.php?tab=new" class="nav-link <?= in_array($currentSort, ['new', 'newest'], true) || (isset($_GET['tab']) && $_GET['tab'] === 'new') ? 'active' : '' ?>">
                     Hàng Mới
                 </a>
 
-                <a href="<?= BASE_URL ?>/products.php?sort=bestseller" class="nav-link <?= in_array($currentSort, ['bestseller', 'best'], true) ? 'active' : '' ?>">
+                <a href="<?= BASE_URL ?>/products.php?tab=bestseller" class="nav-link <?= in_array($currentSort, ['bestseller', 'best'], true) || (isset($_GET['tab']) && $_GET['tab'] === 'bestseller') ? 'active' : '' ?>">
                     Hàng Bán Chạy
                 </a>
             </nav>

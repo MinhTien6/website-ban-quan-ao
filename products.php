@@ -49,11 +49,16 @@ if ($keyword !== '') {
     }
 }
 
+$newProductIds = [30, 20, 15, 2, 26, 14, 4];
+$bestsellerProductIds = [28, 13, 19, 3, 12, 8, 6, 5, 17, 1];
+
 $where = ["p.status = 1"];
 $params = [];
 
-if ($currentTab === 'bestseller') {
-    $where[] = "p.sale_price IS NOT NULL AND p.sale_price > 0";
+if ($currentTab === 'new') {
+    $where[] = "p.id IN (" . implode(',', $newProductIds) . ")";
+} elseif ($currentTab === 'bestseller') {
+    $where[] = "p.id IN (" . implode(',', $bestsellerProductIds) . ")";
 }
 
 if ($categoryFilter !== '') {
@@ -106,8 +111,10 @@ if ($sortOrder === 'price_asc') {
     $orderBySql = "COALESCE(NULLIF(p.sale_price, 0), p.price) ASC, p.id DESC";
 } elseif ($sortOrder === 'price_desc') {
     $orderBySql = "COALESCE(NULLIF(p.sale_price, 0), p.price) DESC, p.id DESC";
-} elseif ($sortOrder === 'bestseller') {
-    $orderBySql = "p.sale_price DESC, p.id DESC";
+} elseif ($sortOrder === 'bestseller' || $currentTab === 'bestseller') {
+    $orderBySql = "FIELD(p.id, " . implode(',', $bestsellerProductIds) . "), p.id DESC";
+} elseif ($sortOrder === 'new' || $currentTab === 'new') {
+    $orderBySql = "FIELD(p.id, " . implode(',', $newProductIds) . "), p.id DESC";
 }
 
 $page   = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
@@ -605,12 +612,12 @@ require_once __DIR__ . '/includes/header.php';
                             </li>
                             <?php
                             $groupUnisex = [
-                                ['id' => 1, 'slug' => 'ao-thun-streetwear', 'name' => 'Áo thun Streetwear'],
-                                ['id' => 2, 'slug' => 'ao-so-mi-polo',       'name' => 'Áo sơ mi & Polo'],
-                                ['id' => 5, 'slug' => 'ao-khoac-hoodie',     'name' => 'Áo khoác & Hoodie'],
+                                ['id' => 1, 'slug' => 'ao-thun-croptop', 'name' => 'Áo thun & Croptop'],
+                                ['id' => 2, 'slug' => 'ao-so-mi-polo',   'name' => 'Áo sơ mi & Polo'],
+                                ['id' => 5, 'slug' => 'ao-khoac-hoodie', 'name' => 'Áo khoác & Hoodie'],
                             ];
                             foreach ($groupUnisex as $c):
-                                $isCatActive = ($categoryFilter == $c['id'] || $categoryFilter === $c['slug']);
+                                $isCatActive = ($categoryFilter == $c['id'] || $categoryFilter === $c['slug'] || ($c['id'] == 1 && in_array($categoryFilter, ['ao-thun', 'ao-thun-streetwear', 'ao-thun-croptop'], true)));
                             ?>
                                 <li style="padding-left:8px;">
                                     <a href="<?= htmlspecialchars(buildFilterUrl(['category' => $c['id']])) ?>"
@@ -711,13 +718,13 @@ require_once __DIR__ . '/includes/header.php';
                         ?>
                         <div class="prod-card" style="background:#ffffff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; transition:transform 0.2s ease, box-shadow 0.2s ease; display:flex; flex-direction:column;">
                             <div class="prod-img-box" style="width:100%; aspect-ratio:1/1; background:#f3f4f6; position:relative; overflow:hidden;">
-                                <?php if ($oldPrice !== null): ?>
-                                    <span class="badge-new-red" style="position:absolute; top:10px; right:10px; background:#e60023; color:#fff; font-size:11px; font-weight:800; padding:4px 9px; border-radius:4px; text-transform:uppercase; z-index:3;">
-                                        SALE
-                                    </span>
-                                <?php elseif ($currentTab === 'new'): ?>
+                                <?php if (in_array($pid, $newProductIds, true)): ?>
                                     <span class="badge-new-red" style="position:absolute; top:10px; right:10px; background:#111; color:#fff; font-size:11px; font-weight:800; padding:4px 9px; border-radius:4px; text-transform:uppercase; z-index:3;">
                                         NEW
+                                    </span>
+                                <?php elseif (in_array($pid, $bestsellerProductIds, true)): ?>
+                                    <span class="badge-new-red" style="position:absolute; top:10px; right:10px; background:#e60023; color:#fff; font-size:11px; font-weight:800; padding:4px 9px; border-radius:4px; text-transform:uppercase; z-index:3;">
+                                        HOT
                                     </span>
                                 <?php endif; ?>
                                 <a href="<?= BASE_URL ?>/product_detail.php?id=<?= $pid ?>" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">

@@ -222,7 +222,7 @@ class Product
     {
         $sql = "SELECT * FROM product_variants 
                 WHERE product_id = :id 
-                ORDER BY size ASC, color ASC";
+                ORDER BY FIELD(size, 'XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL'), color ASC, id ASC";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $productId]);

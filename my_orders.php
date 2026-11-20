@@ -227,16 +227,21 @@ require_once __DIR__ . '/includes/header.php';
                 <?php endforeach; ?>
 
                 <?php
-                    $orderDiscount = max(0, $itemsSubtotal - (float)$selectedOrder['total']);
+                    $orderShippingFee = ($itemsSubtotal >= 399000 || $itemsSubtotal == 0) ? 0 : 30000;
+                    $orderDiscount = max(0, $itemsSubtotal + $orderShippingFee - (float)$selectedOrder['total']);
                 ?>
 
-                
-                <?php if ($orderDiscount > 0): ?>
-                    <div class="order-detail-subtotal">
-                        <span>Tạm tính</span>
-                        <strong><?= formatPrice($itemsSubtotal) ?></strong>
-                    </div>
+                <div class="order-detail-subtotal">
+                    <span>Tạm tính</span>
+                    <strong><?= formatPrice($itemsSubtotal) ?></strong>
+                </div>
 
+                <div class="order-detail-subtotal">
+                    <span>Phí vận chuyển</span>
+                    <span><?= $orderShippingFee == 0 ? '<strong style="color: #16a34a;">Miễn phí</strong>' : formatPrice($orderShippingFee) ?></span>
+                </div>
+
+                <?php if ($orderDiscount > 0): ?>
                     <div class="order-detail-discount">
                         <span>
                             Giảm giá <?= !empty($selectedOrder['coupon_code']) ? '(' . e($selectedOrder['coupon_code']) . ')' : '' ?>

@@ -116,6 +116,13 @@ foreach ($variants as $v) {
     }
 }
 
+$sizeOrderMap = ['XS' => 1, 'S' => 2, 'M' => 3, 'L' => 4, 'XL' => 5, '2XL' => 6, 'XXL' => 6, '3XL' => 7];
+usort($availableSizes, function($a, $b) use ($sizeOrderMap) {
+    $oa = $sizeOrderMap[strtoupper(trim((string)$a))] ?? (is_numeric($a) ? (int)$a + 100 : 999);
+    $ob = $sizeOrderMap[strtoupper(trim((string)$b))] ?? (is_numeric($b) ? (int)$b + 100 : 999);
+    return $oa <=> $ob;
+});
+
 if (empty($availableColors)) {
     $availableColors = ['Đen'];
 }
@@ -125,7 +132,16 @@ if (empty($availableSizes)) {
 
 $defaultColor = $availableColors[0];
 $defaultSize = $availableSizes[0];
-$defaultVariant = !empty($variants[0]['id']) ? (int)$variants[0]['id'] : 0;
+$defaultVariant = 0;
+foreach ($variants as $v) {
+    if ($v['color'] === $defaultColor && $v['size'] === $defaultSize) {
+        $defaultVariant = (int)$v['id'];
+        break;
+    }
+}
+if ($defaultVariant === 0 && !empty($variants[0]['id'])) {
+    $defaultVariant = (int)$variants[0]['id'];
+}
 
 if (!empty($colorImageMap[$defaultColor])) {
     $displayMainImage = $colorImageMap[$defaultColor];

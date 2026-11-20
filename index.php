@@ -13,17 +13,26 @@ $productModel = new Product($pdo);
 $categoryModel = new Category($pdo);
 
 $categories = $categoryModel->getAllActive();
+$categories = array_values(array_filter($categories, fn($c) => !in_array((int)$c['id'], [7, 8], true) && empty($c['parent_id'])));
 
-$latestProducts = $productModel->getLatest(4);
+$latestStmt = $pdo->prepare("
+    SELECT p.*, c.name AS category_name, pi.image_path AS main_image
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
+    LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_main = 1
+    WHERE p.status = 1 AND p.id IN (30, 20, 15, 2)
+    ORDER BY FIELD(p.id, 30, 20, 15, 2)
+");
+$latestStmt->execute();
+$latestProducts = $latestStmt->fetchAll();
 
 $saleStmt = $pdo->prepare("
     SELECT p.*, c.name AS category_name, pi.image_path AS main_image
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_main = 1
-    WHERE p.status = 1 AND p.sale_price IS NOT NULL AND p.sale_price > 0 AND p.sale_price < p.price
-    ORDER BY (p.price - p.sale_price) DESC, p.id DESC
-    LIMIT 4
+    WHERE p.status = 1 AND p.id IN (28, 13, 19, 3)
+    ORDER BY FIELD(p.id, 28, 13, 19, 3)
 ");
 $saleStmt->execute();
 $saleProducts = $saleStmt->fetchAll();
@@ -127,13 +136,13 @@ require_once __DIR__ . '/includes/header.php';
             </a>
         </div>
 
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:18px;">
+        <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:18px;">
             <?php foreach ($categories as $cat): ?>
                 <a href="<?= BASE_URL ?>/products.php?category=<?= (int)$cat['id'] ?>" style="display:block; text-decoration:none; background:#ffffff; border:1.5px solid #ececec; border-radius:10px; padding:22px 18px; text-align:center; transition:all 0.2s ease; box-shadow:0 3px 10px rgba(0,0,0,0.03);" onmouseover="this.style.borderColor='#111'; this.style.transform='translateY(-3px)';" onmouseout="this.style.borderColor='#ececec'; this.style.transform='none';">
                     <div style="width:52px; height:52px; margin:0 auto 12px; background:#f4f4f4; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; color:#111;">
                         <?php
                         $cSlug = $cat['slug'] ?? '';
-                        if (str_contains($cSlug, 'ao-thun')) echo '<i class="fa-solid fa-shirt"></i>';
+                        if (str_contains($cSlug, 'ao-thun') || str_contains($cSlug, 'croptop')) echo '<i class="fa-solid fa-shirt"></i>';
                         elseif (str_contains($cSlug, 'so-mi') || str_contains($cSlug, 'polo')) echo '<i class="fa-solid fa-vest"></i>';
                         elseif (str_contains($cSlug, 'khoac') || str_contains($cSlug, 'hoodie')) echo '<i class="fa-solid fa-mitten"></i>';
                         elseif (str_contains($cSlug, 'quan')) echo '<i class="fa-solid fa-socks"></i>';
@@ -161,7 +170,7 @@ require_once __DIR__ . '/includes/header.php';
                 </h2>
                 <p style="margin:5px 0 0; font-size:14px; color:#666;">Các thiết kế streetwear mới nhất vừa cập bến kho</p>
             </div>
-            <a href="<?= BASE_URL ?>/products.php?sort=newest" style="color:#e60023; font-weight:700; font-size:13.5px; text-decoration:none;">
+            <a href="<?= BASE_URL ?>/products.php?tab=new" style="color:#e60023; font-weight:700; font-size:13.5px; text-decoration:none;">
                 Xem thêm mới về &rarr;
             </a>
         </div>
@@ -181,7 +190,7 @@ require_once __DIR__ . '/includes/header.php';
                     ?>
                     <div class="prod-card" style="background:#fff; border:1px solid #ebebeb; border-radius:10px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.2s ease;">
                         <div class="prod-img-box" style="position:relative; width:100%; padding-top:100%; background:#f7f7f7; overflow:hidden;">
-                            <span class="badge-new-red" style="position:absolute; top:10px; right:10px; background:#e60023; color:#fff; font-size:11px; font-weight:800; padding:4px 9px; border-radius:4px; text-transform:uppercase; z-index:3;">
+                            <span class="badge-new-red" style="position:absolute; top:10px; right:10px; background:#111; color:#fff; font-size:11px; font-weight:800; padding:4px 9px; border-radius:4px; text-transform:uppercase; z-index:3;">
                                 NEW
                             </span>
                             <a href="<?= BASE_URL ?>/product_detail.php?id=<?= $pid ?>" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
@@ -245,12 +254,12 @@ require_once __DIR__ . '/includes/header.php';
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
                 <div>
                     <h2 style="font-size:24px; font-weight:800; text-transform:uppercase; margin:0; letter-spacing:-0.5px; color:#e60023;">
-                        🔥 Sản phẩm giảm giá hot
+                        🔥 Sản phẩm bán chạy
                     </h2>
-                    <p style="margin:5px 0 0; font-size:14px; color:#666;">Ưu đãi đặc biệt có hạn - Săn ngay kẻo lỡ</p>
+                    <p style="margin:5px 0 0; font-size:14px; color:#666;">Top 10 thiết kế streetwear bán chạy nhất được săn đón</p>
                 </div>
-                <a href="<?= BASE_URL ?>/products.php?sort=bestseller" style="color:#e60023; font-weight:700; font-size:13.5px; text-decoration:none;">
-                    Xem tất cả ưu đãi &rarr;
+                <a href="<?= BASE_URL ?>/products.php?tab=bestseller" style="color:#e60023; font-weight:700; font-size:13.5px; text-decoration:none;">
+                    Xem tất cả bán chạy &rarr;
                 </a>
             </div>
 
@@ -258,10 +267,9 @@ require_once __DIR__ . '/includes/header.php';
                 <?php foreach ($saleProducts as $p): ?>
                     <?php
                     $pid = (int)$p['id'];
-                    $currPrice = (float)$p['sale_price'];
-                    $oldPrice = (float)$p['price'];
-                    $percentOff = round((($oldPrice - $currPrice) / $oldPrice) * 100);
-                    $imgUrl = !empty($p['main_image']) ? BASE_URL . '/public/' . ltrim($p['main_image'], '/') : 'https://placehold.co/400x400/eef0f5/687082?text=Sale';
+                    $currPrice = (!empty($p['sale_price']) && $p['sale_price'] > 0) ? (float)$p['sale_price'] : (float)$p['price'];
+                    $oldPrice = (!empty($p['sale_price']) && $p['sale_price'] > 0) ? (float)$p['price'] : null;
+                    $imgUrl = !empty($p['main_image']) ? BASE_URL . '/public/' . ltrim($p['main_image'], '/') : 'https://placehold.co/400x400/eef0f5/687082?text=Hot';
                     $variant = $variantsByProduct[$pid] ?? null;
                     $defVariantId = $variant ? (int)$variant['id'] : 0;
                     $defSize = $variant['size'] ?? 'M';
@@ -269,11 +277,11 @@ require_once __DIR__ . '/includes/header.php';
                     ?>
                     <div class="prod-card" style="background:#fff; border:1px solid #ebebeb; border-radius:10px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.2s ease;">
                         <div class="prod-img-box" style="position:relative; width:100%; padding-top:100%; background:#f7f7f7; overflow:hidden;">
-                            <span class="badge-new-red" style="position:absolute; top:10px; right:10px; background:#111111; color:#fff; font-size:11px; font-weight:800; padding:4px 9px; border-radius:4px; text-transform:uppercase; z-index:3;">
-                                -<?= $percentOff ?>%
+                            <span class="badge-new-red" style="position:absolute; top:10px; right:10px; background:#e60023; color:#fff; font-size:11px; font-weight:800; padding:4px 9px; border-radius:4px; text-transform:uppercase; z-index:3;">
+                                HOT
                             </span>
                             <a href="<?= BASE_URL ?>/product_detail.php?id=<?= $pid ?>" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
-                                <img src="<?= e($imgUrl) ?>" alt="<?= e($p['name']) ?>" style="width:100%; height:100%; object-fit:contain; transition:transform 0.3s ease;" onerror="this.onerror=null; this.src='https://placehold.co/400x400/eef0f5/687082?text=Sale';">
+                                <img src="<?= e($imgUrl) ?>" alt="<?= e($p['name']) ?>" style="width:100%; height:100%; object-fit:contain; transition:transform 0.3s ease;" onerror="this.onerror=null; this.src='https://placehold.co/400x400/eef0f5/687082?text=Hot';">
                             </a>
                         </div>
                         <div class="prod-body" style="padding:14px; display:flex; flex-direction:column; flex:1; justify-content:space-between;">
@@ -285,9 +293,11 @@ require_once __DIR__ . '/includes/header.php';
                                     <span class="prod-price-current" style="font-size:17px; font-weight:900; color:#e60023;">
                                         <?= number_format($currPrice, 0, ',', '.') ?>đ
                                     </span>
-                                    <span class="prod-price-old" style="font-size:13px; color:#888; text-decoration:line-through;">
-                                        <?= number_format($oldPrice, 0, ',', '.') ?>đ
-                                    </span>
+                                    <?php if ($oldPrice !== null): ?>
+                                        <span class="prod-price-old" style="font-size:13px; color:#888; text-decoration:line-through;">
+                                            <?= number_format($oldPrice, 0, ',', '.') ?>đ
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
 

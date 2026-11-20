@@ -165,7 +165,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $cartTotal = getCartTotal();
 $cartCount = getCartCount();
 $discount = 0;
-$finalTotal = $cartTotal;
+$shippingFee = ($cartTotal >= 399000 || $cartTotal == 0) ? 0 : 30000;
+$finalTotal = $cartTotal + $shippingFee;
 $appliedCoupon = null;
 
 if (!empty($_SESSION['applied_coupon'])) {
@@ -176,7 +177,7 @@ if (!empty($_SESSION['applied_coupon'])) {
         );
 
         $discount = (float)$appliedCoupon['discount'];
-        $finalTotal = (float)$appliedCoupon['final_total'];
+        $finalTotal = max(0, $cartTotal - $discount) + $shippingFee;
     } catch (Throwable $e) {
         unset($_SESSION['applied_coupon']);
         setFlash(
@@ -439,7 +440,11 @@ require_once __DIR__ . '/includes/header.php';
 
                     <div class="checkout-summary-row">
                         <span>Phí vận chuyển</span>
-                        <span style="color: #238b57; font-weight: 500;">Miễn phí</span>
+                        <?php if ($shippingFee == 0): ?>
+                            <span style="color: #238b57; font-weight: 600;">Miễn phí</span>
+                        <?php else: ?>
+                            <strong style="color: #111;"><?= formatPrice($shippingFee) ?></strong>
+                        <?php endif; ?>
                     </div>
 
                     <?php if ($discount > 0): ?>

@@ -124,6 +124,7 @@ class Order
 
         
         $discount = min($discount, $subtotal);
+        $shippingFee = ($subtotal >= 399000 || $subtotal == 0) ? 0 : 30000;
 
         return [
             'coupon_id' => (int)$coupon['id'],
@@ -132,7 +133,8 @@ class Order
             'discount_value' => $discountValue,
             'discount' => $discount,
             'subtotal' => $subtotal,
-            'final_total' => $subtotal - $discount
+            'shipping_fee' => $shippingFee,
+            'final_total' => max(0, $subtotal - $discount) + $shippingFee
         ];
     }
 
@@ -262,6 +264,7 @@ class Order
             }
 
             
+            $rawSubtotal = $total;
             $couponId = null;
             $discount = 0;
             $couponCode = strtoupper(trim($couponCode ?? ''));
@@ -351,6 +354,9 @@ class Order
                 $couponId = (int)$coupon['id'];
                 $total -= $discount;
             }
+
+            $shippingFee = ($rawSubtotal >= 399000 || $rawSubtotal == 0) ? 0 : 30000;
+            $total = max(0, $total) + $shippingFee;
 
             
             $orderStmt = $this->pdo->prepare("

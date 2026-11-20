@@ -353,14 +353,24 @@ require_once __DIR__ . '/includes/header.php';
                 <strong><?= formatPrice($cartTotal) ?></strong>
             </div>
 
+            <?php
+            $shippingFee = ($cartTotal >= 399000 || $cartTotal == 0) ? 0 : 30000;
+            $cartGrandTotal = $cartTotal + $shippingFee;
+            ?>
             <div class="summary-row">
                 <span>Phí vận chuyển</span>
-                <span>Được xác nhận khi giao hàng</span>
+                <span><?= $shippingFee === 0 ? '<strong style="color:#238b57;">Miễn phí</strong>' : formatPrice($shippingFee) ?></span>
             </div>
 
+            <?php if ($cartTotal > 0 && $cartTotal < 399000): ?>
+                <div style="margin: 10px 0; padding: 8px 12px; background: #fff0f2; border-radius: 8px; font-size: 12.5px; color: #e60023; font-weight: 600; text-align: center;">
+                    🔥 Mua thêm <?= formatPrice(399000 - $cartTotal) ?> để được FREESHIP!
+                </div>
+            <?php endif; ?>
+
             <div class="summary-row summary-total">
-                <span>Tổng tiền hàng</span>
-                <strong><?= formatPrice($cartTotal) ?></strong>
+                <span>Tổng thanh toán</span>
+                <strong><?= formatPrice($cartGrandTotal) ?></strong>
             </div>
 
             <a href="<?= BASE_URL ?>/checkout.php"
