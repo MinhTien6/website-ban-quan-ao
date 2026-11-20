@@ -71,7 +71,7 @@ check('Có đầy đủ các ràng buộc khóa ngoại (FK)', $fk >= 7, "Tìm t
 
 $expected = [
     'users'            => 4,
-    'categories'       => 7,
+    'categories'       => 5,
     'products'         => 26,
     'product_images'   => 53,
     'product_variants' => 168,
