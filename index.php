@@ -15,13 +15,19 @@ $categoryModel = new Category($pdo);
 $categories = $categoryModel->getAllActive();
 $categories = array_values(array_filter($categories, fn($c) => !in_array((int)$c['id'], [7, 8], true) && empty($c['parent_id'])));
 
+$dynNewStmt = $pdo->query("SELECT id FROM products WHERE status = 1 AND id > 30 ORDER BY id DESC");
+$dynNewIds = $dynNewStmt ? $dynNewStmt->fetchAll(PDO::FETCH_COLUMN) : [];
+$dynNewIds = array_map('intval', $dynNewIds);
+$homeNewIds = array_slice(array_values(array_unique(array_merge($dynNewIds, [30, 20, 15, 2]))), 0, 4);
+$homeNewIn = implode(',', $homeNewIds);
+
 $latestStmt = $pdo->prepare("
     SELECT p.*, c.name AS category_name, pi.image_path AS main_image
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_main = 1
-    WHERE p.status = 1 AND p.id IN (30, 20, 15, 2)
-    ORDER BY FIELD(p.id, 30, 20, 15, 2)
+    WHERE p.status = 1 AND p.id IN ($homeNewIn)
+    ORDER BY FIELD(p.id, $homeNewIn)
 ");
 $latestStmt->execute();
 $latestProducts = $latestStmt->fetchAll();

@@ -49,7 +49,11 @@ if ($keyword !== '') {
     }
 }
 
-$newProductIds = [30, 20, 15, 2, 26, 14, 4];
+$dynNewStmt = $pdo->query("SELECT id FROM products WHERE status = 1 AND id > 30 ORDER BY id DESC");
+$dynNewIds = $dynNewStmt ? $dynNewStmt->fetchAll(PDO::FETCH_COLUMN) : [];
+$dynNewIds = array_map('intval', $dynNewIds);
+$baseNewIds = [30, 20, 15, 2, 26, 14, 4];
+$newProductIds = array_values(array_unique(array_merge($dynNewIds, $baseNewIds)));
 $bestsellerProductIds = [28, 13, 19, 3, 12, 8, 6, 5, 17, 1];
 
 $where = ["p.status = 1"];
